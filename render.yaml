@@ -2,7 +2,7 @@ services:
   - type: web
     name: koms-backend
     runtime: docker
-    repo: https://github.com/REPLACE_WITH_YOUR_USERNAME/koms-backend.git
+    repo: https://github.com/mtmohan012005-rgb/KOMS.git
     branch: main
     region: singapore
     plan: free
