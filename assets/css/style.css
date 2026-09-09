@@ -1,0 +1,126 @@
+/* KOMS Custom Stylesheet - Professional Modern Theme */
+
+:root {
+    --primary-color: #1e3a8a; /* Deep Blue */
+    --secondary-color: #dc2626; /* Crimson Red - Karate theme */
+    --dark-bg: #111827;
+    --light-bg: #f3f4f6;
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    --transition: all 0.3s ease;
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--light-bg);
+    color: #374151;
+}
+
+/* Navbar */
+.navbar {
+    background: linear-gradient(135deg, var(--dark-bg) 0%, #1f2937 100%) !important;
+    border-bottom: 3px solid var(--secondary-color);
+}
+.navbar-brand {
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #fff !important;
+}
+
+/* Cards & Glassmorphism */
+.card {
+    border: none;
+    border-radius: 12px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    transition: var(--transition);
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    border-radius: 12px 12px 0 0 !important;
+}
+
+/* Badges */
+.badge {
+    padding: 0.5em 0.75em;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border-radius: 6px;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 0.5rem 1.5rem;
+    transition: var(--transition);
+}
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+.btn-primary:hover {
+    background-color: #152c6b;
+    transform: scale(1.02);
+}
+.btn-danger {
+    background-color: var(--secondary-color);
+}
+
+/* Tables */
+.table {
+    margin-bottom: 0;
+}
+.table-hover tbody tr {
+    transition: var(--transition);
+}
+.table-hover tbody tr:hover {
+    background-color: rgba(30, 58, 138, 0.03);
+}
+.table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+    border-bottom-width: 1px;
+}
+
+/* Icons */
+.w-20 {
+    width: 20px;
+    text-align: center;
+}
+
+/* Form Controls */
+.form-control, .form-select {
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    border: 1px solid #d1d5db;
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(30, 58, 138, 0.25);
+}
+
+/* Specific Card Borders used in UI */
+.border-primary { border-color: var(--primary-color) !important; }
+.border-success { border-color: #10b981 !important; }
+.border-warning { border-color: #f59e0b !important; }
+.border-danger { border-color: var(--secondary-color) !important; }
+
+/* Dashboard Stat Cards */
+.bg-primary { background: linear-gradient(135deg, var(--primary-color), #3b82f6) !important; }
+.bg-success { background: linear-gradient(135deg, #059669, #10b981) !important; }
+.bg-warning { background: linear-gradient(135deg, #d97706, #fbbf24) !important; }
+.bg-info { background: linear-gradient(135deg, #0891b2, #06b6d4) !important; }
+
+/* Footer */
+footer {
+    background-color: var(--dark-bg) !important;
+    border-top: 3px solid var(--primary-color);
+}
