@@ -9,17 +9,13 @@ services:
     autoDeploy: true
     dockerfilePath: ./Dockerfile
     envVars:
-      - key: DATABASE_URL
-        sync: false
       - key: DB_HOST
-        value: 127.0.0.1
+        value: mysql-3f01fdf9-mtmohan012005-1250.h.aivencloud.com
       - key: DB_USER
-        value: root
-      - key: DB_PASSWORD
-        value: ""
+        value: avnadmin
       - key: DB_NAME
-        value: koms_db
+        value: defaultdb
       - key: DB_PORT
-        value: "3306"
+        value: "15346"
       - key: PORT
         value: "10000"

@@ -14,6 +14,22 @@ DB_PASSWORD="${DB_PASSWORD:-}"
 
 if [ -n "$DATABASE_URL" ] || ([ -n "$DB_HOST" ] && [ "$DB_HOST" != "localhost" ] && [ "$DB_HOST" != "127.0.0.1" ]); then
     echo "Using configured external database..."
+    # Import schema if tables don't exist in external DB
+    DB_PORT="${DB_PORT:-3306}"
+    TABLES_EXIST=$(mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" -N -s -e "SELECT count(*) FROM information_schema.tables WHERE table_schema = '$DB_NAME';" 2>/dev/null || echo "0")
+    if [ "$TABLES_EXIST" = "0" ] || [ -z "$TABLES_EXIST" ]; then
+        if [ -f "/var/www/html/database/schema.sql" ]; then
+            echo "Importing initial database schema..."
+            mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /var/www/html/database/schema.sql || true
+            if [ -f "/var/www/html/database/seed.sql" ]; then
+                echo "Importing seed data..."
+                mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /var/www/html/database/seed.sql || true
+            fi
+            echo "External database import complete!"
+        fi
+    else
+        echo "$DB_NAME already contains $TABLES_EXIST tables."
+    fi
 else
     echo "Configuring MariaDB service inside container..."
     mkdir -p /run/mysqld /var/run/mysqld /var/lib/mysql /var/log/mysql /etc/mysql/conf.d

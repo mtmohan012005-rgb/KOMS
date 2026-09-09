@@ -21,6 +21,11 @@ $options = [
     PDO::ATTR_EMULATE_PREPARES   => false, // Important for security (prevents SQL injection)
 ];
 
+// If using external database, try enabling SSL (required for Aiven)
+if ($host !== '127.0.0.1') {
+    $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+}
+
 try {
     $pdo = new PDO($dsn, $username, $password, $options);
 } catch (\PDOException $e) {
