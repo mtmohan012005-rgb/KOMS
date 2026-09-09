@@ -3,10 +3,10 @@
 
 require_once 'config.php';
 
-$host = 'localhost';
-$db_name = 'koms';
-$username = 'root'; // Update with your MySQL username
-$password = '';     // Update with your MySQL password
+$host = getenv('DB_HOST') ?: '127.0.0.1';
+$db_name = getenv('DB_NAME') ?: 'koms_db';
+$username = getenv('DB_USER') ?: 'root';
+$password = getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : '';
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db_name;charset=$charset";
