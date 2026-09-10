@@ -133,6 +133,11 @@ if [ -n "$DATABASE_URL" ] || ([ -n "$DB_HOST" ] && [ "$DB_HOST" != "localhost" ]
         fi
 
         cleanup_legacy_demo_accounts "${MYSQL_BASE[@]}"
+
+        if [ -f "/var/www/html/database/seed_students.php" ]; then
+            echo "Seeding/verifying 13 KOMS student accounts in external database..."
+            php /var/www/html/database/seed_students.php 2>/dev/null || true
+        fi
     else
         echo "External database ($DB_HOST) was not reachable or credentials were not provided."
         echo "Activating container internal MariaDB fallback for high availability..."
@@ -193,6 +198,11 @@ EOF
         fi
 
         cleanup_legacy_demo_accounts mysql
+
+        if [ -f "/var/www/html/database/seed_students.php" ]; then
+            echo "Seeding/verifying 13 KOMS student accounts in local MariaDB..."
+            php /var/www/html/database/seed_students.php 2>/dev/null || true
+        fi
     else
         echo "Warning: MariaDB did not become ready in time."
     fi

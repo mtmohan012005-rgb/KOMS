@@ -7,12 +7,15 @@ require_once '../../config/database.php';
 
 $data = json_decode(file_get_contents("php://input"));
 
-if (!empty($data->email) && !empty($data->password)) {
-    $stmt = $pdo->prepare("SELECT id, first_name, last_name, role, password_hash, status FROM users WHERE email = ?");
-    $stmt->execute([$data->email]);
+$login = trim($data->email ?? $data->username ?? $data->member_id ?? '');
+$password = $data->password ?? '';
+
+if (!empty($login) && !empty($password)) {
+    $stmt = $pdo->prepare("SELECT id, member_id, first_name, last_name, email, role, password_hash, status FROM users WHERE email = ? OR member_id = ? LIMIT 1");
+    $stmt->execute([$login, $login]);
     $user = $stmt->fetch();
 
-    if ($user && password_verify($data->password, $user['password_hash'])) {
+    if ($user && password_verify($password, $user['password_hash'])) {
         if ($user['status'] === 'active') {
             $token = bin2hex(random_bytes(16)); // Mock session token
             
@@ -21,8 +24,9 @@ if (!empty($data->email) && !empty($data->password)) {
                 "message" => "Login successful",
                 "data" => [
                     "user_id" => (int)$user['id'],
-                    "name" => $user['first_name'] . ' ' . $user['last_name'],
-                    "email" => $data->email,
+                    "member_id" => $user['member_id'],
+                    "name" => trim($user['first_name'] . ' ' . $user['last_name']),
+                    "email" => $user['email'],
                     "role" => $user['role'],
                     "token" => $token
                 ]
@@ -37,6 +41,6 @@ if (!empty($data->email) && !empty($data->password)) {
     }
 } else {
     http_response_code(400);
-    echo json_encode(["success" => false, "message" => "Email and password required", "errors" => []]);
+    echo json_encode(["success" => false, "message" => "Email / User ID and password required", "errors" => []]);
 }
 ?>
