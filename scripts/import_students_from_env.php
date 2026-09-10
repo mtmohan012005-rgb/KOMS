@@ -21,6 +21,14 @@ if (trim($raw) === '') {
     exit(0);
 }
 
+function ensure_column(PDO $pdo, string $column, string $definition): void {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = ?");
+    $stmt->execute([$column]);
+    if ((int)$stmt->fetchColumn() === 0) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN {$definition}");
+    }
+}
+
 try {
     $payload = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
     if (!is_array($payload)) {
@@ -51,13 +59,7 @@ try {
         $dbHost = '127.0.0.1';
     }
 
-    $dsn = sprintf(
-        'mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4',
-        $dbHost,
-        $dbPort,
-        $dbName
-    );
-
+    $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4', $dbHost, $dbPort, $dbName);
     $pdo = new PDO($dsn, $dbUser, $dbPassword, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -72,16 +74,15 @@ try {
         exit(0);
     }
 
-    // Make older/live installations compatible with the Excel data fields.
-    $pdo->exec("ALTER TABLE users
-        ADD COLUMN IF NOT EXISTS blood_group VARCHAR(30) NULL AFTER gender,
-        ADD COLUMN IF NOT EXISTS father_name VARCHAR(150) NULL AFTER blood_group,
-        ADD COLUMN IF NOT EXISTS mother_name VARCHAR(150) NULL AFTER father_name,
-        ADD COLUMN IF NOT EXISTS alternate_phone VARCHAR(20) NULL AFTER phone,
-        ADD COLUMN IF NOT EXISTS date_of_joining DATE NULL AFTER alternate_phone,
-        ADD COLUMN IF NOT EXISTS must_change_password TINYINT(1) NOT NULL DEFAULT 0 AFTER status");
+    // MariaDB versions differ in support for ALTER TABLE ... ADD COLUMN IF NOT EXISTS.
+    ensure_column($pdo, 'blood_group', 'blood_group VARCHAR(30) NULL AFTER gender');
+    ensure_column($pdo, 'father_name', 'father_name VARCHAR(150) NULL AFTER blood_group');
+    ensure_column($pdo, 'mother_name', 'mother_name VARCHAR(150) NULL AFTER father_name');
+    ensure_column($pdo, 'alternate_phone', 'alternate_phone VARCHAR(20) NULL AFTER phone');
+    ensure_column($pdo, 'date_of_joining', 'date_of_joining DATE NULL AFTER alternate_phone');
+    ensure_column($pdo, 'must_change_password', 'must_change_password TINYINT(1) NOT NULL DEFAULT 0 AFTER status');
 
-    $select = $pdo->prepare("SELECT id FROM users WHERE email = ? OR member_id = ? LIMIT 1");
+    $select = $pdo->prepare("SELECT id FROM users WHERE email=? OR member_id=? LIMIT 1");
     $insert = $pdo->prepare("INSERT INTO users
         (member_id, first_name, last_name, email, password_hash, role, dob, gender, blood_group, father_name, mother_name, phone, alternate_phone, address, date_of_joining, status, must_change_password)
         VALUES (?, ?, ?, ?, ?, 'student', ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 1)");
@@ -120,41 +121,12 @@ try {
         $existingId = $select->fetchColumn();
 
         if ($existingId) {
-            $update->execute([
-                $firstName,
-                $lastName,
-                $email,
-                $dob,
-                $gender,
-                $bloodGroup,
-                $fatherName,
-                $motherName,
-                $phone,
-                $alternatePhone,
-                $address,
-                $joining,
-                (int)$existingId,
-            ]);
+            $update->execute([$firstName, $lastName, $email, $dob, $gender, $bloodGroup, $fatherName, $motherName, $phone, $alternatePhone, $address, $joining, (int)$existingId]);
         } else {
-            // Deliberately discard the random plaintext password. The student
-            // cannot log in until an administrator assigns a real password.
+            // Generate and immediately discard a random password. The account
+            // cannot be used until an administrator assigns a real password.
             $unusableHash = password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT);
-            $insert->execute([
-                $memberId,
-                $firstName,
-                $lastName,
-                $email,
-                $unusableHash,
-                $dob,
-                $gender,
-                $bloodGroup,
-                $fatherName,
-                $motherName,
-                $phone,
-                $alternatePhone,
-                $address,
-                $joining,
-            ]);
+            $insert->execute([$memberId, $firstName, $lastName, $email, $unusableHash, $dob, $gender, $bloodGroup, $fatherName, $motherName, $phone, $alternatePhone, $address, $joining]);
         }
 
         $count++;
