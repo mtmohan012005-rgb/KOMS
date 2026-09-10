@@ -33,6 +33,14 @@ class SessionManager(context: Context) {
         return prefs.getString(Constants.KEY_USER_ROLE, null)
     }
 
+    fun getUserName(): String? {
+        return prefs.getString(Constants.KEY_USER_NAME, null)
+    }
+
+    fun getUserEmail(): String? {
+        return prefs.getString(Constants.KEY_USER_EMAIL, null)
+    }
+
     fun isLoggedIn(): Boolean {
         return prefs.getBoolean(Constants.KEY_IS_LOGGED_IN, false)
     }
