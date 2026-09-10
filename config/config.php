@@ -3,22 +3,30 @@
 
 define('APP_NAME', 'KOMS - Karate Organization Management System');
 if (!defined('APP_URL')) {
-    if (isset($_SERVER['HTTP_HOST'])) {
-        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+    if (getenv('APP_URL')) {
+        define('APP_URL', rtrim(getenv('APP_URL'), '/'));
+    } elseif (isset($_SERVER['HTTP_HOST'])) {
+        $is_https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+            || (strpos($_SERVER['HTTP_HOST'], 'onrender.com') !== false);
+        $protocol = $is_https ? 'https://' : 'http://';
         $script_dir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
         $base = ($script_dir === '/' || $script_dir === '.') ? '' : $script_dir;
         $base = preg_replace('#/(admin|master|senior|student|api.*)#', '', $base);
         define('APP_URL', rtrim($protocol . $_SERVER['HTTP_HOST'] . $base, '/'));
     } else {
-        define('APP_URL', 'http://localhost/koms');
+        define('APP_URL', 'https://koms-backend.onrender.com');
     }
 }
-define('APP_ENV', 'development'); // 'development' or 'production'
+define('APP_ENV', getenv('APP_ENV') ?: ((isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'onrender.com') !== false) ? 'production' : 'development'));
 
 // Session configuration
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
-ini_set('session.cookie_secure', 0); // Set to 1 if using HTTPS
+$is_secure_conn = (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+    || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'onrender.com') !== false);
+ini_set('session.cookie_secure', $is_secure_conn ? 1 : 0);
 
 // Error reporting based on environment
 if (APP_ENV === 'development') {
