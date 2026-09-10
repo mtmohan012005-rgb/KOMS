@@ -1,0 +1,1091 @@
+/* ==========================================================================
+   MASS DRAGON DOJO - UNIFIED PORTAL THEME & RESPONSIVE ENGINE
+   Based on reference design: Obsidian black, radiant gold, crimson dragon aura,
+   dual desktop sidebar and smooth mobile drawer & bottom navigation.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Cinzel:wght@600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --koms-bg: #07080a;
+    --koms-bg-subtle: #0d0f13;
+    --koms-surface: #12141a;
+    --koms-surface-card: rgba(18, 20, 26, 0.94);
+    --koms-surface-elevated: #1a1d26;
+    --koms-border: rgba(255, 204, 0, 0.14);
+    --koms-border-red: rgba(224, 35, 35, 0.25);
+    --koms-border-subtle: rgba(255, 255, 255, 0.08);
+
+    --koms-gold: #ffcc00;
+    --koms-gold-glow: #f4bd17;
+    --koms-gold-dark: #b58b09;
+    --koms-gold-gradient: linear-gradient(135deg, #ffd700 0%, #f4bd17 50%, #d49b06 100%);
+
+    --koms-red: #c61a1a;
+    --koms-crimson: #e02323;
+    --koms-red-dark: #790a10;
+    --koms-red-gradient: linear-gradient(135deg, #e02323 0%, #c61a1a 60%, #790a10 100%);
+
+    --koms-text: #ffffff;
+    --koms-text-muted: #9ba1ad;
+    --koms-text-dim: #6c7280;
+
+    --koms-sidebar-width: 260px;
+    --koms-topbar-height: 70px;
+    --koms-bottom-nav-height: 64px;
+
+    --koms-font-sans: 'Poppins', 'Inter', system-ui, sans-serif;
+    --koms-font-brush: 'Caveat Brush', cursive;
+    --koms-font-heading: 'Cinzel', serif;
+
+    --koms-ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body.koms-body {
+    background-color: var(--koms-bg);
+    color: var(--koms-text);
+    font-family: var(--koms-font-sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+    line-height: 1.5;
+}
+
+/* Ambient Dragon Background Artwork */
+.koms-ambient-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: 
+        radial-gradient(circle at 80% 20%, rgba(224, 35, 35, 0.18) 0%, transparent 45%),
+        radial-gradient(circle at 15% 85%, rgba(244, 189, 23, 0.12) 0%, transparent 40%),
+        linear-gradient(to bottom, rgba(7, 8, 10, 0.72) 0%, rgba(7, 8, 10, 0.94) 100%),
+        url('../images/mass_dragon_hero.jpg'),
+        url('../images/dragon_bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   TOP NAVIGATION BAR
+   ========================================================================== */
+.koms-topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--koms-topbar-height);
+    background: rgba(10, 12, 16, 0.88);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--koms-border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 900;
+    transition: all 0.3s ease;
+}
+
+.koms-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.koms-menu-toggle {
+    display: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    border: 1px solid var(--koms-border-subtle);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--koms-gold);
+    font-size: 20px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.koms-menu-toggle:hover, .koms-menu-toggle:active {
+    background: rgba(255, 204, 0, 0.15);
+    border-color: var(--koms-gold);
+}
+
+.koms-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.koms-brand-crest {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid var(--koms-gold);
+    box-shadow: 0 0 16px rgba(255, 204, 0, 0.45);
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.koms-brand-text h1, .koms-brand-text strong {
+    display: block;
+    font-family: var(--koms-font-brush), sans-serif;
+    font-size: 1.25rem;
+    color: var(--koms-gold);
+    letter-spacing: 0.8px;
+    line-height: 1.1;
+    margin: 0;
+}
+
+.koms-brand-text span {
+    display: block;
+    font-size: 0.68rem;
+    color: var(--koms-text-muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* Center Search Box */
+.koms-topbar-search {
+    flex: 0 1 420px;
+    margin: 0 20px;
+    position: relative;
+}
+
+.koms-search-input {
+    width: 100%;
+    height: 40px;
+    border-radius: 999px;
+    background: rgba(22, 25, 32, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 0 16px 0 42px;
+    font-size: 0.88rem;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.25s ease;
+}
+
+.koms-search-input:focus {
+    border-color: var(--koms-gold);
+    background: rgba(28, 32, 42, 0.95);
+    box-shadow: 0 0 14px rgba(255, 204, 0, 0.25);
+}
+
+.koms-search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--koms-text-dim);
+    font-size: 14px;
+    pointer-events: none;
+}
+
+/* Right Actions */
+.koms-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.koms-icon-btn {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--koms-border-subtle);
+    color: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 15px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.koms-icon-btn:hover {
+    background: rgba(255, 204, 0, 0.12);
+    border-color: var(--koms-gold);
+    color: var(--koms-gold);
+}
+
+.koms-badge-dot {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--koms-crimson);
+    border: 2px solid var(--koms-surface);
+    box-shadow: 0 0 6px var(--koms-crimson);
+}
+
+.koms-login-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    border-radius: 999px;
+    background: var(--koms-gold-gradient);
+    color: #1a1402;
+    font-weight: 700;
+    font-size: 0.88rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 18px rgba(255, 204, 0, 0.35);
+    transition: all 0.25s ease;
+}
+
+.koms-login-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 22px rgba(255, 204, 0, 0.5);
+    color: #000;
+}
+
+.koms-user-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 14px 4px 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--koms-border);
+    border-radius: 999px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+}
+
+.koms-user-pill:hover {
+    background: rgba(255, 204, 0, 0.12);
+    border-color: var(--koms-gold);
+}
+
+.koms-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--koms-gold-gradient);
+    color: #181202;
+    font-weight: 800;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.koms-user-info {
+    line-height: 1.2;
+}
+
+.koms-user-name {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.koms-user-role {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--koms-gold);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+/* ==========================================================================
+   LEFT NAVIGATION SIDEBAR & MOBILE DRAWER
+   ========================================================================== */
+.koms-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--koms-sidebar-width);
+    height: 100vh;
+    background: rgba(10, 11, 15, 0.94);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(255, 204, 0, 0.12);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 1000;
+    padding: 20px 14px;
+    overflow-y: auto;
+    transition: transform 0.35s var(--koms-ease-smooth);
+}
+
+.koms-sidebar-header {
+    padding-bottom: 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    margin-bottom: 14px;
+}
+
+.koms-sidebar-close {
+    display: none;
+    position: absolute;
+    right: 14px;
+    top: 18px;
+    background: transparent;
+    border: none;
+    color: var(--koms-text-muted);
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.koms-sidebar-menu-title {
+    font-size: 0.68rem;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: var(--koms-text-dim);
+    padding: 10px 12px 6px;
+    font-weight: 700;
+}
+
+.koms-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.koms-nav-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: #cbd5e1;
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.koms-nav-item i, .koms-nav-item span.icon {
+    width: 22px;
+    text-align: center;
+    font-size: 16px;
+    color: var(--koms-text-muted);
+    transition: color 0.2s ease;
+}
+
+.koms-nav-item:hover {
+    background: rgba(255, 204, 0, 0.08);
+    color: #ffffff;
+    transform: translateX(3px);
+}
+
+.koms-nav-item:hover i {
+    color: var(--koms-gold);
+}
+
+.koms-nav-item.active {
+    background: rgba(255, 204, 0, 0.14);
+    color: var(--koms-gold);
+    font-weight: 600;
+    box-shadow: inset 3px 0 0 var(--koms-gold);
+}
+
+.koms-nav-item.active i {
+    color: var(--koms-gold);
+}
+
+.koms-nav-badge {
+    margin-left: auto;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: var(--koms-red-gradient);
+    color: #fff;
+}
+
+/* Sidebar Calligraphic Slogan */
+.koms-sidebar-slogan {
+    margin-top: 24px;
+    padding: 16px 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    position: relative;
+}
+
+.koms-slogan-text {
+    font-family: var(--koms-font-brush), cursive;
+    font-size: 1.4rem;
+    color: var(--koms-gold);
+    line-height: 1.25;
+    letter-spacing: 0.6px;
+}
+
+.koms-slogan-stroke {
+    width: 60px;
+    height: 3px;
+    background: var(--koms-red-gradient);
+    border-radius: 999px;
+    margin-top: 8px;
+    box-shadow: 0 0 8px rgba(224, 35, 35, 0.6);
+}
+
+/* Mobile Backdrop Overlay */
+.koms-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 950;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.koms-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ==========================================================================
+   MAIN CONTENT STAGE
+   ========================================================================== */
+.koms-main {
+    position: relative;
+    z-index: 10;
+    margin-left: var(--koms-sidebar-width);
+    padding-top: var(--koms-topbar-height);
+    min-height: 100vh;
+    transition: margin-left 0.35s var(--koms-ease-smooth);
+}
+
+.koms-container {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 28px 32px 60px;
+}
+
+/* ==========================================================================
+   HERO BANNER (MATCHING REFERENCE IMAGE)
+   ========================================================================== */
+.koms-hero {
+    position: relative;
+    border-radius: 24px;
+    padding: 40px 36px;
+    background: 
+        radial-gradient(circle at 75% 20%, rgba(224, 35, 35, 0.22) 0%, transparent 45%),
+        linear-gradient(135deg, rgba(12, 14, 18, 0.95) 0%, rgba(20, 24, 32, 0.92) 50%, rgba(45, 10, 14, 0.88) 100%);
+    border: 1px solid var(--koms-border);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 32px;
+    align-items: center;
+    overflow: hidden;
+    margin-bottom: 32px;
+}
+
+.koms-hero::before {
+    content: "龍";
+    position: absolute;
+    right: 30px;
+    top: -30px;
+    font-size: 240px;
+    font-family: serif;
+    color: rgba(224, 35, 35, 0.05);
+    line-height: 1;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Left Hero Showcase */
+.koms-hero-left {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.koms-crest-circle-wrap {
+    position: relative;
+    width: 130px;
+    height: 130px;
+    margin-bottom: 16px;
+}
+
+.koms-crest-circle-glow {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 204, 0, 0.6) 0%, rgba(224, 35, 35, 0.4) 60%, transparent 75%);
+    filter: blur(12px);
+    animation: komsPulse 3s ease-in-out infinite alternate;
+}
+
+.koms-crest-circle-img {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid var(--koms-gold);
+    object-fit: cover;
+    box-shadow: 0 0 25px rgba(255, 204, 0, 0.5);
+}
+
+.koms-hero-title {
+    font-family: var(--koms-font-brush), sans-serif;
+    font-size: clamp(2rem, 3.5vw, 2.7rem);
+    color: var(--koms-gold);
+    letter-spacing: 1px;
+    line-height: 1.1;
+    margin-bottom: 4px;
+    text-shadow: 0 0 20px rgba(255, 204, 0, 0.35);
+}
+
+.koms-hero-subtitle {
+    font-size: 0.85rem;
+    color: var(--koms-text-muted);
+    letter-spacing: 0.8px;
+    margin-bottom: 24px;
+}
+
+/* 4 Circular Pillar / Stat Badges */
+.koms-pillar-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    width: 100%;
+    max-width: 520px;
+}
+
+.koms-pillar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: transform 0.25s ease;
+}
+
+.koms-pillar-item:hover {
+    transform: translateY(-4px);
+}
+
+.koms-pillar-circle {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 2px solid var(--koms-gold);
+    background: rgba(22, 25, 32, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--koms-gold);
+    box-shadow: 0 0 14px rgba(255, 204, 0, 0.25);
+    margin-bottom: 8px;
+    transition: all 0.25s ease;
+}
+
+.koms-pillar-item:hover .koms-pillar-circle {
+    background: var(--koms-gold-gradient);
+    color: #1a1202;
+    box-shadow: 0 0 22px rgba(255, 204, 0, 0.6);
+}
+
+.koms-pillar-title {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    color: #fff;
+    text-transform: uppercase;
+}
+
+.koms-pillar-sub {
+    font-size: 0.65rem;
+    color: var(--koms-text-muted);
+    margin-top: 2px;
+}
+
+/* Right Hero Showcase */
+.koms-hero-right {
+    position: relative;
+    z-index: 2;
+    padding-left: 10px;
+}
+
+.koms-hero-kicker {
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--koms-gold);
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.koms-hero-headline {
+    font-family: var(--koms-font-heading), serif;
+    font-size: clamp(1.8rem, 3.2vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #ffffff;
+    line-height: 1.15;
+}
+
+.koms-hero-script {
+    font-family: var(--koms-font-brush), cursive;
+    font-size: clamp(2.4rem, 4.4vw, 3.8rem);
+    color: var(--koms-gold);
+    display: block;
+    line-height: 1.1;
+    text-shadow: 0 0 25px rgba(255, 204, 0, 0.5);
+    margin: 4px 0;
+}
+
+.koms-hero-subline {
+    font-family: var(--koms-font-heading), serif;
+    font-size: clamp(1rem, 1.8vw, 1.4rem);
+    letter-spacing: 2px;
+    color: #e2e8f0;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+
+.koms-hero-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.koms-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.koms-btn-gold {
+    background: var(--koms-gold-gradient);
+    color: #1a1202;
+    box-shadow: 0 4px 18px rgba(255, 204, 0, 0.35);
+}
+
+.koms-btn-gold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 204, 0, 0.5);
+    color: #000;
+}
+
+.koms-btn-outline {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--koms-border);
+    color: #fff;
+}
+
+.koms-btn-outline:hover {
+    background: rgba(255, 204, 0, 0.12);
+    border-color: var(--koms-gold);
+    color: var(--koms-gold);
+}
+
+/* ==========================================================================
+   CARDS & GRIDS
+   ========================================================================== */
+.koms-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-bottom: 28px;
+}
+
+.koms-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-bottom: 28px;
+}
+
+.koms-grid-2 {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 20px;
+    margin-bottom: 28px;
+}
+
+.koms-card {
+    background: var(--koms-surface-card);
+    border: 1px solid var(--koms-border-subtle);
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.koms-card:hover {
+    border-color: var(--koms-border);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 204, 0, 0.08);
+}
+
+.koms-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.koms-card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.koms-card-title i {
+    color: var(--koms-gold);
+}
+
+/* Stat Card */
+.koms-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--koms-surface-card);
+    border: 1px solid var(--koms-border-subtle);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.koms-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(255, 204, 0, 0.1);
+    color: var(--koms-gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    border: 1px solid var(--koms-border);
+}
+
+.koms-stat-info {
+    flex: 1;
+}
+
+.koms-stat-label {
+    font-size: 0.75rem;
+    color: var(--koms-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.koms-stat-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+    margin-top: 2px;
+}
+
+.koms-stat-sub {
+    font-size: 0.72rem;
+    color: var(--koms-text-dim);
+    margin-top: 2px;
+}
+
+/* ==========================================================================
+   SLIDE-IN LOGIN DRAWER / MODAL
+   ========================================================================== */
+.koms-login-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 420px;
+    max-width: 90vw;
+    height: 100vh;
+    background: rgba(13, 15, 20, 0.98);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-left: 1px solid var(--koms-border);
+    box-shadow: -15px 0 50px rgba(0, 0, 0, 0.85);
+    z-index: 1100;
+    padding: 30px 24px;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.35s var(--koms-ease-smooth);
+}
+
+.koms-login-drawer.open {
+    transform: translateX(0);
+}
+
+.koms-drawer-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: var(--koms-text-muted);
+    font-size: 22px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.koms-drawer-close:hover {
+    color: var(--koms-gold);
+}
+
+/* Form Styles */
+.koms-form-group {
+    margin-bottom: 18px;
+}
+
+.koms-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 6px;
+}
+
+.koms-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.koms-input-wrap i {
+    position: absolute;
+    left: 14px;
+    color: var(--koms-text-dim);
+    font-size: 15px;
+}
+
+.koms-input {
+    width: 100%;
+    padding: 12px 14px 12px 42px;
+    border-radius: 12px;
+    background: rgba(22, 25, 34, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.25s ease;
+}
+
+.koms-input:focus {
+    border-color: var(--koms-gold);
+    box-shadow: 0 0 14px rgba(255, 204, 0, 0.25);
+    background: rgba(28, 32, 44, 0.95);
+}
+
+.koms-input-hint {
+    font-size: 0.72rem;
+    color: var(--koms-text-muted);
+    margin-top: 5px;
+}
+
+/* ==========================================================================
+   MOBILE BOTTOM NAVIGATION BAR (FIXED BOTTOM FOR SMOOTH MOBILE USE)
+   ========================================================================== */
+.koms-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--koms-bottom-nav-height);
+    background: rgba(10, 12, 16, 0.95);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid var(--koms-border-subtle);
+    z-index: 920;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 8px;
+}
+
+.koms-bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    text-decoration: none;
+    color: var(--koms-text-muted);
+    padding: 6px 0;
+    min-height: 48px;
+    transition: color 0.2s ease;
+}
+
+.koms-bottom-nav-item i {
+    font-size: 18px;
+    transition: transform 0.2s ease;
+}
+
+.koms-bottom-nav-item span {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.koms-bottom-nav-item:hover, .koms-bottom-nav-item.active {
+    color: var(--koms-gold);
+}
+
+.koms-bottom-nav-item.active i {
+    transform: translateY(-2px);
+    color: var(--koms-gold);
+    filter: drop-shadow(0 0 6px rgba(255, 204, 0, 0.5));
+}
+
+/* ==========================================================================
+   RESPONSIVE ENGINE: DESKTOP TO MOBILE PHONE ("SMOOTH TRANSITION")
+   ========================================================================== */
+@media (max-width: 1200px) {
+    .koms-hero {
+        grid-template-columns: 1fr;
+        gap: 28px;
+        text-align: center;
+    }
+    .koms-hero-right {
+        padding-left: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .koms-hero-actions {
+        justify-content: center;
+    }
+    .koms-grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .koms-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 1024px) {
+    .koms-sidebar {
+        transform: translateX(-100%);
+    }
+    .koms-sidebar.open {
+        transform: translateX(0);
+        box-shadow: 12px 0 50px rgba(0, 0, 0, 0.9);
+    }
+    .koms-sidebar-close {
+        display: block;
+    }
+    .koms-main {
+        margin-left: 0;
+    }
+    .koms-menu-toggle {
+        display: flex;
+    }
+    .koms-topbar {
+        padding: 0 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    :root {
+        --koms-topbar-height: 62px;
+    }
+    .koms-topbar-search {
+        display: none;
+    }
+    .koms-brand-text span {
+        display: none;
+    }
+    .koms-container {
+        padding: 16px 14px 85px; /* Extra bottom padding for mobile bottom bar */
+    }
+    .koms-hero {
+        padding: 24px 18px;
+        border-radius: 18px;
+        margin-bottom: 20px;
+    }
+    .koms-hero-title {
+        font-size: 1.8rem;
+    }
+    .koms-crest-circle-wrap {
+        width: 100px;
+        height: 100px;
+    }
+    .koms-pillar-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    .koms-pillar-circle {
+        width: 46px;
+        height: 46px;
+        font-size: 17px;
+    }
+    .koms-bottom-nav {
+        display: flex;
+    }
+    .koms-grid-3 {
+        grid-template-columns: 1fr;
+    }
+    .koms-login-drawer {
+        width: 100vw;
+        max-width: 100vw;
+    }
+}
+
+@media (max-width: 480px) {
+    .koms-grid-4 {
+        grid-template-columns: 1fr;
+    }
+    .koms-hero-actions .koms-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    .koms-user-info {
+        display: none;
+    }
+}
+
+@keyframes komsPulse {
+    0% { transform: scale(0.96); opacity: 0.7; }
+    100% { transform: scale(1.05); opacity: 1; }
+}

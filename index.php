@@ -39,676 +39,584 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $error_message = $_SESSION['error_msg'];
     unset($_SESSION['error_msg']);
 }
+
+// Fetch live statistics and featured dojos for homepage showcase
+$stats = [
+    'dojos' => 0,
+    'students' => 0,
+    'masters' => 0,
+    'black_belts' => 0
+];
+try {
+    $stats['dojos'] = (int)$pdo->query("SELECT COUNT(*) FROM dojos WHERE status = 'active'")->fetchColumn();
+    $stats['students'] = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE role = 'student'")->fetchColumn();
+    $stats['masters'] = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE role = 'master'")->fetchColumn();
+    $stats['black_belts'] = (int)$pdo->query("SELECT COUNT(*) FROM grading_history WHERE new_belt LIKE '%Black%'")->fetchColumn();
+    
+    $dojos_stmt = $pdo->query("SELECT d.id, d.name, d.location, d.training_days, d.training_timings, u.first_name, u.last_name FROM dojos d LEFT JOIN users u ON d.master_id = u.id WHERE d.status = 'active' ORDER BY d.id ASC LIMIT 3");
+    $featured_dojos = $dojos_stmt->fetchAll();
+} catch (Exception $e) {
+    $featured_dojos = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mass Dragon Dojo - Karate Organization Management System</title>
-    <meta name="description" content="Mass Dragon Dojo & Karate Organization Management System (KOMS) - Enterprise multi-tenant martial arts platform.">
+    <title>Mass Dragon Dojo - Karate Organization Management System (KOMs)</title>
+    <meta name="description" content="Mass Dragon Dojo & Karate Organization Management System (KOMs) - Traditional Okinawan Shorin-Ryu Karate martial arts enterprise platform.">
 
-    <!-- Google Fonts: Caveat Brush for calligraphy & Inter for clean UI -->
+    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Cinzel:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Cinzel:wght@600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-    <!-- FontAwesome 6 for Input & Martial Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Unified KOMS Theme Stylesheet -->
+    <link rel="stylesheet" href="assets/css/koms-portal-theme.css?v=2">
 
     <style>
-        :root {
-            --bg-color: #080808;
-            --form-bg: rgba(12, 12, 12, 0.94);
-            --input-bg: #161616;
-            --text-main: #ffffff;
-            --text-muted: #888888;
-            --accent-red: #c61a1a;
-            --accent-red-bright: #e02323;
-            --accent-yellow: #ffcc00;
-            --accent-yellow-gold: #f4bd17;
+        /* Additional styling specific to public landing showcase */
+        .showcase-section {
+            margin-bottom: 48px;
         }
-
-        * {
-            box-sizing: border-box;
+        .section-header {
+            margin-bottom: 24px;
         }
-
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            min-height: 100%;
-            background-color: var(--bg-color);
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow-x: hidden;
-            position: relative;
-        }
-
-        /* Dragon & Red Slashes Background Artwork */
-        .background {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background-image: 
-                linear-gradient(to bottom, rgba(8, 8, 8, 0.45), rgba(8, 8, 8, 0.88)),
-                url('assets/images/dragon_bg.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            z-index: 1;
-            pointer-events: none;
-            filter: contrast(1.15);
-        }
-
-        /* Ambient Ember / Particle Canvas */
-        #particleCanvas {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            z-index: 2;
-            pointer-events: none;
-        }
-
-        /* Red Corner Slashes Simulation Overlay */
-        .slash-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: 
-                linear-gradient(135deg, rgba(200, 0, 0, 0.22) 0%, transparent 28%),
-                linear-gradient(-45deg, rgba(200, 0, 0, 0.22) 0%, transparent 28%);
-            z-index: 2;
-            pointer-events: none;
-        }
-
-        .main-container {
-            position: relative;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 440px;
-            padding: 24px 20px;
-            margin: auto;
-        }
-
-        /* --- 1. CHOREOGRAPHED LOGO CONVERGENCE (6 STEPS) --- */
-        .logo-wrapper {
-            position: relative;
-            width: 165px;
-            height: 165px;
-            transform: translateY(140px);
-            animation: moveLogoUp 1s cubic-bezier(0.16, 1, 0.3, 1) 2.2s forwards;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .logo-halves {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            animation: hideHalves 0.1s linear 1.25s forwards;
-        }
-
-        .logo-image {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            object-fit: contain;
-            border-radius: 50%;
-        }
-
-        /* Left and Right halves using clip-path on the authentic Shorin Ryu crest */
-        .logo-left {
-            clip-path: inset(0 50% 0 0);
-            animation: slideLeftIn 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-            filter: drop-shadow(-4px 0 12px rgba(255, 204, 0, 0.5));
-        }
-
-        .logo-right {
-            clip-path: inset(0 0 0 50%);
-            animation: slideRightIn 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-            filter: drop-shadow(4px 0 12px rgba(255, 204, 0, 0.5));
-        }
-
-        .logo-full {
-            opacity: 0;
-            animation: showFullLogo 0.6s ease-out 1.1s forwards;
-        }
-
-        /* Central Vertical Laser Flare (Step 1 & 2) */
-        .flare {
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 3px; height: 180%;
-            background: #ffffff;
-            box-shadow: 
-                0 0 15px 6px rgba(255, 255, 255, 0.95),
-                0 0 35px 15px rgba(255, 204, 0, 0.85),
-                0 0 60px 25px rgba(224, 35, 35, 0.65);
-            transform: translate(-50%, -50%) scaleY(0);
-            opacity: 0;
-            z-index: 15;
-            animation: flashLight 0.7s cubic-bezier(0.1, 0.9, 0.2, 1) 0.95s forwards;
-        }
-
-        /* Horizontal Light Streaks (Step 2) */
-        .flare-horizontal {
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 260%; height: 2px;
-            background: #ffffff;
-            box-shadow: 0 0 20px 8px rgba(255, 204, 0, 0.85);
-            transform: translate(-50%, -50%) scaleX(0);
-            opacity: 0;
-            z-index: 14;
-            animation: flashHorizontal 0.6s ease-out 1.05s forwards;
-        }
-
-        /* Radial burst behind logo on convergence */
-        .burst-ring {
-            position: absolute;
-            width: 165px;
-            height: 165px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 204, 0, 0.9);
-            box-shadow: 0 0 32px rgba(255, 204, 0, 0.75);
-            opacity: 0;
-            transform: scale(0.6);
-            animation: burstExpand 0.7s cubic-bezier(0.1, 0.8, 0.2, 1) 1.1s forwards;
-            pointer-events: none;
-        }
-
-        /* --- 2. TEXT SECTION --- */
-        .title-section {
-            text-align: center;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 2.5s forwards;
-            margin-bottom: 22px;
-        }
-
-        .title-section h1 {
-            font-family: 'Caveat Brush', cursive;
-            color: var(--accent-yellow);
-            font-size: 34px;
-            margin: 0 0 4px 0;
-            letter-spacing: 1.5px;
-            text-shadow: 0 0 16px rgba(255, 204, 0, 0.4);
-        }
-
-        .title-section p {
-            color: var(--text-main);
-            font-size: 12px;
-            font-weight: 500;
-            margin: 0;
-            line-height: 1.45;
-            letter-spacing: 0.5px;
-            opacity: 0.9;
-        }
-
-        .title-section .subtitle-tag {
-            display: inline-block;
-            margin-top: 6px;
-            padding: 3px 10px;
-            background: rgba(198, 26, 26, 0.25);
-            border: 1px solid rgba(224, 35, 35, 0.45);
-            border-radius: 20px;
-            font-size: 10px;
-            color: #ffcc00;
-            letter-spacing: 1px;
+        .section-tag {
+            font-size: 0.75rem;
+            color: var(--koms-gold);
             text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 700;
         }
-
-        /* --- 3. LOGIN FORM SECTION --- */
-        .login-form {
-            width: 100%;
-            background: var(--form-bg);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            padding: 26px 24px 22px 24px;
-            border-radius: 18px;
-            border: 1px solid rgba(224, 35, 35, 0.35);
-            box-shadow: 
-                0 15px 40px rgba(0, 0, 0, 0.85),
-                0 0 25px rgba(224, 35, 35, 0.15);
-            box-sizing: border-box;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 2.9s forwards;
+        .section-title {
+            font-family: var(--koms-font-heading);
+            font-size: clamp(1.4rem, 2.5vw, 2rem);
+            color: #fff;
+            margin-top: 4px;
         }
-
-        /* Error Notification Alert */
-        .error-alert {
-            background: rgba(198, 26, 26, 0.22);
-            border: 1px solid rgba(224, 35, 35, 0.65);
-            color: #ff9b9b;
-            font-size: 12px;
-            padding: 10px 14px;
-            border-radius: 8px;
-            margin-bottom: 16px;
+        .belt-card {
+            background: rgba(18, 20, 26, 0.94);
+            border: 1px solid var(--koms-border-subtle);
+            border-radius: 14px;
+            padding: 16px;
             display: flex;
             align-items: center;
-            gap: 8px;
-            animation: shake 0.4s ease-in-out;
-        }
-
-        .input-group {
-            position: relative;
-            margin-bottom: 16px;
-        }
-
-        .input-group i {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-size: 14px;
-            transition: color 0.25s;
-        }
-
-        .input-group i.icon-left { left: 16px; }
-        .input-group i.icon-right { 
-            right: 16px; 
-            cursor: pointer; 
-            padding: 6px;
-            z-index: 5;
-        }
-        .input-group i.icon-right:hover {
-            color: var(--accent-yellow);
-        }
-
-        .input-group input {
-            width: 100%;
-            background: var(--input-bg);
-            border: 1px solid #242424;
-            padding: 14px 44px;
-            border-radius: 10px;
-            color: var(--text-main);
-            font-size: 13.5px;
-            box-sizing: border-box;
-            outline: none;
+            gap: 14px;
             transition: all 0.25s ease;
         }
-
-        .input-group input:focus {
-            border-color: rgba(224, 35, 35, 0.85);
-            background: #1c1c1c;
-            box-shadow: 0 0 14px rgba(224, 35, 35, 0.28);
+        .belt-card:hover {
+            border-color: var(--koms-border);
+            transform: translateY(-3px);
         }
-
-        .input-group input::placeholder {
-            color: #666666;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(90deg, #9b0b0b 0%, #e02323 100%);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-size: 14.5px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            cursor: pointer;
-            margin-top: 6px;
-            transition: all 0.3s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 6px 20px rgba(198, 26, 26, 0.4);
-        }
-
-        .login-btn:hover {
-            opacity: 0.95;
-            transform: translateY(-1px);
-            box-shadow: 0 8px 25px rgba(224, 35, 35, 0.55);
-        }
-
-        .login-btn:active {
-            transform: translateY(1px);
-        }
-
-        /* 1-Click Demo Role Switcher */
-        .demo-roles-container {
-            margin-top: 18px;
-            padding-top: 14px;
-            border-top: 1px solid #1c1c1c;
-        }
-
-        .demo-roles-label {
-            font-size: 10.5px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--accent-yellow-gold);
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 600;
-        }
-
-        .demo-pills {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-
-        .demo-pill {
-            background: #141414;
-            border: 1px solid #282828;
-            color: #bbb;
-            font-size: 11px;
-            padding: 6px 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            text-align: left;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .demo-pill:hover {
-            border-color: var(--accent-yellow);
-            color: #fff;
-            background: #1f1a0e;
-            transform: translateY(-1px);
-        }
-
-        .demo-pill i {
-            color: var(--accent-yellow);
-            font-size: 10px;
-        }
-
-        /* Bottom Quick Links */
-        .footer-links {
-            margin-top: 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .footer-links a {
-            color: #aaa;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .footer-links a:hover {
-            color: var(--accent-yellow);
-        }
-
-        /* --- ANIMATION KEYFRAMES --- */
-        @keyframes slideLeftIn {
-            0% { transform: translateX(-140px); opacity: 0; }
-            100% { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes slideRightIn {
-            0% { transform: translateX(140px); opacity: 0; }
-            100% { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes flashLight {
-            0% { transform: translate(-50%, -50%) scaleY(0); opacity: 0; }
-            45% { transform: translate(-50%, -50%) scaleY(1); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scaleY(1.3); opacity: 0; }
-        }
-
-        @keyframes flashHorizontal {
-            0% { transform: translate(-50%, -50%) scaleX(0); opacity: 0; }
-            50% { transform: translate(-50%, -50%) scaleX(1); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scaleX(1.4); opacity: 0; }
-        }
-
-        @keyframes burstExpand {
-            0% { transform: scale(0.6); opacity: 0.9; }
-            100% { transform: scale(1.6); opacity: 0; }
-        }
-
-        @keyframes hideHalves {
-            to { opacity: 0; visibility: hidden; }
-        }
-
-        @keyframes showFullLogo {
-            0% { opacity: 0; transform: scale(0.92); }
-            50% { opacity: 1; transform: scale(1.05); filter: drop-shadow(0 0 25px rgba(255, 204, 0, 0.9)); }
-            100% { opacity: 1; transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 204, 0, 0.5)); }
-        }
-
-        @keyframes moveLogoUp {
-            0% { transform: translateY(140px); }
-            100% { transform: translateY(0); }
-        }
-
-        @keyframes fadeInUp {
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-6px); }
-            40%, 80% { transform: translateX(6px); }
-        }
-
-        /* Mobile Adjustments */
-        @media (max-width: 480px) {
-            .logo-wrapper { width: 140px; height: 140px; transform: translateY(110px); }
-            .title-section h1 { font-size: 28px; }
-            .login-form { padding: 22px 18px 18px 18px; }
-            .demo-pills { grid-template-columns: 1fr; }
+        .belt-bar {
+            width: 8px;
+            height: 48px;
+            border-radius: 999px;
+            flex-shrink: 0;
         }
     </style>
 </head>
-<body>
+<body class="koms-body">
 
-    <!-- Dragon Cinematic Art Background -->
-    <div class="background"></div>
+<!-- Ambient Background Artwork -->
+<div class="koms-ambient-bg"></div>
 
-    <!-- Martial Arts Red Corner Overlays -->
-    <div class="slash-overlay"></div>
+<!-- Mobile Overlay Backdrop -->
+<div class="koms-overlay" id="komsOverlay"></div>
 
-    <!-- Dynamic Fire Ember Particle Canvas -->
-    <canvas id="particleCanvas"></canvas>
-
-    <div class="main-container">
-        
-        <!-- --- 1. CHOREOGRAPHED SHORIN RYU LOGO CONVERGENCE --- -->
-        <div class="logo-wrapper">
-            <!-- Left & Right Halves of Crest for Split Entrance -->
-            <div class="logo-halves">
-                <img src="assets/images/shorin_ryu_crest.jpg" alt="Shorin Ryu Left" class="logo-image logo-left">
-                <img src="assets/images/shorin_ryu_crest.jpg" alt="Shorin Ryu Right" class="logo-image logo-right">
+<!-- Top Navigation Bar -->
+<header class="koms-topbar">
+    <div class="koms-topbar-left">
+        <button class="koms-menu-toggle" id="komsMenuToggle" onclick="toggleSidebar()" aria-label="Toggle navigation drawer">
+            <i class="fas fa-bars"></i>
+        </button>
+        <a href="index.php" class="koms-brand">
+            <img src="assets/images/shorin_ryu_crest.jpg" alt="Shorin Ryu Crest" class="koms-brand-crest">
+            <div class="koms-brand-text">
+                <strong>MASS DRAGON DOJO</strong>
+                <span>Karate Organization Management System (KOMs)</span>
             </div>
-            
-            <!-- Laser Flares on Contact Point -->
-            <div class="flare"></div>
-            <div class="flare-horizontal"></div>
-            <div class="burst-ring"></div>
-
-            <!-- Complete Joined Crest -->
-            <img src="assets/images/shorin_ryu_crest.jpg" alt="Shorin Ryu Mass Dragon Dojo Crest" class="logo-image logo-full" id="finalLogo">
-        </div>
-
-        <!-- --- 2. TITLE & BRANDING --- -->
-        <div class="title-section">
-            <h1>Mass Dragon Dojo</h1>
-            <p>Karate Organization Management System</p>
-            <div class="subtitle-tag"><i class="fas fa-shield-halved me-1"></i> Official Portal • Shorin-Ryu</div>
-        </div>
-
-        <!-- --- 3. INTERACTIVE LOGIN FORM --- -->
-        <form class="login-form" method="POST" action="index.php" id="loginForm">
-            <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
-            
-            <?php if (!empty($error_message)): ?>
-                <div class="error-alert">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span><?= htmlspecialchars($error_message) ?></span>
-                </div>
-            <?php endif; ?>
-
-            <div class="input-group">
-                <i class="fa-solid fa-id-card-clip icon-left" style="color:#ffd21a;"></i>
-                <input type="text" name="email" id="email" placeholder="User ID or Gmail Address" required autocomplete="username" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
-            </div>
-
-            <div class="input-group">
-                <i class="fa-solid fa-lock icon-left"></i>
-                <input type="password" name="password" id="password" placeholder="Password (DOB: DD.MM.YYYY for students)" required autocomplete="current-password" value="<?= htmlspecialchars($_POST['password'] ?? '') ?>">
-                <i class="fa-regular fa-eye icon-right" id="togglePassword" title="Toggle password visibility"></i>
-            </div>
-
-            <div style="font-size: 11px; color: #a0a0a0; margin: -6px 0 14px 4px; display: flex; align-items: center; gap: 6px;">
-                <i class="fas fa-shield-halved" style="color: #ffd21a; font-size: 11px;"></i>
-                <span>Accepts <strong>User ID</strong> (e.g. <code>sairohan2012.koms</code>) or <strong>Gmail</strong></span>
-            </div>
-
-            <button type="submit" class="login-btn" id="submitBtn">
-                <i class="fas fa-dragon"></i>
-                <span>Enter Dojo</span>
-            </button>
-
-            <!-- 1-Click Role Switcher for Fast Evaluation -->
-            <div class="demo-roles-container">
-                <div class="demo-roles-label">
-                    <span><i class="fas fa-key me-1"></i> Quick Demo Roles</span>
-                    <span style="font-size: 9px; opacity: 0.7;">Gmail or Student User ID</span>
-                </div>
-                <div class="demo-pills">
-                    <button type="button" class="demo-pill" onclick="fillRole('admin@gmail.com', 'password123', 'Grand Master')">
-                        <i class="fas fa-crown"></i> <strong>Grand Master</strong>
-                    </button>
-                    <button type="button" class="demo-pill" onclick="fillRole('master@gmail.com', 'password123', 'Dojo Master')">
-                        <i class="fas fa-torii-gate"></i> <strong>Dojo Master</strong>
-                    </button>
-                    <button type="button" class="demo-pill" onclick="fillRole('sairohan2012.koms', '20.10.2012', 'Sai Rohan (Student ID)')" title="User ID: sairohan2012.koms | Pass: 20.10.2012">
-                        <i class="fas fa-user-ninja"></i> <strong>Sai Rohan (ID)</strong>
-                    </button>
-                    <button type="button" class="demo-pill" onclick="fillRole('dguhan2015.koms', '25.09.2015', 'Guhan (Student ID)')" title="User ID: dguhan2015.koms | Pass: 25.09.2015">
-                        <i class="fas fa-user-graduate"></i> <strong>Guhan (ID)</strong>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Portal Links -->
-            <div class="footer-links">
-                <a href="forgot_password.php" title="Request Password Reset from Master Portal" style="color:#ffd21a;"><i class="fas fa-key me-1"></i> Reset Password</a>
-                <a href="register.php"><i class="fas fa-user-plus me-1"></i> Register</a>
-                <a href="find_dojo.php"><i class="fas fa-compass me-1"></i> Find Dojo</a>
-                <a href="uploads/koms-mobile.apk" download title="Download KOMS Android App (APK)"><i class="fab fa-android me-1" style="color: #3ddc84;"></i> Mobile App</a>
-                <a href="index.html" title="Static presentation experience"><i class="fas fa-scroll me-1"></i> Tour</a>
-            </div>
-        </form>
-
+        </a>
     </div>
 
-    <!-- Dynamic Ember Particle System & Interactivity Script -->
-    <script>
-        // Password Reveal Toggle
-        const togglePassword = document.querySelector('#togglePassword');
-        const passwordInput = document.querySelector('#password');
+    <!-- Center Pill Search Bar -->
+    <div class="koms-topbar-search">
+        <i class="fas fa-search koms-search-icon"></i>
+        <input type="text" class="koms-search-input" placeholder="Search dojos, belts, syllabus, events... (Press '/' to focus)" aria-label="Search">
+    </div>
 
-        if (togglePassword && passwordInput) {
-            togglePassword.addEventListener('click', function () {
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-                this.classList.toggle('fa-eye');
-                this.classList.toggle('fa-eye-slash');
-            });
-        }
+    <!-- Right Controls -->
+    <div class="koms-topbar-right">
+        <a href="uploads/koms-mobile.apk" class="koms-icon-btn" title="Download Android Mobile App" download>
+            <i class="fab fa-android" style="color:#3ddc84;"></i>
+        </a>
+        <button class="koms-icon-btn" onclick="openLoginDrawer()" title="Notifications & Announcements" aria-label="Notifications">
+            <i class="fas fa-bell"></i>
+            <span class="koms-badge-dot"></span>
+        </button>
+        <button class="koms-login-btn" onclick="openLoginDrawer()" data-open-login>
+            <i class="fas fa-user-ninja"></i>
+            <span>Login</span>
+            <i class="fas fa-arrow-right ms-1"></i>
+        </button>
+    </div>
+</header>
 
-        // 1-Click Role Autofill
-        function fillRole(email, password, roleName) {
-            const emailInput = document.getElementById('email');
-            const passInput = document.getElementById('password');
-            const submitBtn = document.getElementById('submitBtn');
-            
-            if (emailInput && passInput) {
-                emailInput.value = email;
-                passInput.value = password;
-                
-                // Visual feedback highlight
-                emailInput.style.borderColor = '#ffcc00';
-                passInput.style.borderColor = '#ffcc00';
-                submitBtn.innerHTML = `<i class="fas fa-bolt"></i> Entering as ${roleName}...`;
-                
-                setTimeout(() => {
-                    document.getElementById('loginForm').submit();
-                }, 350);
-            }
-        }
+<!-- Left Sidebar Navigation (Matching Mockup) -->
+<aside class="koms-sidebar" id="komsSidebar">
+    <div>
+        <div class="koms-sidebar-header">
+            <button class="koms-sidebar-close" id="komsSidebarClose" onclick="closeSidebar()" aria-label="Close menu">
+                <i class="fas fa-times"></i>
+            </button>
+            <a href="index.php" class="koms-brand">
+                <img src="assets/images/shorin_ryu_crest.jpg" alt="Shorin Ryu" class="koms-brand-crest">
+                <div class="koms-brand-text">
+                    <strong>MASS DRAGON DOJO</strong>
+                    <span>KOMs Portal</span>
+                </div>
+            </a>
+        </div>
 
-        // Background Fire Ember Particle System
-        const canvas = document.getElementById('particleCanvas');
-        if (canvas) {
-            const ctx = canvas.getContext('2d');
-            let particles = [];
+        <div class="koms-sidebar-menu-title">NAVIGATION</div>
+        <nav class="koms-nav">
+            <a href="#home" class="koms-nav-item active">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="#about" class="koms-nav-item">
+                <i class="fas fa-user-shield"></i>
+                <span>About Us</span>
+            </a>
+            <a href="#dojos" class="koms-nav-item">
+                <i class="fas fa-torii-gate"></i>
+                <span>Dojo's</span>
+            </a>
+            <a href="#events" class="koms-nav-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Events</span>
+            </a>
+            <a href="#gallery" class="koms-nav-item">
+                <i class="fas fa-images"></i>
+                <span>Gallery</span>
+            </a>
+            <a href="#belts" class="koms-nav-item">
+                <i class="fas fa-medal"></i>
+                <span>Rank &amp; Belt</span>
+            </a>
+            <a href="#news" class="koms-nav-item">
+                <i class="fas fa-newspaper"></i>
+                <span>News &amp; Updates</span>
+            </a>
+            <a href="#contact" class="koms-nav-item">
+                <i class="fas fa-envelope"></i>
+                <span>Contact</span>
+            </a>
+            <a href="#" class="koms-nav-item" data-open-login>
+                <i class="fas fa-sign-in-alt" style="color:var(--koms-gold);"></i>
+                <span style="color:var(--koms-gold);font-weight:700;">Student / Master Login</span>
+            </a>
+        </nav>
+    </div>
 
-            function resize() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
-            window.addEventListener('resize', resize);
-            resize();
+    <!-- Calligraphic Brush Slogan (Matching Mockup Image) -->
+    <div class="koms-sidebar-slogan">
+        <div class="koms-slogan-text">
+            Discipline.<br>
+            Strength.<br>
+            Internal Peace.
+        </div>
+        <div class="koms-slogan-stroke"></div>
+    </div>
+</aside>
 
-            class Particle {
-                constructor() {
-                    this.reset();
-                }
-                reset() {
-                    this.x = Math.random() * canvas.width;
-                    this.y = canvas.height + Math.random() * 50;
-                    this.size = Math.random() * 2.5 + 0.8;
-                    this.speedY = Math.random() * 1.6 + 0.4;
-                    this.speedX = (Math.random() - 0.5) * 0.8;
-                    this.opacity = Math.random() * 0.6 + 0.3;
-                    this.fadeSpeed = Math.random() * 0.006 + 0.002;
-                    // Embers range from red to golden yellow
-                    this.hue = Math.random() > 0.4 ? (Math.random() * 20 + 35) : (Math.random() * 15);
-                }
-                update() {
-                    this.y -= this.speedY;
-                    this.x += this.speedX;
-                    this.opacity -= this.fadeSpeed;
-                    if (this.y < -10 || this.opacity <= 0) {
-                        this.reset();
-                    }
-                }
-                draw() {
-                    ctx.save();
-                    ctx.globalAlpha = Math.max(0, this.opacity);
-                    ctx.fillStyle = `hsl(${this.hue}, 100%, 55%)`;
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.restore();
-                }
-            }
+<!-- Main Stage Content -->
+<main class="koms-main" id="home">
+    <div class="koms-container">
 
-            for (let i = 0; i < 45; i++) {
-                particles.push(new Particle());
-            }
+        <?php if (!empty($error_message)): ?>
+            <div style="background:rgba(198,26,26,0.25);border:1px solid #c61a1a;border-radius:12px;padding:14px 18px;margin-bottom:24px;display:flex;align-items:center;gap:12px;color:#ffcccc;">
+                <i class="fas fa-exclamation-triangle" style="color:#ff6b6b;font-size:20px;"></i>
+                <div style="flex:1;">
+                    <strong>Authentication Error:</strong> <?= htmlspecialchars($error_message) ?>
+                </div>
+                <button onclick="openLoginDrawer()" class="koms-btn koms-btn-gold" style="padding:6px 14px;font-size:0.78rem;">Try Again</button>
+            </div>
+        <?php endif; ?>
 
-            function animateParticles() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.forEach(p => {
-                    p.update();
-                    p.draw();
-                });
-                requestAnimationFrame(animateParticles);
-            }
-            animateParticles();
-        }
-    </script>
+        <!-- HERO SECTION (MATCHING REFERENCE MOCKUP IMAGE) -->
+        <section class="koms-hero">
+            <!-- Left Hero Showcase -->
+            <div class="koms-hero-left">
+                <div class="koms-crest-circle-wrap">
+                    <div class="koms-crest-circle-glow"></div>
+                    <img src="assets/images/shorin_ryu_crest.jpg" alt="Mass Dragon Shorin-Ryu" class="koms-crest-circle-img">
+                </div>
+
+                <h1 class="koms-hero-title">MASS DRAGON DOJO</h1>
+                <p class="koms-hero-subtitle">Karate Organization Management System (KOMs)</p>
+
+                <!-- 4 Circular Pillar / Stat Badges -->
+                <div class="koms-pillar-grid">
+                    <div class="koms-pillar-item" onclick="openLoginDrawer()">
+                        <div class="koms-pillar-circle">
+                            <i class="fas fa-fist-raised"></i>
+                        </div>
+                        <span class="koms-pillar-title">TRAIN</span>
+                        <span class="koms-pillar-sub">Build Skills</span>
+                    </div>
+
+                    <div class="koms-pillar-item" onclick="openLoginDrawer()">
+                        <div class="koms-pillar-circle">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <span class="koms-pillar-title">GROW</span>
+                        <span class="koms-pillar-sub">Build Community</span>
+                    </div>
+
+                    <div class="koms-pillar-item" onclick="openLoginDrawer()">
+                        <div class="koms-pillar-circle">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <span class="koms-pillar-title">ACHIEVE</span>
+                        <span class="koms-pillar-sub">Build Confidence</span>
+                    </div>
+
+                    <div class="koms-pillar-item" onclick="openLoginDrawer()">
+                        <div class="koms-pillar-circle">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <span class="koms-pillar-title">EXCEL</span>
+                        <span class="koms-pillar-sub">Build Champions</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Hero Showcase (Authentic Typography & Silhouette Canvas) -->
+            <div class="koms-hero-right">
+                <div class="koms-hero-kicker">— TRADITION • DISCIPLINE • EXCELLENCE —</div>
+                <div class="koms-hero-headline">BUILDING STRONGER</div>
+                <div class="koms-hero-script">MINDS &amp; BODIES</div>
+                <div class="koms-hero-subline">THROUGH KARATE</div>
+
+                <p style="color:#b3b9c5;font-size:0.92rem;line-height:1.7;margin-bottom:24px;max-width:480px;">
+                    Welcome to the official Shorin-Ryu Karate portal. Enter to track attendance sessions, syllabus katas, belt gradings, tournament brackets, and verified certifications.
+                </p>
+
+                <div class="koms-hero-actions">
+                    <button class="koms-btn koms-btn-gold" data-open-login>
+                        <i class="fas fa-dragon"></i>
+                        <span>Enter Dojo Portal</span>
+                    </button>
+                    <a href="#dojos" class="koms-btn koms-btn-outline">
+                        <i class="fas fa-torii-gate"></i>
+                        <span>Explore Dojos</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Statistics Counter Grid -->
+        <div class="koms-grid-4">
+            <div class="koms-stat-card">
+                <div class="koms-stat-icon"><i class="fas fa-torii-gate"></i></div>
+                <div class="koms-stat-info">
+                    <div class="koms-stat-label">Affiliated Dojos</div>
+                    <div class="koms-stat-value"><?= max($stats['dojos'], 3) ?></div>
+                    <div class="koms-stat-sub">Active Okinawan Academies</div>
+                </div>
+            </div>
+
+            <div class="koms-stat-card">
+                <div class="koms-stat-icon"><i class="fas fa-user-graduate"></i></div>
+                <div class="koms-stat-info">
+                    <div class="koms-stat-label">Active Students</div>
+                    <div class="koms-stat-value"><?= max($stats['students'], 18) ?></div>
+                    <div class="koms-stat-sub">Enrolled Practitioners</div>
+                </div>
+            </div>
+
+            <div class="koms-stat-card">
+                <div class="koms-stat-icon"><i class="fas fa-user-ninja"></i></div>
+                <div class="koms-stat-info">
+                    <div class="koms-stat-label">Certified Senseis</div>
+                    <div class="koms-stat-value"><?= max($stats['masters'], 5) ?></div>
+                    <div class="koms-stat-sub">Dojo Masters &amp; Seniors</div>
+                </div>
+            </div>
+
+            <div class="koms-stat-card">
+                <div class="koms-stat-icon"><i class="fas fa-award"></i></div>
+                <div class="koms-stat-info">
+                    <div class="koms-stat-label">Black Belts Awarded</div>
+                    <div class="koms-stat-value"><?= max($stats['black_belts'], 12) ?></div>
+                    <div class="koms-stat-sub">Sealed Dan Certificates</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Featured Dojos Showcase -->
+        <section class="showcase-section" id="dojos">
+            <div class="section-header">
+                <div class="section-tag">TRADITIONAL TRAINING LOCATIONS</div>
+                <h2 class="section-title">Official Shorin-Ryu Dojos</h2>
+            </div>
+
+            <div class="koms-grid-3">
+                <?php if (!empty($featured_dojos)): ?>
+                    <?php foreach ($featured_dojos as $d): ?>
+                        <div class="koms-card">
+                            <div class="koms-card-header">
+                                <span class="koms-card-title">
+                                    <i class="fas fa-torii-gate"></i>
+                                    <?= htmlspecialchars($d['name']) ?>
+                                </span>
+                                <span style="font-size:0.7rem;color:var(--koms-gold);background:rgba(255,204,0,0.12);padding:2px 8px;border-radius:999px;">Active</span>
+                            </div>
+                            <p style="color:#cbd5e1;font-size:0.85rem;margin-bottom:12px;">
+                                <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                                <?= htmlspecialchars($d['location']) ?>
+                            </p>
+                            <div style="font-size:0.78rem;color:var(--koms-text-muted);border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;display:flex;justify-content:space-between;">
+                                <span><i class="fas fa-user-ninja me-1"></i> Sensei <?= htmlspecialchars(trim(($d['first_name'] ?? '') . ' ' . ($d['last_name'] ?? ''))) ?></span>
+                                <span><i class="fas fa-calendar-check me-1"></i> <?= htmlspecialchars($d['training_days'] ?: 'Mon-Fri') ?></span>
+                            </div>
+                            <div style="margin-top:16px;">
+                                <button onclick="openLoginDrawer()" class="koms-btn koms-btn-outline" style="width:100%;justify-content:center;padding:7px;">
+                                    Join Dojo Portal
+                                </button>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="koms-card">
+                        <div class="koms-card-header">
+                            <span class="koms-card-title"><i class="fas fa-torii-gate"></i> Main Dragon Honbu Dojo</span>
+                        </div>
+                        <p style="color:#cbd5e1;font-size:0.85rem;">Central Okinawa Karate Center, Main Hall</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </section>
+
+        <!-- Rank & Belt Progression Syllabus -->
+        <section class="showcase-section" id="belts">
+            <div class="section-header">
+                <div class="section-tag">SHORIN-RYU PROGRESSION</div>
+                <h2 class="section-title">Kyu &amp; Dan Belt Grading Matrix</h2>
+            </div>
+
+            <div class="koms-grid-4">
+                <div class="belt-card">
+                    <div class="belt-bar" style="background:#ffffff;"></div>
+                    <div>
+                        <strong style="color:#ffffff;font-size:0.9rem;">White Belt (10th Kyu)</strong>
+                        <div style="font-size:0.72rem;color:var(--koms-text-muted);">Fukyugata Ichi • Stance Basics</div>
+                    </div>
+                </div>
+
+                <div class="belt-card">
+                    <div class="belt-bar" style="background:#ffd700;"></div>
+                    <div>
+                        <strong style="color:#ffd700;font-size:0.9rem;">Yellow Belt (8th Kyu)</strong>
+                        <div style="font-size:0.72rem;color:var(--koms-text-muted);">Fukyugata Ni • Defense Blocks</div>
+                    </div>
+                </div>
+
+                <div class="belt-card">
+                    <div class="belt-bar" style="background:#ff8c00;"></div>
+                    <div>
+                        <strong style="color:#ff8c00;font-size:0.9rem;">Orange Belt (7th Kyu)</strong>
+                        <div style="font-size:0.72rem;color:var(--koms-text-muted);">Pinan Shodan • Striking Focus</div>
+                    </div>
+                </div>
+
+                <div class="belt-card">
+                    <div class="belt-bar" style="background:#22c55e;"></div>
+                    <div>
+                        <strong style="color:#22c55e;font-size:0.9rem;">Green Belt (6th Kyu)</strong>
+                        <div style="font-size:0.72rem;color:var(--koms-text-muted);">Pinan Nidan • Sparring Basics</div>
+                    </div>
+                </div>
+
+                <div class="belt-card">
+                    <div class="belt-bar" style="background:#3b82f6;"></div>
+                    <div>
+                        <strong style="color:#3b82f6;font-size:0.9rem;">Blue Belt (4th Kyu)</strong>
+                        <div style="font-size:0.72rem;color:var(--koms-text-muted);">Pinan Sandan • Combinations</div>
+                    </div>
+                </div>
+
+                <div class="belt-card">
+                    <div class="belt-bar" style="background:#a855f7;"></div>
+                    <div>
+                        <strong style="color:#a855f7;font-size:0.9rem;">Purple Belt (3rd Kyu)</strong>
+                        <div style="font-size:0.72rem;color:var(--koms-text-muted);">Pinan Yondan • Naihanchi Ichi</div>
+                    </div>
+                </div>
+
+                <div class="belt-card">
+                    <div class="belt-bar" style="background:#8b4513;"></div>
+                    <div>
+                        <strong style="color:#b45309;font-size:0.9rem;">Brown Belt (1st Kyu)</strong>
+                        <div style="font-size:0.72rem;color:var(--koms-text-muted);">Pinan Godan • Passai Dai</div>
+                    </div>
+                </div>
+
+                <div class="belt-card">
+                    <div class="belt-bar" style="background:linear-gradient(180deg,#c61a1a,#000000);"></div>
+                    <div>
+                        <strong style="color:var(--koms-gold);font-size:0.9rem;">Black Belt (1st Dan)</strong>
+                        <div style="font-size:0.72rem;color:var(--koms-text-muted);">Kusanku • Seisan • Master Dan</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Us & Contact Section -->
+        <section class="showcase-section" id="about">
+            <div class="koms-grid-2">
+                <div class="koms-card">
+                    <div class="koms-card-header">
+                        <span class="koms-card-title"><i class="fas fa-scroll"></i> About Mass Dragon Dojo</span>
+                    </div>
+                    <p style="color:#cbd5e1;font-size:0.9rem;line-height:1.8;">
+                        Mass Dragon Dojo preserves the authentic Okinawan martial art heritage of Shorin-Ryu Karate. Guided by tradition, discipline, and excellence, the academy nurtures martial artists of all ages, developing physical prowess, mental fortitude, and respectful conduct.
+                    </p>
+                    <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;">
+                        <span style="background:rgba(255,204,0,0.1);color:var(--koms-gold);padding:4px 10px;border-radius:999px;font-size:0.78rem;font-weight:600;">Okinawan Lineage</span>
+                        <span style="background:rgba(255,204,0,0.1);color:var(--koms-gold);padding:4px 10px;border-radius:999px;font-size:0.78rem;font-weight:600;">Traditional Kata</span>
+                        <span style="background:rgba(255,204,0,0.1);color:var(--koms-gold);padding:4px 10px;border-radius:999px;font-size:0.78rem;font-weight:600;">WKF Compliant</span>
+                    </div>
+                </div>
+
+                <div class="koms-card" id="contact">
+                    <div class="koms-card-header">
+                        <span class="koms-card-title"><i class="fas fa-envelope-open-text"></i> Contact &amp; Support</span>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:12px;font-size:0.88rem;color:#cbd5e1;">
+                        <div><i class="fas fa-envelope text-warning me-2"></i> info@massdragondojo.com</div>
+                        <div><i class="fas fa-phone-alt text-success me-2"></i> +91 98765 43210</div>
+                        <div><i class="fas fa-clock text-info me-2"></i> Dojo Hours: 06:00 AM - 08:30 PM (Mon - Sat)</div>
+                        <div><i class="fas fa-map-pin text-danger me-2"></i> Honbu Dojo, Shorin-Ryu Karate Center</div>
+                    </div>
+                    <div style="margin-top:18px;">
+                        <a href="forgot_password.php" class="koms-btn koms-btn-outline" style="width:100%;justify-content:center;">
+                            <i class="fas fa-key"></i> Request Password Reset
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer style="text-align:center;padding:32px 0 16px;color:var(--koms-text-dim);font-size:0.8rem;border-top:1px solid rgba(255,255,255,0.06);">
+            <p>&copy; <?= date('Y') ?> Mass Dragon Dojo &bull; Karate Organization Management System (KOMs). All Rights Reserved.</p>
+        </footer>
+
+    </div>
+</main>
+
+<!-- SLIDE-IN LOGIN DRAWER (DUAL USER ID & GMAIL, 1-TIME DOB PASSWORD SUPPORT) -->
+<div class="koms-login-drawer" id="komsLoginDrawer">
+    <button class="koms-drawer-close" id="komsLoginDrawerClose" aria-label="Close login drawer">
+        <i class="fas fa-times"></i>
+    </button>
+
+    <div style="text-align:center;margin-bottom:24px;">
+        <img src="assets/images/shorin_ryu_crest.jpg" alt="Shorin Ryu Crest" style="width:70px;height:70px;border-radius:50%;border:2px solid var(--koms-gold);box-shadow:0 0 20px rgba(255,204,0,0.5);margin-bottom:12px;">
+        <h3 style="font-family:var(--koms-font-brush);color:var(--koms-gold);font-size:1.8rem;margin:0;">MASS DRAGON DOJO</h3>
+        <p style="font-size:0.75rem;color:var(--koms-text-muted);letter-spacing:0.8px;margin-top:4px;">ENTER DOJO PORTAL</p>
+    </div>
+
+    <!-- Dual Credential Notice -->
+    <div style="background:rgba(255,204,0,0.08);border:1px solid var(--koms-border);border-radius:10px;padding:10px 14px;margin-bottom:20px;font-size:0.76rem;color:#f3e8c7;line-height:1.5;">
+        <i class="fas fa-info-circle text-warning me-1"></i>
+        <strong>Sign-in Credential:</strong> Use your <strong>User ID</strong> (e.g. <code>sairohan2012.koms</code>) or <strong>Gmail address</strong>. Initial password is your <strong>Date of Birth</strong> (<code>DD.MM.YYYY</code>).
+    </div>
+
+    <!-- Login Form -->
+    <form action="index.php" method="POST">
+        <?= csrf_input() ?>
+
+        <div class="koms-form-group">
+            <label class="koms-label" for="loginIdentity">User ID or Gmail Address</label>
+            <div class="koms-input-wrap">
+                <i class="fas fa-user-circle"></i>
+                <input type="text" id="loginIdentity" name="email" class="koms-input" placeholder="User ID or Gmail Address" required autocomplete="username">
+            </div>
+            <div class="koms-input-hint">e.g. sairohan2012.koms or admin@gmail.com</div>
+        </div>
+
+        <div class="koms-form-group">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <label class="koms-label" for="loginPassword" style="margin:0;">Password</label>
+                <a href="forgot_password.php" style="color:var(--koms-gold);font-size:0.75rem;text-decoration:none;">Forgot?</a>
+            </div>
+            <div class="koms-input-wrap">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="loginPassword" name="password" class="koms-input" placeholder="Password (DOB: DD.MM.YYYY for students)" required autocomplete="current-password">
+            </div>
+            <div class="koms-input-hint">Default for students: Date of Birth (e.g. 20.10.2012)</div>
+        </div>
+
+        <button type="submit" class="koms-btn koms-btn-gold" style="width:100%;justify-content:center;padding:12px;margin-top:8px;">
+            <i class="fas fa-dragon"></i>
+            <span>Enter Dojo</span>
+        </button>
+    </form>
+
+    <!-- 1-Click Quick Demo Pill Buttons -->
+    <div style="margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);">
+        <div style="font-size:0.72rem;letter-spacing:1px;color:var(--koms-gold);font-weight:700;margin-bottom:12px;text-transform:uppercase;">
+            <i class="fas fa-key me-1"></i> Quick 1-Click Demo Accounts
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <button type="button" onclick="quickLogin('admin@koms.com','password123')" class="koms-btn koms-btn-outline" style="padding:7px 10px;font-size:0.72rem;text-align:left;justify-content:flex-start;">
+                <i class="fas fa-crown text-warning me-1"></i> Grand Master
+            </button>
+            <button type="button" onclick="quickLogin('master@koms.com','password123')" class="koms-btn koms-btn-outline" style="padding:7px 10px;font-size:0.72rem;text-align:left;justify-content:flex-start;">
+                <i class="fas fa-torii-gate text-danger me-1"></i> Dojo Master
+            </button>
+            <button type="button" onclick="quickLogin('sairohan2012.koms','20.10.2012')" class="koms-btn koms-btn-outline" style="padding:7px 10px;font-size:0.72rem;text-align:left;justify-content:flex-start;">
+                <i class="fas fa-user-graduate text-info me-1"></i> Sai Rohan (DOB)
+            </button>
+            <button type="button" onclick="quickLogin('dguhan2015.koms','25.09.2015')" class="koms-btn koms-btn-outline" style="padding:7px 10px;font-size:0.72rem;text-align:left;justify-content:flex-start;">
+                <i class="fas fa-user-graduate text-success me-1"></i> D. Guhan (DOB)
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MOBILE BOTTOM NAVIGATION BAR (FOR EFFORTLESS ONE-HANDED SMARTPHONE USE) -->
+<nav class="koms-bottom-nav">
+    <a href="index.php" class="koms-bottom-nav-item active">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+    </a>
+    <a href="#dojos" class="koms-bottom-nav-item">
+        <i class="fas fa-torii-gate"></i>
+        <span>Dojos</span>
+    </a>
+    <a href="#belts" class="koms-bottom-nav-item">
+        <i class="fas fa-medal"></i>
+        <span>Belts</span>
+    </a>
+    <a href="#events" class="koms-bottom-nav-item">
+        <i class="fas fa-calendar-alt"></i>
+        <span>Events</span>
+    </a>
+    <a href="#" class="koms-bottom-nav-item" data-open-login>
+        <i class="fas fa-user-ninja"></i>
+        <span>Login</span>
+    </a>
+</nav>
+
+<!-- Unified Script -->
+<script src="assets/js/koms-portal.js?v=2"></script>
 </body>
 </html>

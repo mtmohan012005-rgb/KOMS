@@ -94,13 +94,19 @@ function student_h($value) {
     <div class="sp-overlay" id="studentOverlay"></div>
     <aside class="sp-sidebar" id="studentSidebar">
         <div class="sp-brand">
-            <div class="sp-brand-logo">🥋</div>
-            <div><strong>MASS DRAGON DOJO</strong><small>KOMS Student Portal</small></div>
+            <img src="<?= APP_URL ?>/assets/images/shorin_ryu_crest.jpg" alt="Shorin Ryu Crest" style="width:42px;height:42px;border-radius:50%;border:2px solid var(--student-gold);box-shadow:0 0 14px rgba(255,204,0,0.4);object-fit:cover;">
+            <div>
+                <strong>MASS DRAGON DOJO</strong>
+                <small>KOMS Student Portal</small>
+            </div>
         </div>
-        <div class="sp-heading"><h1>Student Portal</h1><p>Your progress. Our pride.</p></div>
+        <div class="sp-heading">
+            <h1>Student Portal</h1>
+            <p>Your progress. Our pride.</p>
+        </div>
         <nav class="sp-nav" id="studentNav">
             <a class="active" href="<?= APP_URL ?>/student/dashboard.php"><span class="ico">⌂</span>Dashboard</a>
-            <a href="<?= APP_URL ?>/profile.php"><span class="ico">◉</span>Profile</a>
+            <a href="<?= APP_URL ?>/profile.php"><span class="ico">◉</span>Profile &amp; Security</a>
             <a href="<?= APP_URL ?>/student/attendance.php"><span class="ico">✓</span>Attendance</a>
             <a href="<?= APP_URL ?>/student/grading.php"><span class="ico">🥋</span>Belt Progress</a>
             <a href="<?= APP_URL ?>/student/achievements.php"><span class="ico">★</span>Achievements</a>
@@ -110,16 +116,40 @@ function student_h($value) {
             <a href="<?= APP_URL ?>/student/my_dojo.php"><span class="ico">⌘</span>My Dojo</a>
             <a href="<?= APP_URL ?>/logout.php"><span class="ico">↪</span>Sign Out</a>
         </nav>
-        <div class="sp-side-note"><strong>Stay disciplined.</strong><br>Train consistently, track your progress and keep moving toward your next belt.</div>
+        
+        <!-- Calligraphic Slogan from Mockup -->
+        <div class="sp-side-slogan">
+            <div class="sp-slogan-text">
+                Discipline.<br>
+                Strength.<br>
+                Internal Peace.
+            </div>
+            <div class="sp-slogan-stroke"></div>
+        </div>
     </aside>
 
     <main class="sp-main">
         <header class="sp-topbar">
             <div class="sp-top-left">
                 <button class="sp-menu" id="studentMenu" type="button" aria-label="Open student menu">☰</button>
-                <div class="sp-title"><h2>Student Dashboard</h2><p>Training, attendance, fees and progress at a glance.</p></div>
+                <div class="sp-title">
+                    <h2>Student Dashboard</h2>
+                    <p>Traditional Shorin-Ryu Karate Training &bull; KOMS</p>
+                </div>
             </div>
-            <div class="sp-user"><div class="sp-avatar"><?= student_h($initials ?: 'S') ?></div><div><b><?= student_h($student_name) ?></b><span><?= student_h($student_id) ?></span></div></div>
+            
+            <div class="sp-top-right">
+                <a href="<?= APP_URL ?>/uploads/koms-mobile.apk" title="Download Mobile App" style="color:#3ddc84;font-size:16px;padding:6px;" download>
+                    <i class="fab fa-android"></i>
+                </a>
+                <div class="sp-user">
+                    <div class="sp-avatar"><?= student_h($initials ?: 'S') ?></div>
+                    <div>
+                        <b><?= student_h($student_name) ?></b>
+                        <span><?= student_h($student_id) ?></span>
+                    </div>
+                </div>
+            </div>
         </header>
 
         <section class="sp-content">
@@ -260,6 +290,31 @@ function student_h($value) {
         </section>
     </main>
 </div>
+
+<!-- Mobile Bottom Navigation Bar (Smooth Smartphone Access) -->
+<nav class="sp-bottom-nav">
+    <a href="<?= APP_URL ?>/student/dashboard.php" class="active">
+        <i class="fas fa-home"></i>
+        <span>Dashboard</span>
+    </a>
+    <a href="<?= APP_URL ?>/student/attendance.php">
+        <i class="fas fa-calendar-check"></i>
+        <span>Attendance</span>
+    </a>
+    <a href="<?= APP_URL ?>/student/grading.php">
+        <i class="fas fa-medal"></i>
+        <span>Grading</span>
+    </a>
+    <a href="<?= APP_URL ?>/student/my_dojo.php">
+        <i class="fas fa-torii-gate"></i>
+        <span>My Dojo</span>
+    </a>
+    <a href="<?= APP_URL ?>/profile.php">
+        <i class="fas fa-user-circle"></i>
+        <span>Profile</span>
+    </a>
+</nav>
+
 <script src="<?= APP_URL ?>/assets/js/app.js?v=1"></script>
 <script>
 (function(){
@@ -272,7 +327,7 @@ function student_h($value) {
     if(overlay) overlay.addEventListener('click',closeMenu);
     document.addEventListener('keydown',e=>{if(e.key==='Escape') closeMenu();});
     document.querySelectorAll('#studentNav a').forEach(a=>a.addEventListener('click',closeMenu));
-    window.addEventListener('resize',()=>{if(window.innerWidth>850) closeMenu();});
+    window.addEventListener('resize',()=>{if(window.innerWidth>1024) closeMenu();});
 })();
 </script>
 </body>

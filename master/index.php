@@ -82,7 +82,7 @@ if ($dojo_id > 0) {
 
 <aside class="sidebar" id="sidebar">
     <div class="brand">
-        <div class="brand-logo">🥋</div>
+        <img src="../assets/images/shorin_ryu_crest.jpg" alt="Shorin Ryu" style="width:44px;height:44px;border-radius:50%;border:2px solid #d9b75d;box-shadow:0 0 14px rgba(217,183,93,0.4);object-fit:cover;flex-shrink:0;">
         <div class="brand-text">
             <h2>MASS DRAGON DOJO</h2>
             <span>Karate Organization Management System</span>
@@ -99,6 +99,7 @@ if ($dojo_id > 0) {
     <nav class="sidebar-nav">
         <a href="#dashboard" class="active"><span>⌂</span>Dashboard</a>
         <a href="students.php"><span>♙</span>Students</a>
+        <a href="password_requests.php"><span>🔑</span>Password Requests</a>
         <a href="attendance.php"><span>✓</span>Attendance</a>
         <a href="fees.php"><span>₹</span>Fees</a>
         <a href="grading.php"><span>🥋</span>Belt Promotions</a>
@@ -115,7 +116,17 @@ if ($dojo_id > 0) {
         <a href="../logout.php"><span>↪</span>Logout</a>
     </nav>
 
-    <div class="sidebar-footer">
+    <!-- Calligraphic Slogan from Reference Mockup -->
+    <div style="margin-top:22px;padding:16px 10px 6px;border-top:1px solid rgba(255,255,255,0.08);">
+        <div style="font-family:'Caveat Brush',cursive;font-size:1.35rem;color:#f0d584;line-height:1.25;">
+            Discipline.<br>
+            Strength.<br>
+            Internal Peace.
+        </div>
+        <div style="width:50px;height:3px;background:linear-gradient(90deg,#e05b62,#790a10);border-radius:999px;margin-top:8px;"></div>
+    </div>
+
+    <div class="sidebar-footer" style="margin-top:14px;">
         <strong><?= htmlspecialchars($dojo['name'] ?? 'No dojo registered') ?></strong><br>
         <?= htmlspecialchars($dojo['training_days'] ?? 'Training schedule not set') ?><br>
         <?= htmlspecialchars($dojo['training_timings'] ?? 'Timing not set') ?>
@@ -276,6 +287,32 @@ if ($dojo_id > 0) {
         <footer class="footer">© <?= date('Y') ?> Mass Dragon Dojo · Master Portal</footer>
     </div>
 </main>
+
+<!-- Mobile Bottom Navigation Bar (Sensei One-Handed Smartphone Control) -->
+<nav style="display:none;position:fixed;bottom:0;left:0;right:0;height:62px;background:rgba(13,15,18,0.95);backdrop-filter:blur(18px);border-top:1px solid rgba(217,183,93,0.2);z-index:920;justify-content:space-around;align-items:center;padding:0 6px;" class="master-bottom-nav">
+    <a href="index.php" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#f0d584;text-decoration:none;font-size:10px;font-weight:700;">
+        <span style="font-size:18px;">⌂</span>Dashboard
+    </a>
+    <a href="students.php" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#949aa3;text-decoration:none;font-size:10px;font-weight:600;">
+        <span style="font-size:18px;">♙</span>Students
+    </a>
+    <a href="attendance.php" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#949aa3;text-decoration:none;font-size:10px;font-weight:600;">
+        <span style="font-size:18px;">✓</span>Attendance
+    </a>
+    <a href="password_requests.php" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#949aa3;text-decoration:none;font-size:10px;font-weight:600;">
+        <span style="font-size:18px;">🔑</span>Requests
+    </a>
+    <a href="profile.php" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#949aa3;text-decoration:none;font-size:10px;font-weight:600;">
+        <span style="font-size:18px;">◉</span>Profile
+    </a>
+</nav>
+
+<style>
+@media(max-width:850px){
+    .master-bottom-nav{display:flex !important;}
+    .content{padding-bottom:80px !important;}
+}
+</style>
 
 <div class="toast" id="toast"></div>
 <script src="../js/master.js?v=2"></script>
