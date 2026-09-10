@@ -22,3 +22,5 @@ services:
         value: "10000"
       - key: APP_ENV
         value: production
+      - key: APP_URL
+        value: https://koms-backend.onrender.com

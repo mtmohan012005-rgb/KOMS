@@ -11,33 +11,40 @@ sed -i "s/<VirtualHost \*:[0-9]*>/<VirtualHost *:${APACHE_PORT}>/g" /etc/apache2
 DB_NAME="${DB_NAME:-koms}"
 DB_USER="${DB_USER:-root}"
 DB_PASSWORD="${DB_PASSWORD:-}"
+DB_PORT="${DB_PORT:-3306}"
 
+EXT_DB_OK=0
 if [ -n "$DATABASE_URL" ] || ([ -n "$DB_HOST" ] && [ "$DB_HOST" != "localhost" ] && [ "$DB_HOST" != "127.0.0.1" ]); then
-    echo "Using configured external database..."
-    DB_PORT="${DB_PORT:-3306}"
+    echo "Checking external database connection to $DB_HOST:$DB_PORT..."
+    MYSQL_SSL_OPTS="--ssl=1 --ssl-verify-server-cert=0 --connect-timeout=4"
 
-    # Aiven uses TLS. The CA chain may not be present in the container,
-    # so the CLI client is told not to verify the server certificate.
-    MYSQL_SSL_OPTS="--ssl=1 --ssl-verify-server-cert=0"
+    if mysqladmin $MYSQL_SSL_OPTS -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" ping --silent 2>/dev/null; then
+        echo "External database is reachable and authenticated!"
+        EXT_DB_OK=1
 
-    echo "Checking external database connection..."
-    TABLES_EXIST=$(mysql $MYSQL_SSL_OPTS -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" -N -s -e "SELECT count(*) FROM information_schema.tables WHERE table_schema = '$DB_NAME';" 2>/dev/null || echo "0")
+        TABLES_EXIST=$(mysql $MYSQL_SSL_OPTS -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" -N -s -e "SELECT count(*) FROM information_schema.tables WHERE table_schema = '$DB_NAME';" 2>/dev/null || echo "0")
 
-    if [ "$TABLES_EXIST" = "0" ] || [ -z "$TABLES_EXIST" ]; then
-        if [ -f "/var/www/html/database/schema.sql" ]; then
-            echo "Importing initial database schema..."
-            mysql $MYSQL_SSL_OPTS -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /var/www/html/database/schema.sql || true
-            if [ -f "/var/www/html/database/seed.sql" ]; then
-                echo "Importing seed data..."
-                mysql $MYSQL_SSL_OPTS -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /var/www/html/database/seed.sql || true
+        if [ "$TABLES_EXIST" = "0" ] || [ -z "$TABLES_EXIST" ]; then
+            if [ -f "/var/www/html/database/schema.sql" ]; then
+                echo "Importing initial database schema into external database..."
+                mysql $MYSQL_SSL_OPTS -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /var/www/html/database/schema.sql || true
+                if [ -f "/var/www/html/database/seed.sql" ]; then
+                    echo "Importing seed data into external database..."
+                    mysql $MYSQL_SSL_OPTS -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /var/www/html/database/seed.sql || true
+                fi
+                echo "External database import complete!"
             fi
-            echo "External database import complete!"
+        else
+            echo "External database $DB_NAME already contains $TABLES_EXIST tables."
         fi
     else
-        echo "$DB_NAME already contains $TABLES_EXIST tables."
+        echo "External database ($DB_HOST) was not reachable or credentials were not provided."
+        echo "Activating container internal MariaDB fallback for high availability..."
     fi
-else
-    echo "Configuring MariaDB service inside container..."
+fi
+
+if [ "$EXT_DB_OK" = "0" ]; then
+    echo "Configuring internal MariaDB service inside container..."
     mkdir -p /run/mysqld /var/run/mysqld /var/lib/mysql /var/log/mysql /etc/mysql/conf.d
     chown -R mysql:mysql /run/mysqld /var/run/mysqld /var/lib/mysql /var/log/mysql
     chmod 777 /run/mysqld /var/run/mysqld
@@ -81,10 +88,10 @@ EOF
         TABLES_EXIST=$(mysql -N -s -e "SELECT count(*) FROM information_schema.tables WHERE table_schema = '$DB_NAME';" 2>/dev/null || echo "0")
         if [ "$TABLES_EXIST" = "0" ] || [ -z "$TABLES_EXIST" ]; then
             if [ -f "/var/www/html/database/schema.sql" ]; then
-                echo "Importing initial database schema..."
+                echo "Importing initial database schema into local MariaDB..."
                 mysql "$DB_NAME" < /var/www/html/database/schema.sql || true
                 if [ -f "/var/www/html/database/seed.sql" ]; then
-                    echo "Importing seed data..."
+                    echo "Importing seed data into local MariaDB..."
                     mysql "$DB_NAME" < /var/www/html/database/seed.sql || true
                 fi
                 echo "Database import complete!"
@@ -93,9 +100,14 @@ EOF
             echo "$DB_NAME already contains $TABLES_EXIST tables."
         fi
     else
-        echo "Warning: MariaDB did not become ready; continuing so external-db deployments can still start."
+        echo "Warning: MariaDB did not become ready in time."
     fi
 fi
+
+# Ensure uploads directory has correct permissions
+mkdir -p /var/www/html/uploads
+chown -R www-data:www-data /var/www/html/uploads 2>/dev/null || true
+chmod -R 775 /var/www/html/uploads 2>/dev/null || true
 
 echo "Launching Apache on port ${APACHE_PORT}..."
 exec "$@"
