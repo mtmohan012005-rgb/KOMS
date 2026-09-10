@@ -1,5 +1,5 @@
 <?php
-// database.php - Database connection using PDO with cloud env support & automatic setup redirect
+// database.php - Database connection using PDO with cloud env support, SSL, and local fallback
 
 require_once __DIR__ . '/config.php';
 
@@ -26,11 +26,35 @@ $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     PDO::ATTR_EMULATE_PREPARES   => false,
+    PDO::ATTR_TIMEOUT            => 5,
 ];
+
+// If connecting to a remote cloud database (e.g. Aiven Cloud, TiDB Cloud), enable SSL without strict verification failure
+if ($host !== 'localhost' && $host !== '127.0.0.1') {
+    if (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) {
+        $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+    }
+}
 
 try {
     $pdo = new PDO($dsn, $username, $password, $options);
 } catch (\PDOException $e) {
+    // If remote connection failed, attempt local fallback (container internal MariaDB)
+    if ($host !== 'localhost' && $host !== '127.0.0.1') {
+        try {
+            $fallback_dsn = "mysql:host=127.0.0.1;port=3306;dbname=koms;charset=utf8mb4";
+            $pdo = new PDO($fallback_dsn, 'root', '', [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES   => false,
+                PDO::ATTR_TIMEOUT            => 3,
+            ]);
+            return; // Successfully recovered with local fallback
+        } catch (\PDOException $e_local) {
+            // Local fallback also not ready, continue to error handler
+        }
+    }
+
     // If running setup.php directly, allow setup to proceed
     $current_script = basename($_SERVER['SCRIPT_NAME'] ?? '');
     if ($current_script === 'setup.php') {
@@ -40,7 +64,7 @@ try {
     // Gracefully guide user to setup.php instead of raw fatal error crash
     $setup_url = APP_URL . '/setup.php';
     if (!headers_sent()) {
-        header("Location: " . $setup_url . "?error=" . urlencode("Database is not connected. Please verify DB credentials or run 1-Click Setup."));
+        header("Location: " . $setup_url . "?error=" . urlencode("Database connection could not be established. Please check credentials or run 1-Click Setup."));
         exit();
     } else {
         echo '<div style="font-family: sans-serif; background: #080808; color: #fff; padding: 2rem; border: 1px solid #f4bd17; border-radius: 8px; max-width: 600px; margin: 3rem auto; text-align: center;">';
