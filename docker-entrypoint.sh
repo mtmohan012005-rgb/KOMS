@@ -18,18 +18,30 @@ EXT_DB_OK=0
 cleanup_legacy_demo_accounts() {
     local MYSQL_ARGS=("$@")
 
-    "${MYSQL_ARGS[@]}" -N -s -e "CREATE TABLE IF NOT EXISTS koms_system_flags (flag_name VARCHAR(100) PRIMARY KEY, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);" "$DB_NAME"
+    # Ensure cleanup failures do not terminate container startup
+    set +e
+
+    local HAS_USERS
+    HAS_USERS=$("${MYSQL_ARGS[@]}" -N -s -e "SELECT count(*) FROM information_schema.tables WHERE table_schema = '$DB_NAME' AND table_name = 'users';" 2>/dev/null || echo 0)
+    if [ "$HAS_USERS" != "1" ]; then
+        echo "Table 'users' does not exist in $DB_NAME yet; skipping demo cleanup."
+        set -e
+        return 0
+    fi
+
+    "${MYSQL_ARGS[@]}" -N -s -e "CREATE TABLE IF NOT EXISTS koms_system_flags (flag_name VARCHAR(100) PRIMARY KEY, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);" "$DB_NAME" 2>/dev/null || true
 
     local ALREADY_DONE
     ALREADY_DONE=$("${MYSQL_ARGS[@]}" -N -s -e "SELECT COUNT(*) FROM koms_system_flags WHERE flag_name='legacy_demo_accounts_removed_v1';" "$DB_NAME" 2>/dev/null || echo 0)
 
     if [ "$ALREADY_DONE" = "1" ]; then
         echo "Legacy demo-account cleanup already completed."
+        set -e
         return 0
     fi
 
     echo "Removing legacy KOMS demo accounts and their demo records..."
-    "${MYSQL_ARGS[@]}" "$DB_NAME" <<'SQL'
+    "${MYSQL_ARGS[@]}" "$DB_NAME" 2>/dev/null <<'SQL' || true
 SET FOREIGN_KEY_CHECKS = 0;
 
 DELETE FROM audit_logs
@@ -94,6 +106,7 @@ INSERT IGNORE INTO koms_system_flags(flag_name)
 VALUES ('legacy_demo_accounts_removed_v1');
 SQL
 
+    set -e
     echo "Legacy demo-account cleanup completed."
 }
 
@@ -107,16 +120,16 @@ if [ -n "$DATABASE_URL" ] || ([ -n "$DB_HOST" ] && [ "$DB_HOST" != "localhost" ]
         echo "External database is reachable and authenticated!"
         EXT_DB_OK=1
 
-        TABLES_EXIST=$("${MYSQL_BASE[@]}" -N -s -e "SELECT count(*) FROM information_schema.tables WHERE table_schema = '$DB_NAME';" 2>/dev/null || echo "0")
+        HAS_CORE_TABLES=$("${MYSQL_BASE[@]}" -N -s -e "SELECT count(*) FROM information_schema.tables WHERE table_schema = '$DB_NAME' AND table_name = 'users';" 2>/dev/null || echo "0")
 
-        if [ "$TABLES_EXIST" = "0" ] || [ -z "$TABLES_EXIST" ]; then
+        if [ "$HAS_CORE_TABLES" = "0" ] || [ -z "$HAS_CORE_TABLES" ]; then
             if [ -f "/var/www/html/database/schema.sql" ]; then
-                echo "Importing initial database schema into external database..."
+                echo "Importing initial database schema into external database ($DB_NAME)..."
                 "${MYSQL_BASE[@]}" "$DB_NAME" < /var/www/html/database/schema.sql || true
                 echo "External database schema import complete."
             fi
         else
-            echo "External database $DB_NAME already contains $TABLES_EXIST tables."
+            echo "External database $DB_NAME already contains core application tables."
         fi
 
         cleanup_legacy_demo_accounts "${MYSQL_BASE[@]}"
@@ -168,15 +181,15 @@ EOF
     if [ "$READY" = "1" ]; then
         mysql -e "CREATE DATABASE IF NOT EXISTS \`$DB_NAME\` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;" || true
 
-        TABLES_EXIST=$(mysql -N -s -e "SELECT count(*) FROM information_schema.tables WHERE table_schema = '$DB_NAME';" 2>/dev/null || echo "0")
-        if [ "$TABLES_EXIST" = "0" ] || [ -z "$TABLES_EXIST" ]; then
+        HAS_CORE_TABLES=$(mysql -N -s -e "SELECT count(*) FROM information_schema.tables WHERE table_schema = '$DB_NAME' AND table_name = 'users';" 2>/dev/null || echo "0")
+        if [ "$HAS_CORE_TABLES" = "0" ] || [ -z "$HAS_CORE_TABLES" ]; then
             if [ -f "/var/www/html/database/schema.sql" ]; then
-                echo "Importing initial database schema into local MariaDB..."
+                echo "Importing initial database schema into local MariaDB ($DB_NAME)..."
                 mysql "$DB_NAME" < /var/www/html/database/schema.sql || true
                 echo "Local database schema import complete."
             fi
         else
-            echo "$DB_NAME already contains $TABLES_EXIST tables."
+            echo "Local database $DB_NAME already contains core application tables."
         fi
 
         cleanup_legacy_demo_accounts mysql

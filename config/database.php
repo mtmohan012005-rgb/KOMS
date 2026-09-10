@@ -11,7 +11,7 @@ $db_host = getenv('DB_HOST') ?: 'localhost';
 $db_port = getenv('DB_PORT') ?: 3306;
 $db_user = getenv('DB_USER') ?: getenv('DB_USERNAME') ?: 'root';
 $db_password = getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : '';
-$db_name = 'koms';
+$db_name = getenv('DB_NAME') ?: 'koms';
 
 $dsn = "mysql:host={$db_host};port={$db_port};dbname={$db_name};charset=utf8mb4";
 
@@ -34,7 +34,7 @@ try {
 } catch (PDOException $e) {
     error_log('KOMS database connection failed: ' . $e->getMessage());
 
-    // Never silently switch to another database. The application must use `koms`.
+    // Never silently switch to another database when running setup.
     if (basename($_SERVER['SCRIPT_NAME'] ?? '') === 'setup.php') {
         return;
     }
@@ -44,7 +44,7 @@ try {
     echo '<title>KOMS Database Unavailable</title></head><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#080808;color:#fff;font-family:Arial,sans-serif">';
     echo '<div style="width:min(92%,620px);padding:28px;border:1px solid #c61a1a;border-radius:16px;background:#111;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.55)">';
     echo '<h2 style="margin:0 0 12px;color:#ffcc00">Database Connection Required</h2>';
-    echo '<p style="margin:0;color:#bbb;line-height:1.6">KOMS could not connect to the <strong style="color:#fff">koms</strong> MySQL database. Please verify the Render/Aiven database credentials.</p>';
+    echo '<p style="margin:0;color:#bbb;line-height:1.6">KOMS could not connect to the <strong style="color:#fff">' . htmlspecialchars($db_name) . '</strong> MySQL database. Please verify the Render/Aiven database credentials.</p>';
     echo '</div></body></html>';
     exit;
 }
