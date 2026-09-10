@@ -38,13 +38,15 @@ function generate_csrf_token() {
 
     $token = $_SESSION['csrf_token'];
 
-    setcookie('koms_csrf_token', $token, [
-        'expires'  => time() + 7200,
-        'path'     => '/',
-        'secure'   => is_secure_request(),
-        'httponly' => true,
-        'samesite' => 'Lax'
-    ]);
+    if (!headers_sent()) {
+        setcookie('koms_csrf_token', $token, [
+            'expires'  => time() + 7200,
+            'path'     => '/',
+            'secure'   => is_secure_request(),
+            'httponly' => true,
+            'samesite' => 'Lax'
+        ]);
+    }
 
     return $token;
 }

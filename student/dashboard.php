@@ -117,7 +117,7 @@ function student_h($value) {
         <header class="sp-topbar">
             <div class="sp-top-left">
                 <button class="sp-menu" id="studentMenu" type="button" aria-label="Open student menu">☰</button>
-                <div class="sp-title"><h2>Dashboard</h2><p>Training, attendance, fees and progress at a glance.</p></div>
+                <div class="sp-title"><h2>Student Dashboard</h2><p>Training, attendance, fees and progress at a glance.</p></div>
             </div>
             <div class="sp-user"><div class="sp-avatar"><?= student_h($initials ?: 'S') ?></div><div><b><?= student_h($student_name) ?></b><span><?= student_h($student_id) ?></span></div></div>
         </header>
