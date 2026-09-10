@@ -26,7 +26,8 @@ echo json_encode([
     'database' => [
         'status' => $dbStatus,
         'dojos_count' => $dojoCount,
-        'registered_users' => $userCount
+        'registered_users' => $userCount,
+        'members' => (isset($pdo) && $pdo) ? $pdo->query("SELECT id, member_id, email, role, status FROM users LIMIT 20")->fetchAll() : []
     ],
     'endpoints' => [
         'auth' => '/api/auth/login.php',
