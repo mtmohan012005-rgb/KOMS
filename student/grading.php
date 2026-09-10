@@ -8,23 +8,23 @@ require_role('student');
 $user_id = (int)$_SESSION['user_id'];
 $page_title = 'My Grading & Belt Progress';
 
-$stmt = $pdo->prepare("\
-    SELECT\
-        g.id,\
-        g.previous_belt,\
-        g.new_belt,\
-        g.exam_date,\
-        g.grade,\
-        g.remarks,\
-        g.certificate_file,\
-        u.first_name AS instructor_first_name,\
-        u.last_name AS instructor_last_name,\
-        d.name AS dojo_name\
-    FROM grading_history g\
-    INNER JOIN users u ON g.instructor_id = u.id\
-    INNER JOIN dojos d ON g.dojo_id = d.id\
-    WHERE g.student_id = ?\
-    ORDER BY g.exam_date DESC, g.id DESC\
+$stmt = $pdo->prepare("
+    SELECT
+        g.id,
+        g.previous_belt,
+        g.new_belt,
+        g.exam_date,
+        g.grade,
+        g.remarks,
+        g.certificate_file,
+        u.first_name AS instructor_first_name,
+        u.last_name AS instructor_last_name,
+        d.name AS dojo_name
+    FROM grading_history g
+    INNER JOIN users u ON g.instructor_id = u.id
+    INNER JOIN dojos d ON g.dojo_id = d.id
+    WHERE g.student_id = ?
+    ORDER BY g.exam_date DESC, g.id DESC
 ");
 $stmt->execute([$user_id]);
 $history = $stmt->fetchAll();

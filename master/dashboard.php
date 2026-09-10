@@ -40,7 +40,7 @@ $attendanceStmt = $pdo->prepare("SELECT COUNT(*) FROM attendance_entries ae JOIN
 $attendanceStmt->execute([$dojo_id]);
 $today_present = (int)$attendanceStmt->fetchColumn();
 
-$feeStmt = $pdo->prepare("SELECT COALESCE(SUM(amount),0) FROM payments WHERE dojo_id = ? AND DATE(payment_date) = CURDATE()");
+$feeStmt = $pdo->prepare("SELECT COALESCE(SUM(p.amount), 0) FROM payments p JOIN fee_records fr ON p.fee_record_id = fr.id JOIN fee_structures fs ON fr.fee_structure_id = fs.id WHERE fs.dojo_id = ? AND DATE(p.payment_date) = CURDATE()");
 try {
     $feeStmt->execute([$dojo_id]);
     $today_payments = (float)$feeStmt->fetchColumn();

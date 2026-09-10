@@ -13,6 +13,7 @@ if (!$dojo) {
 }
 $dojo_id = (int)$dojo['id'];
 
+$allowed_belts = ['White','Yellow','Orange','Green','Blue','Purple','Brown','Black (1st Dan)','Black (2nd Dan)','Black (3rd Dan)'];
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_grading'])) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
@@ -24,7 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_grading'])) {
         $grade = sanitize_input($_POST['grade'] ?? '');
         $remarks = sanitize_input($_POST['remarks'] ?? '');
 
-        $allowed_belts = ['White','Yellow','Orange','Green','Blue','Purple','Brown','Black (1st Dan)','Black (2nd Dan)','Black (3rd Dan)'];
         if (!$student_id || !in_array($new_belt, $allowed_belts, true) || $date === '') {
             $error = 'Please complete all required grading fields.';
         } elseif (strtotime($date) > strtotime(date('Y-m-d'))) {
