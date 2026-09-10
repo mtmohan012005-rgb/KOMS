@@ -16,3 +16,14 @@ scratch/
 # Uploads directory (keep directory with .gitkeep)
 uploads/*
 !uploads/.gitkeep
+
+# Android Studio & Gradle Artifacts
+android/.gradle/
+android/build/
+android/*/build/
+android/local.properties
+android/.idea/caches/
+android/.idea/workspace.xml
+android/.idea/libraries/
+*.apk
+*.aab

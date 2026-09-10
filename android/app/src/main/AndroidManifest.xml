@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Required for Retrofit & API Calls -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_dojo_logo"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/ic_dojo_logo"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.KOMS"
+        android:usesCleartextTraffic="true"> <!-- Required for 10.0.2.2 localhost -->
+
+        <activity
+            android:name=".ui.auth.LoginActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.student.StudentDashboardActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.student.DojosActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.student.AttendanceActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.student.FeesActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.student.GradingActivity"
+            android:exported="false" />
+
+    </application>
+
+</manifest>

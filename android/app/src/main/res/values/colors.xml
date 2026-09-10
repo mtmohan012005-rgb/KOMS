@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Brand Colors -->
+    <color name="primary">#1E3A8A</color>
+    <color name="primary_dark">#172554</color>
+    <color name="primary_light">#3B82F6</color>
+    <color name="primary_container">#EFF6FF</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="on_primary_container">#1E3A8A</color>
+
+    <!-- Secondary Accent Colors -->
+    <color name="secondary">#DC2626</color>
+    <color name="secondary_container">#FEE2E2</color>
+    <color name="on_secondary">#FFFFFF</color>
+
+    <!-- Background & Surface -->
+    <color name="background">#F8FAFC</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_variant">#F1F5F9</color>
+    <color name="card_stroke">#E2E8F0</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#64748B</color>
+    <color name="text_hint">#94A3B8</color>
+
+    <!-- Category Icon Tints -->
+    <color name="icon_dojo_bg">#DBEAFE</color>
+    <color name="icon_dojo_fg">#2563EB</color>
+    <color name="icon_attendance_bg">#DCFCE7</color>
+    <color name="icon_attendance_fg">#16A34A</color>
+    <color name="icon_fees_bg">#FEF3C7</color>
+    <color name="icon_fees_fg">#D97706</color>
+    <color name="icon_grading_bg">#F3E8FF</color>
+    <color name="icon_grading_fg">#9333EA</color>
+</resources>

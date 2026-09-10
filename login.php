@@ -604,6 +604,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="sub-actions">
                 <a href="find_dojo.php"><i class="fas fa-compass me-1"></i> Find Dojo</a>
                 <a href="register.php"><i class="fas fa-user-plus me-1"></i> Register</a>
+                <a href="uploads/koms-mobile.apk" download title="Download KOMS Android App (APK)"><i class="fab fa-android me-1" style="color: #3ddc84;"></i> Android App</a>
             </div>
 
             <!-- Demo 1-Click Role Fillers -->

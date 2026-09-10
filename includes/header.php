@@ -67,8 +67,12 @@
                     <?php endif; ?>
                 <?php endif; ?>
             </ul>
-
             <ul class="navbar-nav align-items-lg-center">
+                <li class="nav-item">
+                    <a class="nav-link d-flex align-items-center gap-1" href="<?= APP_URL ?>/uploads/koms-mobile.apk" download title="Download KOMS Android App">
+                        <i class="fab fa-android" style="color: #3ddc84;"></i> <span>Mobile App</span>
+                    </a>
+                </li>
                 <?php if (is_logged_in()): ?>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">

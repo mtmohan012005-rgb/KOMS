@@ -599,6 +599,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="footer-links">
                 <a href="register.php"><i class="fas fa-user-plus me-1"></i> Register</a>
                 <a href="find_dojo.php"><i class="fas fa-compass me-1"></i> Find Dojo</a>
+                <a href="uploads/koms-mobile.apk" download title="Download KOMS Android App (APK)"><i class="fab fa-android me-1" style="color: #3ddc84;"></i> Mobile App</a>
                 <a href="index.html" title="Static presentation experience"><i class="fas fa-scroll me-1"></i> Tour</a>
             </div>
         </form>
