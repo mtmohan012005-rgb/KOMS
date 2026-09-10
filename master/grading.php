@@ -55,11 +55,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_grading'])) {
 $page_title = 'Grading & Belts';
 require_once '../includes/header.php';
 
-$stu_stmt = $pdo->prepare("SELECT u.id, u.first_name, u.last_name, COALESCE((SELECT gh.new_belt FROM grading_history gh WHERE gh.student_id = u.id AND gh.dojo_id = ? ORDER BY gh.exam_date DESC, gh.id DESC LIMIT 1), 'White') AS current_belt FROM dojo_memberships m JOIN users u ON m.student_id = u.id WHERE m.dojo_id = ? AND m.status = 'approved' ORDER BY u.first_name, u.last_name");
+$stu_stmt = $pdo->prepare("SELECT u.id, u.member_id, u.first_name, u.last_name, u.email, COALESCE((SELECT gh.new_belt FROM grading_history gh WHERE gh.student_id = u.id AND gh.dojo_id = ? ORDER BY gh.exam_date DESC, gh.id DESC LIMIT 1), 'White') AS current_belt FROM dojo_memberships m JOIN users u ON m.student_id = u.id WHERE m.dojo_id = ? AND m.status = 'approved' ORDER BY u.first_name, u.last_name");
 $stu_stmt->execute([$dojo_id, $dojo_id]);
 $students = $stu_stmt->fetchAll();
 
-$hist_stmt = $pdo->prepare("SELECT g.*, u.first_name, u.last_name FROM grading_history g JOIN users u ON g.student_id = u.id WHERE g.dojo_id = ? ORDER BY g.exam_date DESC, g.id DESC LIMIT 50");
+$hist_stmt = $pdo->prepare("SELECT g.*, u.member_id, u.first_name, u.last_name FROM grading_history g JOIN users u ON g.student_id = u.id WHERE g.dojo_id = ? ORDER BY g.exam_date DESC, g.id DESC LIMIT 50");
 $hist_stmt->execute([$dojo_id]);
 $history = $hist_stmt->fetchAll();
 
@@ -73,7 +73,7 @@ foreach ($students as $s) {
 <style>
 .grading-wrap{max-width:1180px;margin:1.5rem auto}.grading-hero{padding:1.7rem 1.9rem;border-radius:24px;background:linear-gradient(135deg,#080808,#202020 58%,#4b0808);color:#fff;box-shadow:0 20px 50px rgba(0,0,0,.14)}
 .kicker{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:#f4c84b}.hero-title{font-weight:900;font-size:clamp(1.7rem,4vw,2.6rem);margin:.25rem 0}.hero-sub{color:rgba(255,255,255,.72);margin:0}.panel{border:0;border-radius:20px;overflow:hidden;box-shadow:0 15px 38px rgba(17,24,39,.08)}.panel .card-header{background:#fff;border:0;padding:1.2rem 1.35rem}.panel .card-body{background:#fff;padding:1.35rem}
-.form-label{font-size:.86rem;font-weight:750}.form-control,.form-select{border-radius:12px;padding:.72rem .85rem}.form-control:focus,.form-select:focus{border-color:#111;box-shadow:0 0 0 .18rem rgba(17,17,17,.08)}.stat{border-radius:15px;background:#f7f7f7;padding:.9rem}.stat small{display:block;color:#777;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;font-weight:800}.stat strong{font-size:1.2rem}.belt-dot{width:9px;height:9px;border-radius:50%;display:inline-block;background:#222;margin-right:.45rem}.table thead th{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:#666}.history-row td{padding-top:.9rem;padding-bottom:.9rem}
+.form-label{font-size:.86rem;font-weight:750}.form-control,.form-select{border-radius:12px;padding:.72rem .85rem}.form-control:focus,.form-select:focus{border-color:#111;box-shadow:0 0 0 .18rem rgba(17,17,17,.08)}.stat{border-radius:15px;background:#f7f7f7;padding:.9rem}.stat small{display:block;color:#777;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;font-weight:800}.stat strong{font-size:1.2rem}.belt-dot{width:9px;height:9px;border-radius:50%;display:inline-block;background:#222;margin-right:.45rem}.table thead th{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:#666}.history-row td{padding-top:.9rem;padding-bottom:.9rem}.member-id{font-size:.72rem;letter-spacing:.03em;color:#8a6b16;font-weight:800}.current-belt{font-size:.78rem;font-weight:750;color:#555}
 </style>
 
 <div class="grading-wrap">
@@ -85,6 +85,10 @@ foreach ($students as $s) {
 
     <?php if ($error): ?>
         <div class="alert alert-danger border-0 shadow-sm mb-4"><i class="fas fa-circle-exclamation me-2"></i><?= htmlspecialchars($error) ?></div>
+    <?php endif; ?>
+    <?php if (!empty($_SESSION['success_msg'])): ?>
+        <div class="alert alert-success border-0 shadow-sm mb-4"><i class="fas fa-circle-check me-2"></i><?= htmlspecialchars($_SESSION['success_msg']) ?></div>
+        <?php unset($_SESSION['success_msg']); ?>
     <?php endif; ?>
 
     <div class="row g-3 mb-4">
@@ -101,7 +105,15 @@ foreach ($students as $s) {
                     <form method="POST" action="">
                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
                         <input type="hidden" name="add_grading" value="1">
-                        <div class="mb-3"><label class="form-label">Student *</label><select name="student_id" class="form-select" required><option value="" disabled selected>Select student</option><?php foreach ($students as $s): ?><option value="<?= (int)$s['id'] ?>"><?= htmlspecialchars($s['first_name'].' '.$s['last_name']) ?> — <?= htmlspecialchars($s['current_belt']) ?></option><?php endforeach; ?></select></div>
+                        <div class="mb-3">
+                            <label class="form-label">Student *</label>
+                            <select name="student_id" class="form-select" required>
+                                <option value="" disabled selected>Select student</option>
+                                <?php foreach ($students as $s): ?>
+                                    <option value="<?= (int)$s['id'] ?>"><?= htmlspecialchars($s['first_name'].' '.$s['last_name']) ?><?= !empty($s['member_id']) ? ' — '.htmlspecialchars($s['member_id']) : '' ?> — <?= htmlspecialchars($s['current_belt']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                         <div class="mb-3"><label class="form-label">New Belt *</label><select name="new_belt" class="form-select" required><?php foreach ($allowed_belts as $belt): ?><option value="<?= htmlspecialchars($belt) ?>"><?= htmlspecialchars($belt) ?></option><?php endforeach; ?></select></div>
                         <div class="mb-3"><label class="form-label">Exam Date *</label><input type="date" name="exam_date" class="form-control" value="<?= date('Y-m-d') ?>" max="<?= date('Y-m-d') ?>" required></div>
                         <div class="mb-3"><label class="form-label">Grade / Score</label><input type="text" name="grade" class="form-control" maxlength="20" placeholder="A, 95%, Pass"></div>
@@ -113,14 +125,26 @@ foreach ($students as $s) {
         </div>
 
         <div class="col-lg-8">
-            <div class="card panel">
-                <div class="card-header d-flex justify-content-between align-items-center gap-2"><div><div class="text-uppercase text-muted" style="font-size:.72rem;font-weight:800;letter-spacing:.08em;">History</div><h5 class="mb-0 mt-1">Recent Belt Progression</h5></div><a href="students.php" class="btn btn-sm btn-outline-dark">Students</a></div>
+            <div class="card panel mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center gap-2"><div><div class="text-uppercase text-muted" style="font-size:.72rem;font-weight:800;letter-spacing:.08em;">Current Standing</div><h5 class="mb-0 mt-1">Students & Current Belts</h5></div><a href="students.php" class="btn btn-sm btn-outline-dark">Students</a></div>
                 <div class="card-body p-0">
-                    <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Student</th><th>Date</th><th>Progression</th><th>Grade</th><th>Remarks</th></tr></thead><tbody>
-                    <?php foreach ($history as $h): ?>
-                        <tr class="history-row"><td class="fw-bold"><?= htmlspecialchars($h['first_name'].' '.$h['last_name']) ?></td><td><?= date('M j, Y', strtotime($h['exam_date'])) ?></td><td><?php if ($h['previous_belt']): ?><span class="text-muted"><?= htmlspecialchars($h['previous_belt']) ?></span> <i class="fas fa-arrow-right mx-1 text-danger"></i><?php endif; ?><span class="fw-bold"> <?= htmlspecialchars($h['new_belt']) ?></span></td><td><?= htmlspecialchars($h['grade'] ?: '-') ?></td><td class="text-muted small"><?= htmlspecialchars($h['remarks'] ?: '-') ?></td></tr>
+                    <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Student</th><th>KOMS ID</th><th>Current Belt</th></tr></thead><tbody>
+                    <?php foreach ($students as $s): ?>
+                        <tr class="history-row"><td><div class="fw-bold"><?= htmlspecialchars($s['first_name'].' '.$s['last_name']) ?></div><div class="small text-muted"><?= htmlspecialchars($s['email']) ?></div></td><td><span class="member-id"><?= htmlspecialchars($s['member_id'] ?: 'Not assigned') ?></span></td><td><span class="belt-dot"></span><span class="current-belt"><?= htmlspecialchars($s['current_belt']) ?></span></td></tr>
                     <?php endforeach; ?>
-                    <?php if (!$history): ?><tr><td colspan="5" class="text-center py-5 text-muted">No grading records yet.</td></tr><?php endif; ?>
+                    <?php if (!$students): ?><tr><td colspan="3" class="text-center py-5 text-muted">No approved students in this dojo.</td></tr><?php endif; ?>
+                    </tbody></table></div>
+                </div>
+            </div>
+
+            <div class="card panel">
+                <div class="card-header d-flex justify-content-between align-items-center gap-2"><div><div class="text-uppercase text-muted" style="font-size:.72rem;font-weight:800;letter-spacing:.08em;">History</div><h5 class="mb-0 mt-1">Recent Belt Progression</h5></div><span class="small text-muted">Latest 50 records</span></div>
+                <div class="card-body p-0">
+                    <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Student</th><th>KOMS ID</th><th>Date</th><th>Progression</th><th>Grade</th><th>Remarks</th></tr></thead><tbody>
+                    <?php foreach ($history as $h): ?>
+                        <tr class="history-row"><td class="fw-bold"><?= htmlspecialchars($h['first_name'].' '.$h['last_name']) ?></td><td><span class="member-id"><?= htmlspecialchars($h['member_id'] ?: 'Not assigned') ?></span></td><td><?= date('M j, Y', strtotime($h['exam_date'])) ?></td><td><?php if ($h['previous_belt']): ?><span class="text-muted"><?= htmlspecialchars($h['previous_belt']) ?></span> <i class="fas fa-arrow-right mx-1 text-danger"></i><?php endif; ?><span class="fw-bold"> <?= htmlspecialchars($h['new_belt']) ?></span></td><td><?= htmlspecialchars($h['grade'] ?: '-') ?></td><td class="text-muted small"><?= htmlspecialchars($h['remarks'] ?: '-') ?></td></tr>
+                    <?php endforeach; ?>
+                    <?php if (!$history): ?><tr><td colspan="6" class="text-center py-5 text-muted">No grading records yet.</td></tr><?php endif; ?>
                     </tbody></table></div>
                 </div>
             </div>
