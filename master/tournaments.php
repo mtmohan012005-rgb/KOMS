@@ -58,10 +58,14 @@ $stmt = $pdo->prepare("SELECT COUNT(*) FROM tournament_registrations WHERE dojo_
 $stmt->execute([$dojo_id]);
 $rejected_count = (int)$stmt->fetchColumn();
 
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM tournaments WHERE status IN ('open','upcoming','published') AND event_date >= CURDATE()");
+$stmt->execute();
+$upcoming_tournaments = (int)$stmt->fetchColumn();
+
 $stmt = $pdo->prepare("
     SELECT r.id, r.status, r.created_at,
            t.name AS tournament_name, t.event_date, t.venue, t.status AS tournament_status,
-           u.id AS student_id, u.first_name, u.last_name, u.email
+           u.id AS student_id, u.member_id, u.first_name, u.last_name, u.email
     FROM tournament_registrations r
     JOIN tournaments t ON r.tournament_id = t.id
     JOIN users u ON r.student_id = u.id
@@ -71,6 +75,22 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$dojo_id]);
 $registrations = $stmt->fetchAll();
+
+$search = trim($_GET['q'] ?? '');
+if ($search !== '') {
+    $needle = mb_strtolower($search);
+    $registrations = array_values(array_filter($registrations, static function ($r) use ($needle) {
+        $haystack = mb_strtolower(
+            ($r['first_name'] ?? '') . ' ' .
+            ($r['last_name'] ?? '') . ' ' .
+            ($r['member_id'] ?? '') . ' ' .
+            ($r['email'] ?? '') . ' ' .
+            ($r['tournament_name'] ?? '') . ' ' .
+            ($r['venue'] ?? '')
+        );
+        return str_contains($haystack, $needle);
+    }));
+}
 
 $page_title = 'Tournament Management';
 require_once '../includes/header.php';
@@ -89,8 +109,9 @@ require_once '../includes/header.php';
     .tour-table td{padding-top:1rem;padding-bottom:1rem}
     .status{border-radius:999px;padding:.42rem .7rem;font-size:.72rem;font-weight:800;text-transform:uppercase;white-space:nowrap}
     .status-pending{background:#fff0c2;color:#6f5100}.status-selected{background:#dff7e8;color:#146c35}.status-rejected{background:#ffe1e1;color:#9a1c1c}
-    .student-name{font-weight:800}.student-email{font-size:.76rem;color:#888}
-    @media(max-width:768px){.tour-hero{padding:1.35rem}.tour-wrap{margin:1rem auto}.tour-table{min-width:900px}}
+    .student-name{font-weight:800}.student-email{font-size:.76rem;color:#888}.member-pill{display:inline-block;margin-top:.25rem;background:#f3f3f3;border-radius:999px;padding:.18rem .48rem;font-size:.68rem;font-weight:800;color:#444}
+    .search-box{border-radius:12px;padding:.65rem .8rem;border:1px solid #ddd;min-width:230px}
+    @media(max-width:768px){.tour-hero{padding:1.35rem}.tour-wrap{margin:1rem auto}.tour-table{min-width:1050px}.search-box{width:100%;min-width:0}}
 </style>
 
 <div class="tour-wrap">
@@ -100,16 +121,33 @@ require_once '../includes/header.php';
         <p class="mb-0" style="color:rgba(255,255,255,.72)">Review your students' applications and decide who will represent <?= htmlspecialchars($dojo['name']) ?>.</p>
     </section>
 
+    <?php if (!empty($_SESSION['success_msg'])): ?>
+        <div class="alert alert-success border-0 shadow-sm"><?= htmlspecialchars($_SESSION['success_msg']) ?></div>
+        <?php unset($_SESSION['success_msg']); ?>
+    <?php endif; ?>
+    <?php if (!empty($_SESSION['error_msg'])): ?>
+        <div class="alert alert-danger border-0 shadow-sm"><?= htmlspecialchars($_SESSION['error_msg']) ?></div>
+        <?php unset($_SESSION['error_msg']); ?>
+    <?php endif; ?>
+
     <div class="row g-3 mb-4">
-        <div class="col-md-4"><div class="tour-stat"><div class="text-muted small fw-bold text-uppercase">Pending Review</div><div class="num text-warning mt-1"><?= $pending_count ?></div><div class="small text-muted">Applications waiting for your decision</div></div></div>
-        <div class="col-md-4"><div class="tour-stat"><div class="text-muted small fw-bold text-uppercase">Selected</div><div class="num text-success mt-1"><?= $selected_count ?></div><div class="small text-muted">Students chosen to represent the dojo</div></div></div>
-        <div class="col-md-4"><div class="tour-stat"><div class="text-muted small fw-bold text-uppercase">Rejected</div><div class="num text-danger mt-1"><?= $rejected_count ?></div><div class="small text-muted">Applications not selected</div></div></div>
+        <div class="col-md-3"><div class="tour-stat"><div class="text-muted small fw-bold text-uppercase">Upcoming Tournaments</div><div class="num mt-1"><?= $upcoming_tournaments ?></div><div class="small text-muted">Events available in KOMS</div></div></div>
+        <div class="col-md-3"><div class="tour-stat"><div class="text-muted small fw-bold text-uppercase">Pending Review</div><div class="num text-warning mt-1"><?= $pending_count ?></div><div class="small text-muted">Applications waiting for your decision</div></div></div>
+        <div class="col-md-3"><div class="tour-stat"><div class="text-muted small fw-bold text-uppercase">Selected</div><div class="num text-success mt-1"><?= $selected_count ?></div><div class="small text-muted">Students chosen to represent the dojo</div></div></div>
+        <div class="col-md-3"><div class="tour-stat"><div class="text-muted small fw-bold text-uppercase">Rejected</div><div class="num text-danger mt-1"><?= $rejected_count ?></div><div class="small text-muted">Applications not selected</div></div></div>
     </div>
 
     <div class="card tour-card">
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div><div class="small text-muted fw-bold text-uppercase">Applications</div><h5 class="mb-0 mt-1">Student Tournament Registrations</h5></div>
-            <a href="dashboard.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Dashboard</a>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <form method="GET" class="d-flex gap-2">
+                    <input type="search" class="search-box" name="q" value="<?= htmlspecialchars($search) ?>" placeholder="Search student, KOMS ID, tournament...">
+                    <button class="btn btn-dark btn-sm" type="submit"><i class="fas fa-search"></i></button>
+                    <?php if ($search !== ''): ?><a href="tournaments.php" class="btn btn-outline-secondary btn-sm">Clear</a><?php endif; ?>
+                </form>
+                <a href="dashboard.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Dashboard</a>
+            </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -122,7 +160,11 @@ require_once '../includes/header.php';
                     <tbody>
                     <?php foreach ($registrations as $r): ?>
                         <tr>
-                            <td><div class="student-name"><?= htmlspecialchars($r['first_name'].' '.$r['last_name']) ?></div><div class="student-email"><?= htmlspecialchars($r['email']) ?></div></td>
+                            <td>
+                                <div class="student-name"><?= htmlspecialchars($r['first_name'].' '.$r['last_name']) ?></div>
+                                <div class="student-email"><?= htmlspecialchars($r['email']) ?></div>
+                                <?php if (!empty($r['member_id'])): ?><span class="member-pill">KOMS ID: <?= htmlspecialchars($r['member_id']) ?></span><?php endif; ?>
+                            </td>
                             <td><strong><?= htmlspecialchars($r['tournament_name']) ?></strong><div class="small text-muted"><?= htmlspecialchars(ucwords(str_replace('_',' ',$r['tournament_status']))) ?></div></td>
                             <td><?= date('M j, Y', strtotime($r['event_date'])) ?></td>
                             <td><?= htmlspecialchars($r['venue']) ?></td>
@@ -145,7 +187,7 @@ require_once '../includes/header.php';
                         </tr>
                     <?php endforeach; ?>
                     <?php if (empty($registrations)): ?>
-                        <tr><td colspan="6" class="text-center py-5"><i class="fas fa-trophy fa-2x text-muted mb-2"></i><div class="fw-bold">No registrations yet</div><div class="small text-muted">Tournament applications from your students will appear here.</div></td></tr>
+                        <tr><td colspan="6" class="text-center py-5"><i class="fas fa-trophy fa-2x text-muted mb-2"></i><div class="fw-bold">No registrations found</div><div class="small text-muted"><?= $search !== '' ? 'Try another search term.' : 'Tournament applications from your students will appear here.' ?></div></td></tr>
                     <?php endif; ?>
                     </tbody>
                 </table>
