@@ -1,19 +1,24 @@
-# Production Dockerfile for Karate Organization Management System (KOMS) on Render
 FROM php:8.2-apache
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install MariaDB server, client, GD, and dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    mariadb-server \
+    mariadb-client \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
     zip \
     unzip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql mysqli opcache \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && docker-php-ext-install -j$(nproc) gd mysqli pdo pdo_mysql opcache \
+    && rm -rf /var/lib/apt/lists/*
 
-# Enable Apache modules
 RUN a2enmod rewrite headers
+
+# Enable AllowOverride All for /var/www/html
+RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
 
 # Configure PHP production defaults
 RUN { \
@@ -28,19 +33,18 @@ RUN { \
     echo 'memory_limit=256M'; \
 } > /usr/local/etc/php/conf.d/koms-recommended.ini
 
-# Set working directory
 WORKDIR /var/www/html
-
-# Copy application files
 COPY . /var/www/html/
 
-# Set proper ownership and permissions for uploads and cache
+# Setup entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html \
     && chmod -R 775 /var/www/html/uploads
 
-# Expose standard web port
-EXPOSE 80
+EXPOSE 80 10000
 
-# Start Apache in foreground
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["apache2-foreground"]

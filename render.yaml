@@ -1,23 +1,24 @@
-# Render Blueprint Specification for KOMS
-# Deploy instantly on Render via Infrastructure-as-Code
 services:
   - type: web
-    name: koms-app
+    name: koms-backend
     runtime: docker
+    repo: https://github.com/mtmohan012005-rgb/KOMS.git
+    branch: main
+    region: singapore
     plan: free
+    autoDeploy: true
     dockerfilePath: ./Dockerfile
     healthCheckPath: /api/index.php
-    autoDeploy: true
     envVars:
-      - key: APP_ENV
-        value: production
       - key: DB_HOST
-        sync: false
+        value: mysql-3f01fdf9-mtmohan012005-1250.h.aivencloud.com
+      - key: DB_USER
+        value: avnadmin
       - key: DB_NAME
         value: koms
-      - key: DB_USER
-        sync: false
-      - key: DB_PASSWORD
-        sync: false
       - key: DB_PORT
-        value: "3306"
+        value: "15346"
+      - key: PORT
+        value: "10000"
+      - key: APP_ENV
+        value: production
