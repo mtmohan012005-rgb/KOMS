@@ -18,6 +18,7 @@ if (!$dojo) {
 
 $dojo_id = (int)$dojo['id'];
 $error = '';
+$today = date('Y-m-d');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
@@ -26,17 +27,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
 
         if ($action === 'create') {
-            $title = sanitize_input($_POST['title'] ?? '');
-            $content = sanitize_input($_POST['content'] ?? '');
-            $publish_date = sanitize_input($_POST['publish_date'] ?? date('Y-m-d'));
+            $title = trim(sanitize_input($_POST['title'] ?? ''));
+            $content = trim(sanitize_input($_POST['content'] ?? ''));
+            $publish_date = sanitize_input($_POST['publish_date'] ?? $today);
             $expiry_date = sanitize_input($_POST['expiry_date'] ?? '');
 
             if ($title === '' || $content === '') {
                 $error = 'Title and announcement content are required.';
-            } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $publish_date)) {
+            } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $publish_date) || !strtotime($publish_date)) {
                 $error = 'Please provide a valid publish date.';
-            } elseif ($expiry_date !== '' && (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $expiry_date) || $expiry_date < $publish_date)) {
-                $error = 'Expiry date must be empty or on/after the publish date.';
+            } elseif ($expiry_date !== '' && (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $expiry_date) || !strtotime($expiry_date))) {
+                $error = 'Please provide a valid expiry date.';
+            } elseif ($expiry_date !== '' && $expiry_date < $publish_date) {
+                $error = 'Expiry date must be on or after the publish date.';
             } else {
                 $insert = $pdo->prepare("INSERT INTO announcements (title, content, level, dojo_id, publish_date, expiry_date, status, created_by) VALUES (?, ?, 'dojo', ?, ?, ?, 'active', ?)");
                 $insert->execute([
@@ -55,13 +58,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } elseif ($action === 'archive') {
             $announcement_id = (int)($_POST['announcement_id'] ?? 0);
+
             if ($announcement_id > 0) {
                 $update = $pdo->prepare("UPDATE announcements SET status = 'archived' WHERE id = ? AND dojo_id = ? AND created_by = ?");
                 $update->execute([$announcement_id, $dojo_id, $master_id]);
-                log_audit_action($pdo, $master_id, 'UPDATE', 'announcements', $announcement_id, 'Archived dojo announcement');
-                $_SESSION['success_msg'] = 'Announcement archived.';
+
+                if ($update->rowCount() > 0) {
+                    log_audit_action($pdo, $master_id, 'UPDATE', 'announcements', $announcement_id, 'Archived dojo announcement');
+                    $_SESSION['success_msg'] = 'Announcement archived.';
+                } else {
+                    $_SESSION['error_msg'] = 'Announcement not found or already archived.';
+                }
+
                 redirect('/master/announcements.php');
             }
+
             $error = 'Invalid announcement selected.';
         }
     }
@@ -70,22 +81,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $page_title = 'Announcements';
 require_once '../includes/header.php';
 
-$list = $pdo->prepare("SELECT * FROM announcements WHERE dojo_id = ? ORDER BY publish_date DESC, created_at DESC LIMIT 50");
-$list->execute([$dojo_id]);
+$list = $pdo->prepare("SELECT id, title, content, publish_date, expiry_date, status, created_at FROM announcements WHERE dojo_id = ? AND created_by = ? ORDER BY publish_date DESC, created_at DESC LIMIT 100");
+$list->execute([$dojo_id, $master_id]);
 $announcements = $list->fetchAll();
 
 $active_count = 0;
 $scheduled_count = 0;
+$expired_count = 0;
 $archived_count = 0;
-$today = date('Y-m-d');
+
 foreach ($announcements as $a) {
     if ($a['status'] === 'archived') {
         $archived_count++;
+    } elseif (!empty($a['expiry_date']) && $a['expiry_date'] < $today) {
+        $expired_count++;
+    } elseif ($a['publish_date'] > $today) {
+        $scheduled_count++;
     } else {
         $active_count++;
-        if ($a['publish_date'] > $today) {
-            $scheduled_count++;
-        }
     }
 }
 ?>
@@ -105,13 +118,14 @@ foreach ($announcements as $a) {
     .announcement-item{border:1px solid #eee;border-radius:16px;padding:1rem 1.05rem;background:#fff}
     .announcement-item + .announcement-item{margin-top:.8rem}
     .badge-soft{border-radius:999px;padding:.4rem .65rem;font-size:.72rem;font-weight:800}
+    .announcement-meta{font-size:.76rem;color:#888}
 </style>
 
 <div class="ann-wrap">
     <section class="ann-hero mb-4">
         <div class="ann-kicker">Master Control • Communication</div>
         <div class="ann-title">Announcements for <?= htmlspecialchars($dojo['name']) ?></div>
-        <p class="mb-0" style="color:rgba(255,255,255,.72)">Keep your students informed about training, grading, events, schedule changes and important dojo updates.</p>
+        <p class="mb-0" style="color:rgba(255,255,255,.72)">Publish important dojo updates and keep students informed about training, grading, events and schedule changes.</p>
     </section>
 
     <?php if ($error): ?>
@@ -119,9 +133,10 @@ foreach ($announcements as $a) {
     <?php endif; ?>
 
     <div class="row g-3 mb-4">
-        <div class="col-md-4"><div class="metric"><div class="metric-label">Active</div><div class="metric-value"><?= $active_count ?></div></div></div>
-        <div class="col-md-4"><div class="metric"><div class="metric-label">Scheduled</div><div class="metric-value"><?= $scheduled_count ?></div></div></div>
-        <div class="col-md-4"><div class="metric"><div class="metric-label">Archived</div><div class="metric-value"><?= $archived_count ?></div></div></div>
+        <div class="col-sm-6 col-lg-3"><div class="metric"><div class="metric-label">Active</div><div class="metric-value text-success"><?= $active_count ?></div></div></div>
+        <div class="col-sm-6 col-lg-3"><div class="metric"><div class="metric-label">Scheduled</div><div class="metric-value text-warning"><?= $scheduled_count ?></div></div></div>
+        <div class="col-sm-6 col-lg-3"><div class="metric"><div class="metric-label">Expired</div><div class="metric-value text-danger"><?= $expired_count ?></div></div></div>
+        <div class="col-sm-6 col-lg-3"><div class="metric"><div class="metric-label">Archived</div><div class="metric-value"><?= $archived_count ?></div></div></div>
     </div>
 
     <div class="row g-4">
@@ -142,12 +157,12 @@ foreach ($announcements as $a) {
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Message</label>
-                            <textarea name="content" class="form-control" rows="6" required placeholder="Write the announcement for your dojo students..."></textarea>
+                            <textarea name="content" class="form-control" rows="6" maxlength="5000" required placeholder="Write the announcement for your dojo students..."></textarea>
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Publish Date</label>
-                                <input type="date" name="publish_date" class="form-control" value="<?= date('Y-m-d') ?>" required>
+                                <input type="date" name="publish_date" class="form-control" value="<?= $today ?>" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Expiry Date</label>
@@ -168,21 +183,32 @@ foreach ($announcements as $a) {
                 </div>
                 <div class="card-body">
                     <?php foreach ($announcements as $a): ?>
+                        <?php
+                            $is_expired = $a['status'] !== 'archived' && !empty($a['expiry_date']) && $a['expiry_date'] < $today;
+                            $is_scheduled = $a['status'] !== 'archived' && !$is_expired && $a['publish_date'] > $today;
+                        ?>
                         <article class="announcement-item">
                             <div class="d-flex justify-content-between align-items-start gap-3">
                                 <div>
                                     <h6 class="fw-bold mb-1"><?= htmlspecialchars($a['title']) ?></h6>
-                                    <div class="small text-muted">Publish: <?= date('M j, Y', strtotime($a['publish_date'])) ?><?php if ($a['expiry_date']): ?> • Expires: <?= date('M j, Y', strtotime($a['expiry_date'])) ?><?php endif; ?></div>
+                                    <div class="announcement-meta">
+                                        Publish: <?= date('M j, Y', strtotime($a['publish_date'])) ?>
+                                        <?php if ($a['expiry_date']): ?> • Expires: <?= date('M j, Y', strtotime($a['expiry_date'])) ?><?php endif; ?>
+                                    </div>
                                 </div>
                                 <?php if ($a['status'] === 'archived'): ?>
                                     <span class="badge-soft bg-secondary text-white">ARCHIVED</span>
-                                <?php elseif ($a['publish_date'] > $today): ?>
+                                <?php elseif ($is_expired): ?>
+                                    <span class="badge-soft bg-danger text-white">EXPIRED</span>
+                                <?php elseif ($is_scheduled): ?>
                                     <span class="badge-soft bg-warning text-dark">SCHEDULED</span>
                                 <?php else: ?>
                                     <span class="badge-soft bg-success text-white">ACTIVE</span>
                                 <?php endif; ?>
                             </div>
-                            <p class="mt-3 mb-3 text-muted" style="white-space:pre-line;"><?= htmlspecialchars($a['content']) ?></p>
+
+                            <p class="mt-3 mb-3 text-muted" style="white-space:pre-line;word-break:break-word;"><?= htmlspecialchars($a['content']) ?></p>
+
                             <?php if ($a['status'] !== 'archived'): ?>
                                 <form method="POST" onsubmit="return confirm('Archive this announcement?');">
                                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
