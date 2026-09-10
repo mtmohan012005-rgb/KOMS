@@ -49,6 +49,14 @@ try {
     exit;
 }
 
+function ensure_user_column(PDO $pdo, string $column, string $definition): void {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='users' AND column_name=?");
+    $stmt->execute([$column]);
+    if ((int)$stmt->fetchColumn() === 0) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN {$definition}");
+    }
+}
+
 /**
  * Import the user-provided student spreadsheet through a Render secret.
  * The JSON payload is never stored in the public Git repository.
@@ -71,13 +79,12 @@ function import_runtime_students(PDO $pdo): void {
             throw new RuntimeException('Student import payload is not an array.');
         }
 
-        $pdo->exec("ALTER TABLE users
-            ADD COLUMN IF NOT EXISTS blood_group VARCHAR(30) NULL AFTER gender,
-            ADD COLUMN IF NOT EXISTS father_name VARCHAR(150) NULL AFTER blood_group,
-            ADD COLUMN IF NOT EXISTS mother_name VARCHAR(150) NULL AFTER father_name,
-            ADD COLUMN IF NOT EXISTS alternate_phone VARCHAR(20) NULL AFTER phone,
-            ADD COLUMN IF NOT EXISTS date_of_joining DATE NULL AFTER alternate_phone,
-            ADD COLUMN IF NOT EXISTS must_change_password TINYINT(1) NOT NULL DEFAULT 0 AFTER status");
+        ensure_user_column($pdo, 'blood_group', 'blood_group VARCHAR(30) NULL AFTER gender');
+        ensure_user_column($pdo, 'father_name', 'father_name VARCHAR(150) NULL AFTER blood_group');
+        ensure_user_column($pdo, 'mother_name', 'mother_name VARCHAR(150) NULL AFTER father_name');
+        ensure_user_column($pdo, 'alternate_phone', 'alternate_phone VARCHAR(20) NULL AFTER phone');
+        ensure_user_column($pdo, 'date_of_joining', 'date_of_joining DATE NULL AFTER alternate_phone');
+        ensure_user_column($pdo, 'must_change_password', 'must_change_password TINYINT(1) NOT NULL DEFAULT 0 AFTER status');
 
         $select = $pdo->prepare("SELECT id FROM users WHERE email=? OR member_id=? LIMIT 1");
         $insert = $pdo->prepare("INSERT INTO users
