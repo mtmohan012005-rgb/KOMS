@@ -8,8 +8,9 @@ require_role('super_admin');
 $page_title = 'Add Student';
 $error = '';
 $created = false;
-$generated_email = 'lsairohan@koms.local';
-$generated_password = 'KOMS@SaiRohan2026';
+$generated_member_id = 'sairohan2012.koms';
+$generated_email = 'sairohan2012@koms.local';
+$generated_password = 'Sairohan@2012KOMS!';
 
 function add_student_ensure_profile_fields(PDO $pdo): void {
     $columns = [
@@ -28,6 +29,13 @@ function add_student_ensure_profile_fields(PDO $pdo): void {
     }
 }
 
+function add_student_ensure_member_id(PDO $pdo): void {
+    $check = $pdo->query("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'users' AND column_name = 'member_id'");
+    if ((int)$check->fetchColumn() === 0) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN member_id VARCHAR(100) NULL UNIQUE AFTER id");
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
         $error = 'Security token mismatch. Please reload and try again.';
@@ -43,11 +51,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mother_name = trim($_POST['mother_name'] ?? '');
         $blood_group = trim($_POST['blood_group'] ?? '');
         $date_of_joining = $_POST['date_of_joining'] ?? null;
+        $member_id = strtolower(trim($_POST['member_id'] ?? $generated_member_id));
         $email = strtolower(trim($_POST['email'] ?? $generated_email));
         $password = $_POST['password'] ?? $generated_password;
 
-        if ($first_name === '' || $last_name === '' || !$dob || $email === '' || $password === '') {
+        if ($first_name === '' || $last_name === '' || !$dob || $member_id === '' || $email === '' || $password === '') {
             $error = 'Please complete all required fields.';
+        } elseif (!preg_match('/^[a-z0-9]+(?:[._-][a-z0-9]+)*$/i', $member_id)) {
+            $error = 'User ID may contain letters, numbers, dots, underscores and hyphens only.';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error = 'Please enter a valid login email address.';
         } elseif (strlen($password) < 8) {
@@ -55,17 +66,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             try {
                 add_student_ensure_profile_fields($pdo);
+                add_student_ensure_member_id($pdo);
 
-                $exists = $pdo->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
-                $exists->execute([$email]);
+                $exists = $pdo->prepare('SELECT id FROM users WHERE email = ? OR member_id = ? LIMIT 1');
+                $exists->execute([$email, $member_id]);
                 if ($exists->fetch()) {
-                    $error = 'That login email already exists. Use a different email.';
+                    $error = 'That email or User ID already exists. Use a different one.';
                 } else {
                     $pdo->beginTransaction();
 
                     $password_hash = password_hash($password, PASSWORD_DEFAULT);
-                    $stmt = $pdo->prepare('INSERT INTO users (first_name, last_name, email, password_hash, role, dob, gender, phone, address, status) VALUES (?, ?, ?, ?, \'student\', ?, ?, ?, ?, \'active\')');
-                    $stmt->execute([$first_name, $last_name, $email, $password_hash, $dob, $gender, $phone, $address]);
+                    $stmt = $pdo->prepare('INSERT INTO users (member_id, first_name, last_name, email, password_hash, role, dob, gender, phone, address, status) VALUES (?, ?, ?, ?, ?, \'student\', ?, ?, ?, ?, \'active\')');
+                    $stmt->execute([$member_id, $first_name, $last_name, $email, $password_hash, $dob, $gender, $phone, $address]);
                     $new_user_id = (int)$pdo->lastInsertId();
 
                     $profile = $pdo->prepare('INSERT INTO student_profiles (user_id, is_minor, parent_name, parent_contact, parent_email, parent_consent_status, alternate_mobile, blood_group, father_name, mother_name, date_of_joining, medical_notes) VALUES (?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?)');
@@ -84,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $pdo->commit();
                     $created = true;
+                    $generated_member_id = $member_id;
                     $generated_email = $email;
                     $generated_password = $password;
                 }
@@ -112,7 +125,7 @@ body{background:#f4f5f7;font-family:Inter,Arial,sans-serif}.page{max-width:1050p
 <div class="hero"><div class="text-uppercase small opacity-75">Mass Dragon Dojo • KOMS</div><h1>Add Student</h1><div class="mt-2 opacity-75">Create a student login and profile from one secure form.</div></div>
 <div class="p-4 p-lg-5">
 <?php if ($created): ?>
-<div class="alert success"><h5 class="fw-bold text-success">Student created successfully</h5><p class="mb-2">The new student account has been stored in the KOMS database.</p><div class="login-box"><div><span class="muted">Login email</span><br><code><?= htmlspecialchars($generated_email) ?></code></div><div class="mt-3"><span class="muted">Temporary password</span><br><code><?= htmlspecialchars($generated_password) ?></code></div><div class="small text-muted mt-3">This email is a KOMS login identity; it is not an externally hosted mailbox.</div></div></div>
+<div class="alert success"><h5 class="fw-bold text-success">Student created successfully</h5><p class="mb-2">The new student account has been stored in the KOMS database.</p><div class="login-box"><div><span class="muted">KOMS User ID</span><br><code><?= htmlspecialchars($generated_member_id) ?></code></div><div class="mt-3"><span class="muted">Login email</span><br><code><?= htmlspecialchars($generated_email) ?></code></div><div class="mt-3"><span class="muted">Temporary password</span><br><code><?= htmlspecialchars($generated_password) ?></code></div><div class="small text-muted mt-3">The KOMS User ID can be used directly on the login page. The email is an internal KOMS login identity, not an externally hosted mailbox.</div></div></div>
 <?php endif; ?>
 <?php if ($error): ?><div class="alert error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
 <form method="post" autocomplete="off">
@@ -129,8 +142,9 @@ body{background:#f4f5f7;font-family:Inter,Arial,sans-serif}.page{max-width:1050p
 <div class="col-md-6"><label class="form-label">Mother's name</label><input class="form-control" name="mother_name" value="Patturani. L"></div>
 <div class="col-md-6"><label class="form-label">Date of joining</label><input class="form-control" type="date" name="date_of_joining" value="2026-08-01"></div>
 <div class="col-12"><label class="form-label">Address</label><textarea class="form-control" name="address" rows="3">J.K. builders 2nd floor, Rangangar 1st main, Old Perungalathur, Chennai</textarea></div>
-<div class="col-md-6"><label class="form-label">KOMS login email *</label><input class="form-control" type="email" name="email" value="<?= htmlspecialchars($generated_email) ?>" required></div>
-<div class="col-md-6"><label class="form-label">Temporary password *</label><input class="form-control" type="text" name="password" value="<?= htmlspecialchars($generated_password) ?>" required></div>
+<div class="col-md-4"><label class="form-label">KOMS User ID *</label><input class="form-control" name="member_id" value="<?= htmlspecialchars($generated_member_id) ?>" required></div>
+<div class="col-md-4"><label class="form-label">KOMS login email *</label><input class="form-control" type="email" name="email" value="<?= htmlspecialchars($generated_email) ?>" required></div>
+<div class="col-md-4"><label class="form-label">Temporary password *</label><input class="form-control" type="text" name="password" value="<?= htmlspecialchars($generated_password) ?>" required></div>
 </div>
 <div class="d-flex flex-wrap gap-2 mt-4"><button class="btn btn-danger px-4" type="submit"><i class="fa-solid fa-user-plus me-2"></i>Create Student</button><a class="btn btn-outline-dark" href="users.php">Back to Users</a><a class="btn btn-outline-secondary" href="<?= APP_URL ?>/admin/dashboard.php">Dashboard</a></div>
 </form>
