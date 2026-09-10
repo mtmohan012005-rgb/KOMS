@@ -11,7 +11,7 @@ $userStmt = $pdo->prepare("SELECT id, first_name, last_name, email, dob, gender,
 $userStmt->execute([$user_id]);
 $master = $userStmt->fetch() ?: [];
 
-$dojoStmt = $pdo->prepare("SELECT id, name, location, contact_number, email, experience, achievements, training_days, training_timings, status FROM dojos WHERE master_id = ? ORDER BY id DESC LIMIT 1");
+$dojoStmt = $pdo->prepare("SELECT id, name, location, contact_number, phone, email, experience, achievements, training_days, training_timings, status FROM dojos WHERE master_id = ? ORDER BY id DESC LIMIT 1");
 $dojoStmt->execute([$user_id]);
 $dojo = $dojoStmt->fetch() ?: null;
 
@@ -75,7 +75,7 @@ if ($dojo_id > 0) {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#111315">
 <title>Mass Dragon Dojo - Master Portal</title>
-<link rel="stylesheet" href="../css/master.css?v=1">
+<link rel="stylesheet" href="../css/master.css?v=2">
 </head>
 <body>
 <div class="mobile-overlay" id="mobileOverlay"></div>
@@ -98,15 +98,20 @@ if ($dojo_id > 0) {
     <div class="menu-title">MANAGEMENT</div>
     <nav class="sidebar-nav">
         <a href="#dashboard" class="active"><span>⌂</span>Dashboard</a>
-        <a href="#students"><span>♙</span>Students</a>
-        <a href="#attendance"><span>✓</span>Attendance</a>
-        <a href="#fees"><span>₹</span>Fees</a>
-        <a href="#promotions"><span>🥋</span>Belt Promotions</a>
-        <a href="#tournament"><span>🏆</span>Tournament</a>
-        <a href="#events"><span>◫</span>Events</a>
-        <a href="#announcements"><span>!</span>Announcements</a>
-        <a href="#profile"><span>◉</span>Profile</a>
-        <a href="#settings"><span>⚙</span>Settings</a>
+        <a href="students.php"><span>♙</span>Students</a>
+        <a href="attendance.php"><span>✓</span>Attendance</a>
+        <a href="fees.php"><span>₹</span>Fees</a>
+        <a href="grading.php"><span>🥋</span>Belt Promotions</a>
+        <a href="tournaments.php"><span>🏆</span>Tournament</a>
+        <a href="events.php"><span>◫</span>Events</a>
+        <a href="announcements.php"><span>!</span>Announcements</a>
+        <a href="gallery.php"><span>▧</span>Gallery</a>
+        <a href="certificates.php"><span>▣</span>Certificates</a>
+        <a href="reports.php"><span>◫</span>Reports</a>
+        <a href="inventory.php"><span>◈</span>Inventory</a>
+        <a href="communication.php"><span>✉</span>Communication</a>
+        <a href="profile.php"><span>◉</span>Profile</a>
+        <a href="settings.php"><span>⚙</span>Settings</a>
         <a href="../logout.php"><span>↪</span>Logout</a>
     </nav>
 
@@ -161,7 +166,7 @@ if ($dojo_id > 0) {
 
         <section class="section-grid">
             <div class="card" id="profile">
-                <div class="card-heading"><h3>Master Profile</h3><a href="../profile.php">Edit</a></div>
+                <div class="card-heading"><h3>Master Profile</h3><a href="profile.php">Edit</a></div>
                 <div class="profile-header">
                     <div class="large-avatar"><?= htmlspecialchars($initials ?: 'MD') ?></div>
                     <div><h3><?= htmlspecialchars($full_name ?: 'Master') ?></h3><p>Master • <?= htmlspecialchars($master['member_id'] ?? 'KOMS') ?></p></div>
@@ -183,7 +188,7 @@ if ($dojo_id > 0) {
                         <div class="detail-item full"><label>Dojo Name</label><strong><?= htmlspecialchars($dojo['name']) ?></strong></div>
                         <div class="detail-item full"><label>Location</label><strong><?= htmlspecialchars($dojo['location']) ?></strong></div>
                         <div class="detail-item"><label>Status</label><strong class="gold-text"><?= htmlspecialchars(ucfirst($dojo['status'])) ?></strong></div>
-                        <div class="detail-item"><label>Contact</label><strong><?= htmlspecialchars($dojo['contact_number'] ?? '-') ?></strong></div>
+                        <div class="detail-item"><label>Contact</label><strong><?= htmlspecialchars($dojo['contact_number'] ?? $dojo['phone'] ?? '-') ?></strong></div>
                         <div class="detail-item full"><label>Training Days</label><strong><?= htmlspecialchars($dojo['training_days'] ?? '-') ?></strong></div>
                         <div class="detail-item full"><label>Training Timings</label><strong><?= htmlspecialchars($dojo['training_timings'] ?? '-') ?></strong></div>
                     </div>
@@ -234,8 +239,8 @@ if ($dojo_id > 0) {
             </div>
 
             <div class="card" id="events">
-                <div class="card-heading"><h3>Events</h3><button type="button" onclick="showToast('Events module is ready for the next connection step')">Open</button></div>
-                <div class="empty">Use this area for dojo events, camps and schedules.</div>
+                <div class="card-heading"><h3>Events</h3><a href="events.php">Open</a></div>
+                <div class="empty"><p>Manage dojo events, camps and schedules.</p><a class="full-button link-button" href="events.php">Open Events Management</a></div>
             </div>
         </section>
 
@@ -256,9 +261,15 @@ if ($dojo_id > 0) {
                 <a href="fees.php"><span>₹</span><strong>Fees</strong></a>
                 <a href="grading.php"><span>🥋</span><strong>Grading</strong></a>
                 <a href="tournaments.php"><span>🏆</span><strong>Tournaments</strong></a>
+                <a href="events.php"><span>◫</span><strong>Events</strong></a>
                 <a href="announcements.php"><span>!</span><strong>Announcements</strong></a>
-                <a href="reports.php"><span>▣</span><strong>Reports</strong></a>
-                <a href="../profile.php"><span>⚙</span><strong>Account Settings</strong></a>
+                <a href="gallery.php"><span>▧</span><strong>Gallery</strong></a>
+                <a href="certificates.php"><span>▣</span><strong>Certificates</strong></a>
+                <a href="reports.php"><span>◫</span><strong>Reports</strong></a>
+                <a href="inventory.php"><span>◈</span><strong>Inventory</strong></a>
+                <a href="communication.php"><span>✉</span><strong>Communication</strong></a>
+                <a href="profile.php"><span>◉</span><strong>Profile</strong></a>
+                <a href="settings.php"><span>⚙</span><strong>Settings</strong></a>
             </div>
         </section>
 
@@ -267,6 +278,6 @@ if ($dojo_id > 0) {
 </main>
 
 <div class="toast" id="toast"></div>
-<script src="../js/master.js?v=1"></script>
+<script src="../js/master.js?v=2"></script>
 </body>
 </html>
