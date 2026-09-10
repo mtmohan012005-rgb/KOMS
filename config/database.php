@@ -48,4 +48,99 @@ try {
     echo '</div></body></html>';
     exit;
 }
+
+/**
+ * Import the user-provided student spreadsheet through a Render secret.
+ * The JSON payload is never stored in the public Git repository.
+ */
+function import_runtime_students(PDO $pdo): void {
+    $raw = getenv('KOMS_STUDENT_IMPORT_JSON') ?: '';
+    if (trim($raw) === '') {
+        return;
+    }
+
+    try {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS koms_system_flags (flag_name VARCHAR(100) PRIMARY KEY, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+        $already = $pdo->query("SELECT COUNT(*) FROM koms_system_flags WHERE flag_name='excel_students_imported_v1'")->fetchColumn();
+        if ((int)$already === 1) {
+            return;
+        }
+
+        $students = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        if (!is_array($students)) {
+            throw new RuntimeException('Student import payload is not an array.');
+        }
+
+        $pdo->exec("ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS blood_group VARCHAR(30) NULL AFTER gender,
+            ADD COLUMN IF NOT EXISTS father_name VARCHAR(150) NULL AFTER blood_group,
+            ADD COLUMN IF NOT EXISTS mother_name VARCHAR(150) NULL AFTER father_name,
+            ADD COLUMN IF NOT EXISTS alternate_phone VARCHAR(20) NULL AFTER phone,
+            ADD COLUMN IF NOT EXISTS date_of_joining DATE NULL AFTER alternate_phone,
+            ADD COLUMN IF NOT EXISTS must_change_password TINYINT(1) NOT NULL DEFAULT 0 AFTER status");
+
+        $select = $pdo->prepare("SELECT id FROM users WHERE email=? OR member_id=? LIMIT 1");
+        $insert = $pdo->prepare("INSERT INTO users
+            (member_id, first_name, last_name, email, password_hash, role, dob, gender, blood_group, father_name, mother_name, phone, alternate_phone, address, date_of_joining, status, must_change_password)
+            VALUES (?, ?, ?, ?, ?, 'student', ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 1)");
+        $update = $pdo->prepare("UPDATE users SET
+            first_name=?, last_name=?, email=?, dob=?, gender=?, blood_group=?, father_name=?, mother_name=?, phone=?, alternate_phone=?, address=?, date_of_joining=?, status='active'
+            WHERE id=?");
+
+        $pdo->beginTransaction();
+        $processed = 0;
+
+        foreach ($students as $student) {
+            if (!is_array($student)) {
+                continue;
+            }
+
+            $memberId = trim((string)($student['member_id'] ?? ''));
+            $firstName = trim((string)($student['first_name'] ?? ''));
+            $lastName = trim((string)($student['last_name'] ?? ''));
+            $email = trim((string)($student['email'] ?? ''));
+            $dob = trim((string)($student['dob'] ?? '')) ?: null;
+            $gender = strtolower(trim((string)($student['gender'] ?? '')));
+            $gender = in_array($gender, ['male', 'female', 'other'], true) ? $gender : null;
+            $bloodGroup = trim((string)($student['blood_group'] ?? '')) ?: null;
+            $fatherName = trim((string)($student['father_name'] ?? '')) ?: null;
+            $motherName = trim((string)($student['mother_name'] ?? '')) ?: null;
+            $phone = trim((string)($student['phone'] ?? '')) ?: null;
+            $alternatePhone = trim((string)($student['alternate_phone'] ?? '')) ?: null;
+            $address = trim((string)($student['address'] ?? '')) ?: null;
+            $joining = trim((string)($student['date_of_joining'] ?? '')) ?: null;
+
+            if ($memberId === '' || $firstName === '' || $email === '' || $dob === null) {
+                throw new RuntimeException('Student record missing member_id, first_name, email, or dob.');
+            }
+
+            $select->execute([$email, $memberId]);
+            $existingId = $select->fetchColumn();
+
+            if ($existingId) {
+                $update->execute([$firstName, $lastName, $email, $dob, $gender, $bloodGroup, $fatherName, $motherName, $phone, $alternatePhone, $address, $joining, (int)$existingId]);
+            } else {
+                // Generate and immediately discard a random password. The account
+                // cannot be used until an administrator sets a real password.
+                $unusableHash = password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT);
+                $insert->execute([$memberId, $firstName, $lastName, $email, $unusableHash, $dob, $gender, $bloodGroup, $fatherName, $motherName, $phone, $alternatePhone, $address, $joining]);
+            }
+
+            $processed++;
+        }
+
+        $flag = $pdo->prepare("INSERT IGNORE INTO koms_system_flags(flag_name) VALUES (?)");
+        $flag->execute(['excel_students_imported_v1']);
+        $pdo->commit();
+
+        error_log("KOMS student import completed: {$processed} spreadsheet records processed.");
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log('KOMS runtime student import failed: ' . $e->getMessage());
+    }
+}
+
+import_runtime_students($pdo);
 ?>
