@@ -11,7 +11,7 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css">
 </head>
-<body class="bg-light">
+<body class="bg-dark text-white" style="background-color: #080808 !important; color: #ffffff !important; min-height: 100vh; display: flex; flex-direction: column;">
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
     <div class="container">
