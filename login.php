@@ -12,6 +12,25 @@ if (is_logged_in()) {
     redirect('/index.php');
 }
 
+if (isset($_GET['quick'])) {
+    $quickRole = $_GET['quick'];
+    $emailMap = [
+        'master' => 'master@gmail.com',
+        'admin'  => 'admin@gmail.com',
+        'senior' => 'senior@gmail.com',
+        'student'=> 'student@gmail.com'
+    ];
+    if (isset($emailMap[$quickRole])) {
+        $result = login_user($pdo, $emailMap[$quickRole], 'password123');
+        if ($result['success']) {
+            if ($result['role'] === 'super_admin') redirect('/admin/dashboard.php');
+            if ($result['role'] === 'master') redirect('/master/dashboard.php');
+            if ($result['role'] === 'senior') redirect('/senior/dashboard.php');
+            if ($result['role'] === 'student') redirect('/student/dashboard.php');
+        }
+    }
+}
+
 $error_message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
@@ -585,15 +604,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
                 
                 <div class="input-group"> 
-                    <i class="fas fa-user icon-left"></i> 
-                    <input type="text" name="email" id="emailInput" placeholder="Username / Email" required autofocus autocomplete="username"> 
+                    <i class="fas fa-id-card-clip icon-left" style="color:#ffd21a;"></i> 
+                    <input type="text" name="email" id="emailInput" placeholder="User ID or Gmail Address" required autofocus autocomplete="username"> 
                 </div> 
 
                 <div class="input-group"> 
                     <i class="fas fa-lock icon-left"></i> 
-                    <input type="password" name="password" id="passwordInput" placeholder="Password" required autocomplete="current-password"> 
+                    <input type="password" name="password" id="passwordInput" placeholder="Password (DOB: DD.MM.YYYY for students)" required autocomplete="current-password"> 
                     <i class="fas fa-eye icon-right" id="togglePassword" title="Toggle password visibility"></i> 
                 </div> 
+
+                <div style="font-size: 11px; color: #a0a0a0; margin: -4px 0 12px 2px; display: flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-shield-halved" style="color: #ffd21a; font-size: 11px;"></i>
+                    <span>Accepts <strong>User ID</strong> (e.g. <code>sairohan2012.koms</code>) or <strong>Gmail</strong></span>
+                </div>
 
                 <button type="submit" class="login-btn" id="loginSubmitBtn">
                     <span>Login</span>
@@ -602,15 +626,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
 
             <div class="sub-actions">
+                <a href="forgot_password.php" style="color:#ffd21a;"><i class="fas fa-key me-1"></i> Reset Password</a>
                 <a href="find_dojo.php"><i class="fas fa-compass me-1"></i> Find Dojo</a>
                 <a href="register.php"><i class="fas fa-user-plus me-1"></i> Register</a>
+                <a href="uploads/koms-mobile.apk" download title="Download KOMS Android App (APK)"><i class="fab fa-android me-1" style="color: #3ddc84;"></i> Android App</a>
             </div>
 
             <!-- Demo 1-Click Role Fillers -->
             <div class="demo-roles-container">
                 <div class="demo-roles-label">
                     <span><i class="fas fa-bolt me-1"></i> 1-Click Demo Accounts</span>
-                    <span style="color:#777; font-weight:normal;">Password: password123</span>
+                    <span style="color:#777; font-weight:normal;">Gmail or Student User ID</span>
                 </div>
                 <div class="demo-pills">
                     <button type="button" class="demo-pill" onclick="fillCredentials('admin@gmail.com', 'password123')">
@@ -621,13 +647,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <i class="fas fa-user-ninja"></i>
                         <span>Sensei Master</span>
                     </button>
-                    <button type="button" class="demo-pill" onclick="fillCredentials('senior@gmail.com', 'password123')">
-                        <i class="fas fa-medal"></i>
-                        <span>Senior Belt</span>
+                    <button type="button" class="demo-pill" onclick="fillCredentials('sairohan2012.koms', '20.10.2012')" title="User ID: sairohan2012.koms | Pass: 20.10.2012">
+                        <i class="fas fa-user-ninja"></i>
+                        <span>Sai Rohan (ID)</span>
                     </button>
-                    <button type="button" class="demo-pill" onclick="fillCredentials('student@gmail.com', 'password123')">
+                    <button type="button" class="demo-pill" onclick="fillCredentials('dguhan2015.koms', '25.09.2015')" title="User ID: dguhan2015.koms | Pass: 25.09.2015">
                         <i class="fas fa-user-graduate"></i>
-                        <span>Student</span>
+                        <span>Guhan (ID)</span>
                     </button>
                 </div>
             </div>

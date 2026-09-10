@@ -1,11 +1,9 @@
 -- KOMS Complete MySQL Database Schema
 
-CREATE DATABASE IF NOT EXISTS koms;
-USE koms;
-
 -- Users Table
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    member_id VARCHAR(100) UNIQUE NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
@@ -13,17 +11,24 @@ CREATE TABLE users (
     role ENUM('super_admin', 'master', 'senior', 'student') NOT NULL,
     dob DATE,
     gender ENUM('male', 'female', 'other'),
+    blood_group VARCHAR(30) NULL,
+    father_name VARCHAR(150) NULL,
+    mother_name VARCHAR(150) NULL,
     phone VARCHAR(20),
+    alternate_phone VARCHAR(20) NULL,
+    date_of_joining DATE NULL,
     address TEXT,
     emergency_contact VARCHAR(100),
     profile_photo VARCHAR(255),
     status ENUM('active', 'inactive') DEFAULT 'active',
+    must_change_password TINYINT(1) NOT NULL DEFAULT 1,
+    password_change_count INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- Dojos Table
-CREATE TABLE dojos (
+CREATE TABLE IF NOT EXISTS dojos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
     master_id INT NOT NULL,
@@ -43,7 +48,7 @@ CREATE TABLE dojos (
 );
 
 -- Student Dojo Memberships (Requests & Active Members)
-CREATE TABLE dojo_memberships (
+CREATE TABLE IF NOT EXISTS dojo_memberships (
     id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT NOT NULL,
     dojo_id INT NOT NULL,
@@ -56,7 +61,7 @@ CREATE TABLE dojo_memberships (
 );
 
 -- Attendance Sessions
-CREATE TABLE attendance_sessions (
+CREATE TABLE IF NOT EXISTS attendance_sessions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     dojo_id INT NOT NULL,
     instructor_id INT NOT NULL,
@@ -72,7 +77,7 @@ CREATE TABLE attendance_sessions (
 );
 
 -- Attendance Entries
-CREATE TABLE attendance_entries (
+CREATE TABLE IF NOT EXISTS attendance_entries (
     id INT AUTO_INCREMENT PRIMARY KEY,
     session_id INT NOT NULL,
     student_id INT NOT NULL,
@@ -85,7 +90,7 @@ CREATE TABLE attendance_entries (
 );
 
 -- Fee Structures (SCD Type 2 Temporal Pattern)
-CREATE TABLE fee_structures (
+CREATE TABLE IF NOT EXISTS fee_structures (
     id INT AUTO_INCREMENT PRIMARY KEY,
     dojo_id INT NOT NULL,
     fee_name VARCHAR(100) NOT NULL,
@@ -101,7 +106,7 @@ CREATE TABLE fee_structures (
 );
 
 -- Monthly Fee Records
-CREATE TABLE fee_records (
+CREATE TABLE IF NOT EXISTS fee_records (
     id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT NOT NULL,
     fee_structure_id INT NOT NULL,
@@ -115,7 +120,7 @@ CREATE TABLE fee_records (
 );
 
 -- Payments
-CREATE TABLE payments (
+CREATE TABLE IF NOT EXISTS payments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     fee_record_id INT NOT NULL,
     student_id INT NOT NULL,
@@ -131,7 +136,7 @@ CREATE TABLE payments (
 );
 
 -- Tournaments
-CREATE TABLE tournaments (
+CREATE TABLE IF NOT EXISTS tournaments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
     description TEXT,
@@ -146,7 +151,7 @@ CREATE TABLE tournaments (
 );
 
 -- Tournament Registrations
-CREATE TABLE tournament_registrations (
+CREATE TABLE IF NOT EXISTS tournament_registrations (
     id INT AUTO_INCREMENT PRIMARY KEY,
     tournament_id INT NOT NULL,
     student_id INT NOT NULL,
@@ -160,7 +165,7 @@ CREATE TABLE tournament_registrations (
 );
 
 -- Grading History
-CREATE TABLE grading_history (
+CREATE TABLE IF NOT EXISTS grading_history (
     id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT NOT NULL,
     dojo_id INT NOT NULL,
@@ -177,7 +182,7 @@ CREATE TABLE grading_history (
 );
 
 -- Achievements
-CREATE TABLE achievements (
+CREATE TABLE IF NOT EXISTS achievements (
     id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT NOT NULL,
     title VARCHAR(150) NOT NULL,
@@ -192,7 +197,7 @@ CREATE TABLE achievements (
 );
 
 -- Announcements
-CREATE TABLE announcements (
+CREATE TABLE IF NOT EXISTS announcements (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(150) NOT NULL,
     content TEXT NOT NULL,
@@ -207,7 +212,7 @@ CREATE TABLE announcements (
 );
 
 -- Audit Logs
-CREATE TABLE audit_logs (
+CREATE TABLE IF NOT EXISTS audit_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     action VARCHAR(50) NOT NULL,
@@ -264,3 +269,19 @@ CREATE TABLE IF NOT EXISTS tournament_brackets (
     FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE
 );
 
+-- Password Reset Requests (Enforces 1 self-service change rule)
+CREATE TABLE IF NOT EXISTS password_reset_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    dojo_id INT NULL,
+    reason TEXT NULL,
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    master_notes TEXT NULL,
+    reviewed_by INT NULL,
+    reviewed_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user (user_id),
+    INDEX idx_status (status)
+);

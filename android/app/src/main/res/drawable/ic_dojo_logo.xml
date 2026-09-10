@@ -1,0 +1,91 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+
+  <!-- Scalloped Golden Border -->
+  <path
+      android:fillColor="#FFE733"
+      android:pathData="M100,10 C120,25 140,20 160,35 C175,50 185,75 190,95 C195,115 185,140 170,160 C150,180 120,185 100,195 C80,185 50,180 30,160 C15,140 5,115 10,95 C15,75 25,50 40,35 C60,20 80,25 100,10 Z" />
+
+  <!-- Inner Black Background -->
+  <path
+      android:fillColor="#0D0D0D"
+      android:pathData="M100,16 C116,28 134,26 150,39 C164,52 172,74 177,93 C181,111 174,133 160,150 C143,167 116,173 100,181 C84,173 57,167 40,150 C26,133 19,111 23,93 C28,74 36,52 50,39 C66,26 84,28 100,16 Z" />
+
+  <!-- "SHORIN" text curve path (Yellow) -->
+  <path
+      android:fillColor="#FFE733"
+      android:pathData="M 45 70 L 52 62 M 55 60 L 65 52 M 70 50 L 82 46 M 85 45 L 98 42 M 102 42 L 115 45" />
+
+  <!-- "RYU" text curve path (Yellow) -->
+  <path
+      android:fillColor="#FFE733"
+      android:pathData="M 125 50 L 138 58 M 145 62 L 155 75 M 158 80 L 165 92" />
+
+  <!-- The Fist Graphic (Tan/Skin Color) -->
+  <path
+      android:fillColor="#F0C797"
+      android:strokeColor="#000000"
+      android:strokeWidth="2"
+      android:pathData="M 65 75 C 65 60 80 50 100 55 C 120 60 140 70 145 90 C 150 110 135 125 115 125 C 100 125 80 110 75 90 C 70 85 65 85 65 75 Z" />
+
+  <!-- Fist Finger Lines -->
+  <path
+      android:strokeColor="#000000"
+      android:strokeWidth="2"
+      android:strokeLineCap="round"
+      android:pathData="M 85 85 L 90 95 M 105 85 L 105 100 M 125 85 L 120 100" />
+
+  <!-- Fist Thumb -->
+  <path
+      android:fillColor="#F0C797"
+      android:strokeColor="#000000"
+      android:strokeWidth="2"
+      android:pathData="M 90 120 C 85 130 95 135 105 125 Z" />
+
+  <!-- Fist Four Black Knuckle Dots -->
+  <path android:fillColor="#0D0D0D" android:pathData="M 115 65 A 6 6 0 1 1 115 77 A 6 6 0 1 1 115 65 Z" />
+  <path android:fillColor="#0D0D0D" android:pathData="M 135 70 A 6 6 0 1 1 135 82 A 6 6 0 1 1 135 70 Z" />
+  <path android:fillColor="#0D0D0D" android:pathData="M 100 95 A 5 5 0 1 1 100 105 A 5 5 0 1 1 100 95 Z" />
+  <path android:fillColor="#0D0D0D" android:pathData="M 125 98 A 5 5 0 1 1 125 108 A 5 5 0 1 1 125 98 Z" />
+
+  <!-- Crossed Sai / Weapons -->
+  <!-- Left Sai Blade -->
+  <path
+      android:strokeColor="#CCCCCC"
+      android:strokeWidth="4"
+      android:strokeLineCap="round"
+      android:pathData="M 50 150 L 160 85" />
+  <!-- Left Sai Handle (Green) -->
+  <path
+      android:strokeColor="#2DAA5E"
+      android:strokeWidth="7"
+      android:strokeLineCap="round"
+      android:pathData="M 60 144 L 50 150" />
+
+  <!-- Right Sai Blade -->
+  <path
+      android:strokeColor="#CCCCCC"
+      android:strokeWidth="4"
+      android:strokeLineCap="round"
+      android:pathData="M 50 85 L 160 150" />
+  <!-- Right Sai Handle (Green) -->
+  <path
+      android:strokeColor="#2DAA5E"
+      android:strokeWidth="7"
+      android:strokeLineCap="round"
+      android:pathData="M 150 144 L 160 150" />
+
+  <!-- Left Red Kanji (松) -->
+  <path
+      android:fillColor="#C61A1A"
+      android:pathData="M 35 110 H 55 V 115 H 35 Z M 42 105 V 135 H 48 V 105 Z M 30 135 L 60 140 Z" />
+
+  <!-- Right Red Kanji (林) -->
+  <path
+      android:fillColor="#C61A1A"
+      android:pathData="M 145 110 H 165 V 115 H 145 Z M 152 105 V 135 H 158 V 105 Z M 140 135 L 170 140 Z" />
+
+</vector>

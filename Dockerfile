@@ -17,6 +17,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN a2enmod rewrite headers
 
+# Configure Apache DirectoryIndex to prioritize index.php and index.html
+RUN echo "DirectoryIndex index.php index.html" > /etc/apache2/mods-enabled/dir.conf
+
 # Enable AllowOverride All for /var/www/html
 RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
 
@@ -49,4 +52,4 @@ RUN mkdir -p /var/www/html/uploads \
 EXPOSE 80 10000
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["apache2-foreground"]
+CMD ["bash", "-lc", "php /var/www/html/scripts/import_students_from_env.php || true; exec apache2-foreground"]

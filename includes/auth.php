@@ -26,57 +26,135 @@ function has_role($role) {
 
 function require_role($required_role) {
     require_login();
+
     if (!has_role($required_role)) {
         $_SESSION['error_msg'] = "Unauthorized access.";
-        
-        // Redirect to appropriate dashboard based on role
+
         if (has_role('super_admin')) redirect('/admin/dashboard.php');
         if (has_role('master')) redirect('/master/dashboard.php');
         if (has_role('senior')) redirect('/senior/dashboard.php');
         if (has_role('student')) redirect('/student/dashboard.php');
-        
+
         redirect('/index.php');
     }
 }
 
-function login_user($pdo, $email, $password) {
-    $stmt = $pdo->prepare("SELECT id, first_name, last_name, password_hash, role, status FROM users WHERE email = ? LIMIT 1");
-    $stmt->execute([$email]);
-    $user = $stmt->fetch();
+/**
+ * Ensure the KOMS member_id column exists for databases created before
+ * member IDs were introduced. This keeps the live database compatible
+ * without requiring a manual migration step.
+ */
+function ensure_member_id_column(PDO $pdo): void {
+    $check = $pdo->query(
+        "SELECT COUNT(*)
+         FROM information_schema.columns
+         WHERE table_schema = DATABASE()
+           AND table_name = 'users'
+           AND column_name = 'member_id'"
+    );
 
-    if ($user && password_verify($password, $user['password_hash'])) {
-        if ($user['status'] !== 'active') {
-            return ["success" => false, "message" => "Account is inactive. Please contact administrator."];
+    if ((int)$check->fetchColumn() === 0) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN member_id VARCHAR(100) NULL UNIQUE AFTER id");
+    }
+}
+
+function login_user($pdo, $login, $password) {
+    try {
+        ensure_member_id_column($pdo);
+
+        $login = trim((string)$login);
+
+        $stmt = $pdo->prepare(
+            "SELECT id, first_name, last_name, password_hash, role, status
+             FROM users
+             WHERE email = ? OR member_id = ?
+             LIMIT 1"
+        );
+        $stmt->execute([$login, $login]);
+        $user = $stmt->fetch();
+
+        if (!$user || !password_verify($password, $user['password_hash'])) {
+            return [
+                "success" => false,
+                "message" => "Invalid email / User ID or password."
+            ];
         }
 
-        // Prevent session fixation
-        session_regenerate_id(true);
+        if ($user['status'] !== 'active') {
+            return [
+                "success" => false,
+                "message" => "Account is inactive. Please contact administrator."
+            ];
+        }
 
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['user_name'] = $user['first_name'] . ' ' . $user['last_name'];
+        // Prevent session fixation after successful authentication.
+        if (!headers_sent() && session_status() === PHP_SESSION_ACTIVE) {
+            @session_regenerate_id(true);
+        }
+
+        $_SESSION['user_id'] = (int)$user['id'];
+        $_SESSION['user_name'] = trim($user['first_name'] . ' ' . $user['last_name']);
         $_SESSION['user_role'] = $user['role'];
-        
-        log_audit_action($pdo, $user['id'], 'LOGIN', 'auth', null, 'User logged in successfully');
 
-        return ["success" => true, "role" => $user['role']];
+        // Audit logging must never turn a valid login into HTTP 500.
+        try {
+            log_audit_action(
+                $pdo,
+                $user['id'],
+                'LOGIN',
+                'auth',
+                null,
+                'User logged in successfully'
+            );
+        } catch (Throwable $audit_error) {
+            error_log('KOMS audit log failed during login: ' . $audit_error->getMessage());
+        }
+
+        return [
+            "success" => true,
+            "role" => $user['role']
+        ];
+    } catch (Throwable $e) {
+        error_log('KOMS login error: ' . $e->getMessage());
+
+        return [
+            "success" => false,
+            "message" => "Login service is temporarily unavailable. Please check the database connection and try again."
+        ];
     }
-    
-    return ["success" => false, "message" => "Invalid email or password."];
 }
 
 function logout_user($pdo) {
     if (is_logged_in()) {
-        log_audit_action($pdo, $_SESSION['user_id'], 'LOGOUT', 'auth', null, 'User logged out');
+        try {
+            log_audit_action(
+                $pdo,
+                $_SESSION['user_id'],
+                'LOGOUT',
+                'auth',
+                null,
+                'User logged out'
+            );
+        } catch (Throwable $e) {
+            error_log('KOMS audit log failed during logout: ' . $e->getMessage());
+        }
     }
-    
+
     $_SESSION = array();
+
     if (ini_get("session.use_cookies")) {
         $params = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000,
-            $params["path"], $params["domain"],
-            $params["secure"], $params["httponly"]
+        setcookie(
+            session_name(),
+            '',
+            time() - 42000,
+            $params["path"],
+            $params["domain"],
+            $params["secure"],
+            $params["httponly"]
         );
     }
+
     session_destroy();
 }
 ?>

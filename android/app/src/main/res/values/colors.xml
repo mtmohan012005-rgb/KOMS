@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Brand Colors -->
+    <color name="primary">#1E3A8A</color>
+    <color name="primary_dark">#172554</color>
+    <color name="primary_light">#3B82F6</color>
+    <color name="primary_container">#EFF6FF</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="on_primary_container">#1E3A8A</color>
+
+    <!-- Secondary Accent Colors -->
+    <color name="secondary">#DC2626</color>
+    <color name="secondary_container">#FEE2E2</color>
+    <color name="on_secondary">#FFFFFF</color>
+
+    <!-- Background & Surface -->
+    <color name="background">#F8FAFC</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_variant">#F1F5F9</color>
+    <color name="card_stroke">#E2E8F0</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#64748B</color>
+    <color name="text_hint">#94A3B8</color>
+
+    <!-- Category Icon Tints -->
+    <color name="icon_dojo_bg">#DBEAFE</color>
+    <color name="icon_dojo_fg">#2563EB</color>
+    <color name="icon_attendance_bg">#DCFCE7</color>
+    <color name="icon_attendance_fg">#16A34A</color>
+    <color name="icon_fees_bg">#FEF3C7</color>
+    <color name="icon_fees_fg">#D97706</color>
+    <color name="icon_grading_bg">#F3E8FF</color>
+    <color name="icon_grading_fg">#9333EA</color>
+
+    <!-- Martial & Student Portal Colors -->
+    <color name="sidebar_bg">#990B0B</color>
+    <color name="sidebar_active">#7B0808</color>
+    <color name="gold_accent">#FBBF24</color>
+    <color name="gold_kicker">#FFD700</color>
+    <color name="hero_bg_start">#0D0707</color>
+    <color name="hero_bg_mid">#1A0707</color>
+    <color name="hero_bg_end">#4A0A0A</color>
+    <color name="stat_green_bg">#ECFDF5</color>
+    <color name="stat_green_fg">#10B981</color>
+    <color name="stat_pink_bg">#FFF1F2</color>
+    <color name="stat_pink_fg">#F43F5E</color>
+    <color name="stat_gold_bg">#FEF9C3</color>
+    <color name="stat_gold_fg">#EAB308</color>
+    <color name="stat_purple_bg">#F5F3FF</color>
+    <color name="stat_purple_fg">#8B5CF6</color>
+</resources>

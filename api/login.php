@@ -7,14 +7,16 @@ require_once '../config/database.php';
 
 $data = json_decode(file_get_contents("php://input"));
 
-if (!empty($data->email) && !empty($data->password)) {
-    $stmt = $pdo->prepare("SELECT id, first_name, last_name, role, password_hash, status FROM users WHERE email = ?");
-    $stmt->execute([$data->email]);
+$login = trim($data->email ?? $data->username ?? $data->member_id ?? '');
+$password = $data->password ?? '';
+
+if (!empty($login) && !empty($password)) {
+    $stmt = $pdo->prepare("SELECT id, member_id, first_name, last_name, email, role, password_hash, status FROM users WHERE email = ? OR member_id = ? LIMIT 1");
+    $stmt->execute([$login, $login]);
     $user = $stmt->fetch();
 
-    if ($user && password_verify($data->password, $user['password_hash'])) {
+    if ($user && password_verify($password, $user['password_hash'])) {
         if ($user['status'] === 'active') {
-            // In a real app, generate a JWT token. Here we use a mock token for simplicity.
             $token = bin2hex(random_bytes(16)); 
             
             http_response_code(200);
@@ -23,10 +25,12 @@ if (!empty($data->email) && !empty($data->password)) {
                 "message" => "Login successful",
                 "token" => $token,
                 "user" => [
-                    "id" => $user['id'],
+                    "id" => (int)$user['id'],
+                    "member_id" => $user['member_id'],
                     "first_name" => $user['first_name'],
                     "last_name" => $user['last_name'],
-                    "role" => $user['role']
+                    "role" => $user['role'],
+                    "email" => $user['email']
                 ]
             ]);
         } else {
@@ -35,10 +39,10 @@ if (!empty($data->email) && !empty($data->password)) {
         }
     } else {
         http_response_code(401);
-        echo json_encode(["status" => "error", "message" => "Invalid email or password"]);
+        echo json_encode(["status" => "error", "message" => "Invalid email / User ID or password"]);
     }
 } else {
     http_response_code(400);
-    echo json_encode(["status" => "error", "message" => "Email and password are required"]);
+    echo json_encode(["status" => "error", "message" => "Email / User ID and password are required"]);
 }
 ?>

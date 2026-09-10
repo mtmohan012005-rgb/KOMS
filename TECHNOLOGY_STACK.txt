@@ -1,0 +1,283 @@
+================================================================================
+          KARATE ORGANIZATION MANAGEMENT SYSTEM (KOMS) - COMPLETE TECHNOLOGY STACK
+                      & CLOUD DEPLOYMENT ARCHITECTURE SPECIFICATION
+================================================================================
+Generated: September 2026
+System: KOMS Enterprise (Web Portal, REST API, Native Android & Hybrid WebView)
+Live URL: https://koms-backend.onrender.com
+Repository: https://github.com/mtmohan012005-rgb/KOMS.git
+
+--------------------------------------------------------------------------------
+1. EXECUTIVE SYSTEM ARCHITECTURE OVERVIEW
+--------------------------------------------------------------------------------
+The Karate Organization Management System (KOMS) is a multi-tier, enterprise-grade
+martial arts organization platform designed for dojo networks, instructors, and
+practitioners. The ecosystem consists of three primary layers:
+
+  [ Android Client Tier ]        [ Web Frontend Tier ]
+   - Native Kotlin (MVVM)         - Responsive HTML5 / CSS3 / ES6+
+   - Hybrid WebView APK           - Bootstrap 5 & Custom Martial Dark Theme
+              \                         /
+               \                       /
+                v                     v
+          +--------------------------------------+
+          |       Apache HTTP Web Server         |
+          |       PHP 8.2 Engine Runtime         |
+          +--------------------------------------+
+                             |
+                   [ Application Layer ]
+            - Session-based Web Portals (Admin/Master/Senior/Student)
+            - RESTful JSON API Services (/api/)
+            - Security Middleware (CSRF, RBAC, BCrypt, Audit Logs)
+                             |
+                    [ Persistence Tier ]
+            - Primary: Aiven Cloud Managed MySQL 8.0 (SSL Encrypted)
+            - Fallback: High-Availability MariaDB 10.x inside Container
+            - Local Dev: XAMPP MySQL 8.0+
+
+--------------------------------------------------------------------------------
+2. WEB APPLICATION FRONTEND STACK
+--------------------------------------------------------------------------------
+  * Structure & Markup:
+    - HTML5 semantic elements (header, nav, section, main, article, footer).
+    - Meta tags for viewport scaling, mobile responsiveness, and SEO.
+
+  * Styling & UI Frameworks:
+    - Custom Martial Arts Aesthetic: Deep crimson palette (#990B0B, #8B0000),
+      obsidian dark backgrounds (#080808, #0D0D0D), golden martial kickers (#FFD700),
+      and glassmorphism frosted containers.
+    - Bootstrap 5 (v5.3.0): Grid system, modals, utility classes, buttons, flex layouts.
+    - FontAwesome 6 (v6.4.0): Vector iconography for martial arts, belts, trophies,
+      finances, navigation, and badges.
+    - Google Fonts: 'Inter' (modern typography) and 'Caveat Brush' (traditional crest).
+
+  * Client-Side Scripting & Dynamic Effects:
+    - Vanilla JavaScript (ES6+): Modular async event handlers, DOM manipulation.
+    - HTML5 Canvas Particle Engine: Custom ember particles simulating dojo fire/energy.
+    - Dynamic Modals & AJAX: Fetch API for live check-in, fee settlement, and filters.
+    - Real-Time Validation: Password strength checkers, dynamic form sanitization.
+
+--------------------------------------------------------------------------------
+3. WEB APPLICATION BACKEND & SERVER RUNTIME
+--------------------------------------------------------------------------------
+  * Language & Runtime:
+    - PHP 8.2 (Official Debian Bookworm Apache base: php:8.2-apache).
+    - Strict error reporting and exception handling with try/catch blocks.
+
+  * PHP Core Extensions & Modules:
+    - pdo & pdo_mysql: High-performance prepared SQL statements, parameter binding.
+    - mysqli: Auxiliary database connectivity.
+    - gd (with FreeType & libjpeg): Image rendering, dynamic belt certificates, avatar scaling.
+    - opcache: Precompiled bytecode caching for sub-millisecond execution times.
+    - session: Secure server-side sessions with HttpOnly and SameSite cookie policies.
+    - json: Native JSON encoding/decoding for REST API communication.
+    - curl & openssl: Outbound API communications and cryptographic operations.
+
+  * Web Server:
+    - Apache HTTP Server 2.4 (pre-fork MPM).
+    - mod_rewrite: Clean URL routing and directory restrictions via .htaccess.
+    - mod_headers: Security headers (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection).
+
+  * Application Roles & Portals:
+    1. Grand Master / Super Admin Portal (/admin/)
+       - Dojo provisioning, global billing, tournament sanctioning, audit logging.
+    2. Dojo Master / Sensei Portal (/master/)
+       - Student enrollment, attendance register, fee collection, belt examinations.
+    3. Senior Belt Portal (/senior/)
+       - Training logs, peer assistance, katas & kumite progression.
+    4. Student Portal (/student/)
+       - Belt tracking, attendance history, pending dues payment, tournament entries.
+
+--------------------------------------------------------------------------------
+4. DATABASE ARCHITECTURE & PERSISTENCE LAYER
+--------------------------------------------------------------------------------
+  * Database Engines:
+    - Production Remote: Aiven Managed MySQL 8.0 (SSL Required).
+    - Production Container Fallback: Embedded MariaDB 10.x.
+    - Local Dev: XAMPP MySQL 8.0 Daemon (Port 3306).
+
+  * Character Set & Collation:
+    - utf8mb4 / utf8mb4_unicode_ci (full multilingual and emoji support).
+
+  * Core Relational Schema (18+ Normalized Tables):
+    - users: Core authentication, member IDs, email, BCrypt password_hash, role enum.
+    - dojos: Dojo registration, location coordinates, contact details, head sensei foreign key.
+    - dojo_memberships: Many-to-many relationship with membership approval workflow.
+    - student_profiles: Height, weight, emergency contacts, date of birth, blood group.
+    - belt_ranks: Martial progression ranks from White (10th Kyu) to Black (Dan ranks).
+    - attendance_sessions & attendance_entries: Class scheduling and attendance registry.
+    - fee_structures, fee_records, payments: Tuition models, invoice generation, receipts.
+    - grading_history: Belt examination records, score sheets, examiner approvals.
+    - tournaments, tournament_registrations, tournament_brackets: Matches, brackets, medals.
+    - announcements: Targeted broadcast announcements by dojo or organization.
+    - audit_logs: Comprehensive security audit trail logging every user login & mutation.
+    - koms_system_flags: Idempotent migration and initialization flag tracker.
+
+--------------------------------------------------------------------------------
+5. ANDROID MOBILE APPLICATION STACK
+--------------------------------------------------------------------------------
+The project features a dual Android mobile architecture: a Native Kotlin client and
+an optimized Hybrid WebView client.
+
+  * Android Project Specifications:
+    - Build System: Gradle 8.x / 9.x with Kotlin DSL (build.gradle.kts).
+    - Android Gradle Plugin (AGP): 8.3+
+    - Kotlin Version: 1.9+
+    - Toolchain: JVM 17 (Java 17 SDK)
+    - Minimum SDK: API 24 (Android 7.0 Nougat)
+    - Target SDK: API 34 (Android 14)
+    - Compile SDK: API 34
+
+  * Architecture & Design Pattern:
+    - MVVM (Model - View - ViewModel) architecture pattern.
+    - ViewBinding enabled (replaces findViewById with type-safe generated bindings).
+    - Repository Pattern separating network calls from UI logic.
+
+  * Mobile Libraries & Frameworks:
+    - androidx.core:core-ktx:1.13.1: Kotlin extensions for Android framework APIs.
+    - androidx.appcompat:appcompat:1.7.0: Backward-compatible UI components.
+    - com.google.android.material:material:1.12.0: Material Design 3 components.
+    - androidx.constraintlayout:constraintlayout:2.1.4: High-performance constraint layouts.
+    - androidx.swiperefreshlayout:swiperefreshlayout:1.1.0: Pull-to-refresh container.
+    - androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7: Lifecycle-aware ViewModel state.
+    - androidx.lifecycle:lifecycle-livedata-ktx:2.8.7: Observable data holders.
+    - org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0: Asynchronous background threads.
+
+  * Mobile Networking & REST Client:
+    - com.squareup.retrofit2:retrofit:2.11.0: Type-safe HTTP REST client.
+    - com.squareup.retrofit2:converter-gson:2.11.0: Automated JSON serialization.
+    - com.squareup.okhttp3:okhttp:4.12.0: HTTP/2 client with connection pooling.
+    - com.squareup.okhttp3:logging-interceptor:4.12.0: Network debug logger.
+    - com.google.code.gson:gson:2.11.0: Google JSON parser.
+
+  * Mobile UI Components:
+    - Custom DrawerLayout: Deep crimson sliding navigation drawer (#990B0B).
+    - Vector Drawables: Custom martial logos (Shorin Ryu Crest, dragon Kanji watermark).
+    - Dynamic Dashboard Grids: 2x2 stat card layouts, quick actions matrix, student roster.
+    - SessionManager: Encrypted SharedPreferences holding JWT tokens, user roles, IDs.
+
+  * Hybrid WebView Application (WebViewActivity):
+    - Full WebKit engine integration (android.webkit.WebView).
+    - JavaScript, DOM storage, and HTML5 database storage enabled.
+    - Custom WebChromeClient with onShowFileChooser supporting camera & photo uploads.
+    - Custom WebViewClient keeping all internal navigation within the app sandbox.
+    - Server switcher dialog (Cloud Render, Local Dev, Emulator 10.0.2.2, or custom IP).
+    - Native Android hardware back-button navigation integrated into web history.
+
+--------------------------------------------------------------------------------
+6. RENDER CLOUD HOSTING & DEPLOYMENT PROCESS
+--------------------------------------------------------------------------------
+The backend is deployed as a fully containerized Docker service on Render Cloud.
+
+  * Render Specifications:
+    - Service Type: Web Service (Docker Runtime)
+    - Service Name: koms-backend
+    - Region: Singapore (ap-southeast-1)
+    - Plan: Free Tier
+    - Auto-Deploy: Enabled (Triggered automatically on git push to 'main' branch)
+    - Public Endpoint: https://koms-backend.onrender.com
+    - Blueprint Configuration: render.yaml (Infrastructure as Code)
+
+  * Step-by-Step Render Deployment Pipeline:
+
+    STEP 1: GIT PUSH TRIGGER
+      Developer pushes commits to 'main' on https://github.com/mtmohan012005-rgb/KOMS.git.
+      Render's GitHub Webhook detects the new commit SHA and triggers a build.
+
+    STEP 2: DOCKER IMAGE BUILD
+      Render pulls the repository and builds the image using './Dockerfile':
+        - Pulls base image 'php:8.2-apache'.
+        - Installs OS dependencies: mariadb-server, mariadb-client, libpng, libjpeg, libfreetype.
+        - Compiles PHP extensions: gd, mysqli, pdo, pdo_mysql, opcache.
+        - Enables Apache modules: rewrite, headers.
+        - Copies Apache configuration files and PHP production optimization settings.
+        - Copies application source code to '/var/www/html'.
+        - Installs and makes executable '/usr/local/bin/docker-entrypoint.sh'.
+        - Sets file ownership to 'www-data:www-data' with secure permissions (chmod 755 / 775).
+
+    STEP 3: CONTAINER PROVISIONING & STARTUP
+      Render starts the Docker container and executes 'docker-entrypoint.sh':
+        1. Port Reconfiguration:
+           Dynamically reads Render's assigned '$PORT' (e.g., 10000) and rewrites Apache's
+           'ports.conf' and '000-default.conf' using sed.
+        2. Database Discovery & Health Probing:
+           Reads environment variables (DB_HOST, DB_USER, DB_PASSWORD, DB_PORT, DB_NAME).
+           Executes 'mysqladmin ping' with SSL options (--ssl=1 --ssl-verify-server-cert=0).
+        3. Schema Verification & Auto-Migration:
+           If tables do not exist in the database, the entrypoint automatically executes:
+           mysql "$DB_NAME" < /var/www/html/database/schema.sql
+        4. High-Availability Fallback:
+           If the external database is unreachable, the entrypoint automatically initializes
+           and starts an embedded local MariaDB daemon (/usr/sbin/mariadbd) inside the
+           container, creating the database and importing schema.sql on the fly.
+        5. Idempotent Data Cleanup:
+           Executes 'cleanup_legacy_demo_accounts', ensuring demo data integrity and setting
+           the 'legacy_demo_accounts_removed_v1' flag in 'koms_system_flags'.
+        6. Web Server Execution:
+           Hands off process execution to 'exec apache2-foreground'.
+
+    STEP 4: HEALTH CHECK & TRAFFIC ROUTING
+      Render polls the health check endpoint:
+        GET https://koms-backend.onrender.com/api/index.php
+      Once the endpoint returns HTTP 200 OK, Render switches traffic to the new container
+      with zero-downtime deployment, terminating SSL via Cloudflare CDN.
+
+--------------------------------------------------------------------------------
+7. ENVIRONMENT VARIABLES MATRIX
+--------------------------------------------------------------------------------
+The following environment variables govern the application runtime:
+
+  Variable Name   | Default Value       | Description
+  ----------------+---------------------+---------------------------------------------
+  PORT            | 10000 / 80          | Port assigned dynamically by Render runtime
+  APP_ENV         | production          | Environment mode ('production' / 'development')
+  APP_URL         | https://...render...| Canonical base URL of the deployed application
+  DB_HOST         | aivencloud.com / ...| Database hostname (Remote Aiven Cloud or Local)
+  DB_PORT         | 15346 / 3306        | Database TCP port
+  DB_USER         | avnadmin / root     | Database authentication username
+  DB_PASSWORD     | [SECRET]            | Database authentication password
+  DB_NAME         | koms                | Database catalog name
+  DATABASE_URL    | [OPTIONAL]          | Standard connection URI string (pdo_mysql)
+
+--------------------------------------------------------------------------------
+8. SECURITY, AUTHENTICATION & ACCESS CONTROL
+--------------------------------------------------------------------------------
+  * Authentication:
+    - Passwords hashed using PHP's native password_hash() with BCrypt (Cost factor 10).
+    - Session regeneration (session_regenerate_id(true)) upon login to prevent fixation.
+    - Unified login accepting either Email Address or alphanumeric Member ID.
+
+  * Role-Based Access Control (RBAC):
+    - Strict role enforcement via middleware require_role($role).
+    - Unauthorized access triggers audit logging and redirects to appropriate portal.
+    - Valid roles: 'super_admin', 'master', 'senior', 'student'.
+
+  * Cross-Site Request Forgery (CSRF):
+    - Cryptographically secure CSRF token generated per session (bin2hex(random_bytes(32))).
+    - Mandatory token validation on all state-changing HTTP POST operations.
+
+  * Data Sanitization & SQL Injection Prevention:
+    - 100% of dynamic database queries utilize PDO prepared statements with parameter binding.
+    - Strict input sanitization via htmlspecialchars() and trim().
+
+  * Enterprise Audit Trail:
+    - Dedicated audit_logs table logging every login, role transition, dojo registration,
+      and financial mutation with user ID, IP address, and timestamp.
+
+--------------------------------------------------------------------------------
+9. LOCAL DEVELOPMENT ENVIRONMENT & TOOLS
+--------------------------------------------------------------------------------
+  * Web Backend:
+    - XAMPP / PHP 8.2 Development Server (php -S 127.0.0.1:8080)
+    - MySQL 8.0 Daemon (mysqld --standalone) on port 3306
+  * Mobile Development:
+    - Android Studio Hedgehog / Iguana / Ladybug
+    - Android SDK Build-Tools 34.0.0
+    - Android Debug Bridge (ADB) via USB and Wi-Fi debugging
+    - Test Device: OnePlus CPH2495 (Android 15, API 35)
+  * Version Control:
+    - Git 2.x with main branch tracking on GitHub
+
+================================================================================
+                           END OF SPECIFICATION FILE
+================================================================================
