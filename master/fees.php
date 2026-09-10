@@ -47,7 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_structure'])) 
                     }
                 }
 
-                log_audit_action($pdo, $master_id, 'CREATE', 'fee_structures', $structure_id, "Created fee structure: $name");
+                try {
+                    log_audit_action($pdo, $master_id, 'CREATE', 'fee_structures', $structure_id, "Created fee structure: $name");
+                } catch (Throwable $audit_error) {
+                    error_log('KOMS audit log failed while creating fee structure: ' . $audit_error->getMessage());
+                }
                 $_SESSION['success_msg'] = "Fee structure created successfully. Current eligible students were billed automatically when applicable.";
             } else {
                 $_SESSION['error_msg'] = 'Failed to create the fee structure.';
@@ -57,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_structure'])) 
     redirect('/master/fees.php');
 }
 
-// Update overdue statuses based on due dates for a useful live dashboard.
+// Keep pending records visually accurate as dates pass.
 $pdo->prepare("UPDATE fee_records r JOIN fee_structures s ON r.fee_structure_id = s.id SET r.status = 'overdue' WHERE s.dojo_id = ? AND r.status = 'pending' AND r.due_date < CURDATE()")->execute([$dojo_id]);
 
 $page_title = 'Fees & Payments';
@@ -71,7 +75,8 @@ $stmt = $pdo->prepare("SELECT COUNT(*) FROM dojo_memberships WHERE dojo_id = ? A
 $stmt->execute([$dojo_id]);
 $active_students = (int)$stmt->fetchColumn();
 
-$stmt = $pdo->prepare("SELECT COALESCE(SUM(r.amount_due), 0) FROM fee_records r JOIN fee_structures s ON r.fee_structure_id = s.id WHERE s.dojo_id = ? AND r.status IN ('pending','overdue','partially_paid')");
+// Outstanding is the actual remaining balance, not the original billed amount.
+$stmt = $pdo->prepare("SELECT COALESCE(SUM(GREATEST(r.amount_due - COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.fee_record_id = r.id), 0), 0)), 0) FROM fee_records r JOIN fee_structures s ON r.fee_structure_id = s.id WHERE s.dojo_id = ? AND r.status IN ('pending','overdue','partially_paid')");
 $stmt->execute([$dojo_id]);
 $outstanding_total = (float)$stmt->fetchColumn();
 
@@ -83,7 +88,7 @@ $stmt = $pdo->prepare("SELECT COUNT(*) FROM fee_records r JOIN fee_structures s 
 $stmt->execute([$dojo_id]);
 $paid_records = (int)$stmt->fetchColumn();
 
-$stmt = $pdo->prepare("SELECT r.*, s.fee_name, u.first_name, u.last_name,
+$stmt = $pdo->prepare("SELECT r.*, s.fee_name, u.first_name, u.last_name, u.member_id,
     COALESCE((SELECT SUM(p2.amount) FROM payments p2 WHERE p2.fee_record_id = r.id), 0) AS paid_amount
     FROM fee_records r
     JOIN fee_structures s ON r.fee_structure_id = s.id
@@ -107,6 +112,7 @@ $pending_records = $stmt->fetchAll();
     .panel .card-body { padding:1.3rem; }
     .form-control,.form-select { border-radius:12px; padding:.72rem .85rem; }
     .fee-badge { border-radius:999px; padding:.4rem .7rem; font-size:.72rem; font-weight:800; }
+    .member-id{display:inline-flex;border-radius:999px;padding:.25rem .55rem;background:#fff4cf;color:#705200;font-size:.68rem;font-weight:800;margin-top:.25rem}
 </style>
 
 <div class="fees-wrap">
@@ -163,17 +169,18 @@ $pending_records = $stmt->fetchAll();
             <div class="card panel">
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div><div class="text-uppercase text-muted" style="font-size:.72rem;font-weight:800;letter-spacing:.08em;">Collection Queue</div><h5 class="mb-0 mt-1">Outstanding Fee Records</h5></div>
-                    <a href="dashboard.php" class="btn btn-sm btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i>Dashboard</a>
+                    <a href="index.php" class="btn btn-sm btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i>Master Dashboard</a>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light"><tr><th>Student</th><th>Fee</th><th>Billing</th><th>Due</th><th>Due / Paid</th><th>Status</th><th></th></tr></thead>
+                            <thead class="table-light"><tr><th>Student</th><th>KOMS ID</th><th>Fee</th><th>Billing</th><th>Due</th><th>Remaining</th><th>Status</th><th></th></tr></thead>
                             <tbody>
                             <?php foreach ($pending_records as $rec): ?>
                                 <?php $remaining = max(0, (float)$rec['amount_due'] - (float)$rec['paid_amount']); ?>
                                 <tr>
-                                    <td><div class="fw-bold"><?= htmlspecialchars($rec['first_name'].' '.$rec['last_name']) ?></div><small class="text-muted">#<?= (int)$rec['student_id'] ?></small></td>
+                                    <td><div class="fw-bold"><?= htmlspecialchars($rec['first_name'].' '.$rec['last_name']) ?></div><small class="text-muted">Student #<?= (int)$rec['student_id'] ?></small></td>
+                                    <td><span class="member-id"><?= htmlspecialchars($rec['member_id'] ?: 'Not assigned') ?></span></td>
                                     <td><?= htmlspecialchars($rec['fee_name']) ?></td>
                                     <td><?= date('M Y', strtotime($rec['billing_month'])) ?></td>
                                     <td class="<?= strtotime($rec['due_date']) < time() ? 'text-danger fw-bold' : '' ?>"><?= date('M j, Y', strtotime($rec['due_date'])) ?></td>
@@ -182,7 +189,7 @@ $pending_records = $stmt->fetchAll();
                                     <td><a href="record_payment.php?record_id=<?= (int)$rec['id'] ?>" class="btn btn-sm btn-success">Payment</a></td>
                                 </tr>
                             <?php endforeach; ?>
-                            <?php if (!$pending_records): ?><tr><td colspan="7" class="text-center py-5 text-muted"><i class="fas fa-circle-check fa-2x d-block mb-2"></i>No outstanding fees found.</td></tr><?php endif; ?>
+                            <?php if (!$pending_records): ?><tr><td colspan="8" class="text-center py-5 text-muted"><i class="fas fa-circle-check fa-2x d-block mb-2"></i>No outstanding fees found.</td></tr><?php endif; ?>
                             </tbody>
                         </table>
                     </div>
