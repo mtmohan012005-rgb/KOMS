@@ -1,0 +1,87 @@
+/* MASS DRAGON DOJO - STUDENT PORTAL THEME */
+:root {
+    --student-red:#b51218;
+    --student-red-dark:#790a10;
+    --student-red-light:#ed3038;
+    --student-black:#0c0c0e;
+    --student-muted:#8c8c93;
+    --student-line:#e9e9ec;
+    --student-bg:#f4f5f7;
+    --student-green:#16a36a;
+    --student-orange:#f4a300;
+    --student-danger:#df3a44;
+    --student-shadow:0 12px 35px rgba(23,24,31,.08);
+    --student-sidebar:258px;
+}
+
+.student-portal,*{box-sizing:border-box}
+.student-portal{min-height:100vh;background:var(--student-bg);color:#16161a;font-family:"Poppins",Arial,sans-serif;overflow-x:hidden}
+.student-portal a{text-decoration:none;color:inherit}
+.student-portal button,.student-portal a{font-family:inherit}
+
+.student-portal .sp-sidebar{
+    position:fixed;inset:0 auto 0 0;width:var(--student-sidebar);height:100vh;z-index:1000;overflow-y:auto;
+    padding:24px 16px;color:#fff;background:
+    radial-gradient(circle at 10% 10%,rgba(255,255,255,.10),transparent 25%),
+    linear-gradient(155deg,#8f0e14 0%,#b51218 45%,#78090e 100%);
+    box-shadow:10px 0 30px rgba(0,0,0,.12);transition:transform .35s ease
+}
+.student-portal .sp-brand{display:flex;align-items:center;gap:11px;padding:2px 8px 25px}
+.student-portal .sp-brand-logo{width:45px;height:45px;border-radius:50%;display:grid;place-items:center;background:#fff;color:var(--student-red);font-size:23px;box-shadow:0 5px 20px rgba(0,0,0,.18)}
+.student-portal .sp-brand strong{display:block;font-size:16px;line-height:1.1;letter-spacing:.6px}
+.student-portal .sp-brand small{display:block;margin-top:4px;opacity:.78;font-size:9px;letter-spacing:.9px;text-transform:uppercase}
+.student-portal .sp-heading{padding:3px 12px 18px}
+.student-portal .sp-heading h1{font-size:24px;line-height:1.15;margin:0}
+.student-portal .sp-heading p{font-size:11px;line-height:1.6;color:rgba(255,255,255,.72);margin:6px 0 0}
+.student-portal .sp-nav{display:flex;flex-direction:column;gap:4px}
+.student-portal .sp-nav a{position:relative;display:flex;align-items:center;gap:12px;min-height:45px;padding:10px 12px;border-radius:12px;color:rgba(255,255,255,.86);font-size:12px;transition:.25s ease}
+.student-portal .sp-nav a:hover,.student-portal .sp-nav a.active{color:#fff;background:rgba(255,255,255,.14);transform:translateX(4px)}
+.student-portal .sp-nav a.active:before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;background:#fff;border-radius:3px}
+.student-portal .sp-nav .ico{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:rgba(255,255,255,.07);font-size:14px;flex:0 0 auto}
+.student-portal .sp-side-note{margin-top:24px;padding:13px 12px;border-radius:14px;background:rgba(0,0,0,.12);font-size:9px;line-height:1.6;color:rgba(255,255,255,.78)}
+
+.student-portal .sp-main{min-height:100vh;margin-left:var(--student-sidebar)}
+.student-portal .sp-topbar{position:sticky;top:0;z-index:800;height:74px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 28px;background:rgba(255,255,255,.92);backdrop-filter:blur(14px);border-bottom:1px solid rgba(25,25,30,.07)}
+.student-portal .sp-top-left{display:flex;align-items:center;gap:12px}
+.student-portal .sp-menu{width:43px;height:43px;border:0;border-radius:12px;background:#f0f1f3;display:none;place-items:center;font-size:20px;cursor:pointer}
+.student-portal .sp-title h2{margin:0;font-size:21px;line-height:1.1}
+.student-portal .sp-title p{font-size:10px;color:var(--student-muted);margin:3px 0 0}
+.student-portal .sp-user{display:flex;align-items:center;gap:10px;padding:5px 10px 5px 5px;background:#f3f4f6;border-radius:13px}
+.student-portal .sp-avatar{width:35px;height:35px;border-radius:50%;background:linear-gradient(135deg,#ececec,#d2d2d2);display:grid;place-items:center;font-weight:800;color:var(--student-red);border:2px solid #fff}
+.student-portal .sp-user b{display:block;font-size:11px}.student-portal .sp-user span{font-size:8px;color:var(--student-muted)}
+
+.student-portal .sp-content{padding:28px;max-width:1600px;margin:auto}
+.student-portal .sp-hero{position:relative;overflow:hidden;padding:30px;border-radius:24px;color:#fff;background:radial-gradient(circle at 80% 15%,rgba(255,255,255,.17),transparent 18%),linear-gradient(135deg,#111214 0%,#191a1e 40%,#991019 100%);box-shadow:0 18px 45px rgba(108,12,19,.20)}
+.student-portal .sp-hero:after{content:"龍";position:absolute;right:28px;top:-12px;font-size:190px;opacity:.045;line-height:1}
+.student-portal .sp-kicker{font-size:9px;text-transform:uppercase;letter-spacing:1.4px;color:#ffcf5c;font-weight:800}
+.student-portal .sp-hero h1{font-size:clamp(26px,3vw,38px);margin:10px 0 6px;font-weight:800;position:relative;z-index:2}
+.student-portal .sp-hero p{font-size:12px;line-height:1.8;max-width:680px;color:rgba(255,255,255,.72);margin:0;position:relative;z-index:2}
+.student-portal .sp-hero-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px;position:relative;z-index:2}
+.student-portal .sp-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:11px;padding:10px 14px;font-size:10px;font-weight:700;border:0;cursor:pointer;transition:.25s ease}
+.student-portal .sp-btn:hover{transform:translateY(-2px)}
+.student-portal .sp-btn-light{background:#fff;color:#151515}.student-portal .sp-btn-dark{background:#17181b;color:#fff}.student-portal .sp-btn-outline{background:transparent;border:1px solid #d9d9dd;color:#16161a}
+
+.student-portal .sp-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:18px}
+.student-portal .sp-card{background:#fff;border:1px solid var(--student-line);box-shadow:var(--student-shadow);border-radius:19px;padding:18px}
+.student-portal .sp-stat-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.student-portal .sp-stat-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:17px;background:#f2f3f4}
+.student-portal .sp-stat-label{font-size:9px;color:var(--student-muted);margin-top:12px;text-transform:uppercase;letter-spacing:.6px;font-weight:800}
+.student-portal .sp-stat-value{font-size:24px;font-weight:900;margin-top:3px;line-height:1.15}.student-portal .sp-stat-note{font-size:9px;color:var(--student-muted);margin-top:5px}
+.student-portal .tone-green .sp-stat-icon{background:#e7f7ee;color:var(--student-green)}.student-portal .tone-red .sp-stat-icon{background:#fdebed;color:var(--student-danger)}.student-portal .tone-orange .sp-stat-icon{background:#fff3df;color:var(--student-orange)}.student-portal .tone-gold .sp-stat-icon{background:#fff5cf;color:#b78600}
+
+.student-portal .sp-grid{display:grid;grid-template-columns:1.35fr .95fr;gap:18px;margin-top:18px}
+.student-portal .sp-panel{background:#fff;border:1px solid var(--student-line);box-shadow:var(--student-shadow);border-radius:20px;padding:20px}
+.student-portal .sp-panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:15px}.student-portal .sp-panel-head h3{font-size:16px;margin:0}.student-portal .sp-panel-head a{font-size:9px;color:var(--student-red);font-weight:700}
+.student-portal .sp-announce{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid #efeff1}.student-portal .sp-announce:last-child{border-bottom:0;padding-bottom:0}.student-portal .sp-announce-icon{width:33px;height:33px;border-radius:10px;background:#faf0e1;display:grid;place-items:center;font-size:14px;flex:0 0 auto}.student-portal .sp-announce strong{display:block;font-size:11px;line-height:1.45}.student-portal .sp-announce small{display:block;color:#9ba0a5;font-size:9px;margin-top:3px}
+.student-portal .sp-progress{display:grid;gap:17px}.student-portal .sp-progress-row{display:grid;grid-template-columns:66px minmax(0,1fr) 34px;align-items:center;gap:9px;font-size:10px}.student-portal .sp-track{height:8px;border-radius:99px;background:#ededee;overflow:hidden}.student-portal .sp-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,#f2be24,#ffca32)}.student-portal .sp-progress-value{text-align:right;color:#6f747a;font-size:9px}
+.student-portal .sp-dojo{padding:16px;border-radius:17px;color:#fff;background:linear-gradient(140deg,#171719,#2a2b2f 55%,#b51a20)}.student-portal .sp-dojo small{color:rgba(255,255,255,.65);font-size:9px}.student-portal .sp-dojo-name{font-size:19px;font-weight:900;margin-top:3px}.student-portal .sp-dojo-meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}.student-portal .sp-dojo-meta strong{display:block;font-size:10px;margin-top:3px}
+.student-portal .sp-table{width:100%;border-collapse:collapse}.student-portal .sp-table th,.student-portal .sp-table td{text-align:left;padding:10px 8px;border-bottom:1px solid #efeff1;font-size:9px}.student-portal .sp-table th{font-size:8px;color:#8b8b8b;text-transform:uppercase;letter-spacing:.7px}.student-portal .sp-table tr:last-child td{border-bottom:0}
+.student-portal .sp-badge{display:inline-flex;align-items:center;padding:5px 8px;border-radius:999px;font-size:8px;font-weight:800;text-transform:uppercase}.student-portal .badge-green{background:#e7f7ee;color:#13704a}.student-portal .badge-red{background:#fdebed;color:#a81420}.student-portal .badge-gold{background:#fff2c7;color:#8d6500}.student-portal .badge-dark{background:#17181b;color:#fff}
+.student-portal .sp-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.student-portal .sp-action{display:block;padding:12px;border-radius:14px;background:#f7f7f8;transition:.2s}.student-portal .sp-action:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(0,0,0,.07)}.student-portal .sp-action i{color:var(--student-red);font-size:15px}.student-portal .sp-action b{display:block;font-size:10px;margin-top:7px}.student-portal .sp-action small{display:block;color:var(--student-muted);font-size:8px;margin-top:2px}
+.student-portal .sp-footer{text-align:center;color:#a0a4aa;font-size:9px;padding:22px 0 8px}
+.student-portal .sp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:900;display:none}.student-portal .sp-overlay.show{display:block}
+
+@media(max-width:1180px){.student-portal .sp-stats{grid-template-columns:repeat(2,1fr)}.student-portal .sp-grid{grid-template-columns:1fr}}
+@media(max-width:850px){.student-portal .sp-sidebar{transform:translateX(-105%)}.student-portal .sp-sidebar.open{transform:translateX(0)}.student-portal .sp-main{margin-left:0}.student-portal .sp-menu{display:grid}.student-portal .sp-content{padding:18px}.student-portal .sp-topbar{padding:12px 18px}}
+@media(max-width:560px){.student-portal .sp-stats{grid-template-columns:1fr 1fr;gap:10px}.student-portal .sp-card{padding:14px}.student-portal .sp-stat-value{font-size:19px}.student-portal .sp-user>div:last-child{display:none}.student-portal .sp-hero{padding:22px}.student-portal .sp-hero:after{font-size:130px}.student-portal .sp-dojo-meta{grid-template-columns:1fr}.student-portal .sp-table th:nth-child(3),.student-portal .sp-table td:nth-child(3){display:none}}
+@media(max-width:390px){.student-portal .sp-stats{grid-template-columns:1fr}}
