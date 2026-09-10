@@ -1,0 +1,18 @@
+# Operating System
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+
+# Temporary / Session test artifacts
+*.log
+*cookie*.txt
+scratch/
+
+# Uploads directory (keep directory with .gitkeep)
+uploads/*
+!uploads/.gitkeep

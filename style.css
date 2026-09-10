@@ -1,0 +1,772 @@
+/* ==========================================================================
+   MASS DRAGON DOJO - KOMS ENTERPRISE THEME
+   Traditional Okinawan Martial Arts Aesthetics: Deep Obsidian, Gold, Crimson
+   ========================================================================== */
+
+:root {
+    --bg-base: #030303;
+    --bg-surface: #0a0a0a;
+    --bg-card: rgba(18, 18, 18, 0.85);
+    --bg-card-hover: rgba(28, 28, 28, 0.95);
+    --gold: #f4bd17;
+    --gold-glow: rgba(244, 189, 23, 0.4);
+    --gold-dim: #b88a0b;
+    --crimson: #e50914;
+    --crimson-glow: rgba(229, 9, 20, 0.4);
+    --text-primary: #ffffff;
+    --text-secondary: #a3a3a3;
+    --text-muted: #666666;
+    --border-subtle: rgba(244, 189, 23, 0.18);
+    --border-crimson: rgba(229, 9, 20, 0.3);
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-heading: 'Cinzel', 'Trajan Pro', Georgia, serif;
+    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+    line-height: 1.5;
+}
+
+/* ==========================================================================
+   Environmental Backgrounds: SVG Fractal Noise Grain & Particle Canvas
+   ========================================================================== */
+#particleCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.grain-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0.035;
+}
+
+.ambient-glow {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(244, 189, 23, 0.08) 0%, rgba(229, 9, 20, 0.04) 50%, transparent 70%);
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    animation: ambientFloat 18s ease-in-out infinite alternate;
+}
+
+@keyframes ambientFloat {
+    0% { transform: translate(-20%, -20%) scale(1); }
+    100% { transform: translate(40%, 30%) scale(1.2); }
+}
+
+/* ==========================================================================
+   Choreographed Entrance Animation: Shorin Ryu Logo Convergence
+   ========================================================================== */
+#entranceOverlay {
+    position: fixed;
+    inset: 0;
+    background: #000000;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.8s ease, visibility 0.8s;
+}
+
+.convergence-stage {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-half {
+    position: absolute;
+    width: 140px;
+    height: 280px;
+    overflow: hidden;
+    top: 0;
+    will-change: transform;
+}
+
+.logo-left {
+    left: 0;
+    transform: translateX(-120vw);
+    animation: convergeLeft 1.2s cubic-bezier(0.19, 1, 0.22, 1) 0.3s forwards;
+}
+
+.logo-right {
+    right: 0;
+    transform: translateX(120vw);
+    animation: convergeRight 1.2s cubic-bezier(0.19, 1, 0.22, 1) 0.3s forwards;
+}
+
+.crest-svg {
+    width: 280px;
+    height: 280px;
+}
+
+.logo-right .crest-svg {
+    margin-left: -140px;
+}
+
+.central-light-beam {
+    position: absolute;
+    width: 6px;
+    height: 100vh;
+    background: linear-gradient(to bottom, transparent, #ffffff, var(--gold), transparent);
+    box-shadow: 0 0 50px #ffffff, 0 0 100px var(--gold);
+    opacity: 0;
+    transform: scaleY(0);
+    animation: beamFlash 0.6s ease-out 1.5s forwards;
+}
+
+.radial-glow-burst {
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(244, 189, 23, 0.9) 0%, rgba(229, 9, 20, 0.4) 40%, transparent 70%);
+    opacity: 0;
+    transform: scale(0.2);
+    animation: glowBurst 0.9s cubic-bezier(0.19, 1, 0.22, 1) 1.5s forwards;
+}
+
+.entrance-brand {
+    margin-top: 2rem;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: brandFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) 1.8s forwards;
+}
+
+.entrance-brand h1 {
+    font-family: var(--font-heading);
+    font-size: 2.2rem;
+    letter-spacing: 6px;
+    color: var(--gold);
+    text-shadow: 0 0 25px rgba(244, 189, 23, 0.6);
+    margin-bottom: 0.4rem;
+}
+
+.entrance-brand .kanji-sub {
+    font-size: 1.1rem;
+    letter-spacing: 8px;
+    color: var(--crimson);
+    font-weight: 700;
+}
+
+@keyframes convergeLeft {
+    to { transform: translateX(0); }
+}
+
+@keyframes convergeRight {
+    to { transform: translateX(0); }
+}
+
+@keyframes beamFlash {
+    0% { opacity: 0; transform: scaleY(0); }
+    50% { opacity: 1; transform: scaleY(1.2); }
+    100% { opacity: 0; transform: scaleY(1.5); }
+}
+
+@keyframes glowBurst {
+    0% { opacity: 0; transform: scale(0.2); }
+    40% { opacity: 1; transform: scale(1.2); }
+    100% { opacity: 0.3; transform: scale(1); }
+}
+
+@keyframes brandFadeIn {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   Main App Container & Layout
+   ========================================================================== */
+#appWrapper {
+    position: relative;
+    z-index: 10;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Top Navigation Bar */
+.koms-navbar {
+    background: rgba(8, 8, 8, 0.9);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 0.85rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    text-decoration: none;
+    color: var(--text-primary);
+}
+
+.nav-logo-crest {
+    width: 38px;
+    height: 38px;
+    filter: drop-shadow(0 0 8px rgba(244, 189, 23, 0.5));
+}
+
+.brand-text-block .brand-name {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 1.15rem;
+    letter-spacing: 2px;
+    color: var(--gold);
+    line-height: 1.1;
+}
+
+.brand-text-block .brand-sub {
+    font-size: 0.72rem;
+    letter-spacing: 1.5px;
+    color: var(--crimson);
+    font-weight: 700;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Custom Martial Buttons */
+.btn-martial-gold {
+    background: linear-gradient(135deg, var(--gold) 0%, #d49f0a 100%);
+    color: #000;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 1.4rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    box-shadow: 0 0 15px rgba(244, 189, 23, 0.25);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-martial-gold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px rgba(244, 189, 23, 0.55);
+    color: #000;
+}
+
+.btn-martial-crimson {
+    background: linear-gradient(135deg, var(--crimson) 0%, #b3070f 100%);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 1.4rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    box-shadow: 0 0 15px rgba(229, 9, 20, 0.3);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-martial-crimson:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px rgba(229, 9, 20, 0.6);
+    color: #fff;
+}
+
+.btn-martial-outline {
+    background: transparent;
+    color: var(--gold);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 0.55rem 1.2rem;
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-martial-outline:hover {
+    background: rgba(244, 189, 23, 0.1);
+    border-color: var(--gold);
+    color: var(--gold);
+}
+
+/* ==========================================================================
+   Login Experience & Modals
+   ========================================================================== */
+.auth-hero-section {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+}
+
+.login-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 480px;
+    padding: 2.5rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 35px rgba(244, 189, 23, 0.1);
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition-normal);
+}
+
+.login-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--crimson), var(--gold), var(--crimson));
+}
+
+.login-card.shake-animation {
+    animation: shakeCard 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.login-card.success-glow {
+    box-shadow: 0 0 60px rgba(244, 189, 23, 0.6), 0 0 100px rgba(229, 9, 20, 0.3) !important;
+    border-color: var(--gold) !important;
+}
+
+@keyframes shakeCard {
+    10%, 90% { transform: translate3d(-3px, 0, 0); }
+    20%, 80% { transform: translate3d(5px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+    40%, 60% { transform: translate3d(6px, 0, 0); }
+}
+
+.form-group-custom {
+    margin-bottom: 1.4rem;
+}
+
+.form-label-custom {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.45rem;
+}
+
+.input-icon-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon-wrapper i.lead-icon {
+    position: absolute;
+    left: 1rem;
+    color: var(--text-muted);
+    transition: var(--transition-fast);
+}
+
+.form-input-custom {
+    width: 100%;
+    background: #0f0f0f;
+    border: 1px solid #262626;
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    color: #ffffff;
+    font-size: 0.95rem;
+    transition: var(--transition-fast);
+    outline: none;
+}
+
+.form-input-custom:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 12px rgba(244, 189, 23, 0.25);
+    background: #141414;
+}
+
+.form-input-custom:focus + i.lead-icon {
+    color: var(--gold);
+}
+
+.toggle-password-btn {
+    position: absolute;
+    right: 0.8rem;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.3rem;
+    transition: var(--transition-fast);
+}
+
+.toggle-password-btn:hover {
+    color: var(--gold);
+}
+
+/* Quick Demo Role Selector Pills */
+.demo-selector-box {
+    background: rgba(244, 189, 23, 0.04);
+    border: 1px solid rgba(244, 189, 23, 0.15);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.demo-pills-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.demo-role-btn {
+    background: #141414;
+    border: 1px solid #262626;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    padding: 0.45rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    transition: var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.demo-role-btn:hover {
+    background: #1f1f1f;
+    border-color: var(--gold);
+    color: var(--gold);
+}
+
+/* ==========================================================================
+   SPA Role Dashboards Framework
+   ========================================================================== */
+.dashboard-container {
+    padding: 2rem 2.5rem;
+    flex: 1;
+    max-width: 1440px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dash-title-group h2 {
+    font-family: var(--font-heading);
+    font-size: 1.9rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.dash-title-group h2 .role-tag {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: var(--font-sans);
+    font-weight: 800;
+}
+
+.role-tag.super-admin { background: rgba(229, 9, 20, 0.2); color: #ff4d4f; border: 1px solid rgba(229, 9, 20, 0.4); }
+.role-tag.master { background: rgba(244, 189, 23, 0.2); color: var(--gold); border: 1px solid rgba(244, 189, 23, 0.4); }
+.role-tag.senior { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+.role-tag.student { background: rgba(74, 222, 128, 0.2); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.4); }
+
+/* Metric Cards Grid */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.4rem;
+    margin-bottom: 2rem;
+}
+
+.kpi-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition-normal);
+}
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-subtle);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.kpi-card .kpi-label {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+}
+
+.kpi-card .kpi-value {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.kpi-card i.kpi-icon {
+    position: absolute;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    font-size: 2.5rem;
+    opacity: 0.12;
+    color: var(--gold);
+}
+
+/* Glass Panels & Tables */
+.glass-panel {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.glass-panel-header {
+    padding: 1.2rem 1.6rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.glass-panel-header h4 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.custom-table th {
+    background: rgba(255, 255, 255, 0.02);
+    padding: 0.9rem 1.4rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.custom-table td {
+    padding: 1rem 1.4rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    color: #d1d5db;
+}
+
+.custom-table tr:hover td {
+    background: rgba(244, 189, 23, 0.02);
+}
+
+/* ==========================================================================
+   Algorithmic Tournament Bracket Visualizer
+   ========================================================================== */
+.bracket-viewport {
+    display: flex;
+    gap: 2.5rem;
+    padding: 2rem;
+    overflow-x: auto;
+    background: #080808;
+    border-radius: var(--radius-md);
+}
+
+.bracket-round {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    min-width: 220px;
+}
+
+.bracket-round-title {
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: var(--gold);
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.match-card {
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    border-radius: var(--radius-sm);
+    margin: 1rem 0;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.match-competitor {
+    padding: 0.6rem 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #222;
+}
+
+.match-competitor:last-child {
+    border-bottom: none;
+}
+
+.match-competitor.winner {
+    color: var(--gold);
+    font-weight: 700;
+    background: rgba(244, 189, 23, 0.06);
+}
+
+.match-competitor .dojo-badge {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    background: #262626;
+    color: #999;
+}
+
+/* ==========================================================================
+   Shorin Ryu Kyu & Dan Timeline
+   ========================================================================== */
+.belt-timeline {
+    position: relative;
+    padding: 1.5rem 0 1.5rem 2rem;
+}
+
+.belt-timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #ffffff, var(--gold), var(--crimson), #111);
+}
+
+.belt-event {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.belt-event::before {
+    content: '';
+    position: absolute;
+    left: -2rem;
+    top: 4px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 10px var(--gold);
+}
+
+/* ==========================================================================
+   DPDP Act 2023 Parental Consent Modal
+   ========================================================================== */
+.modal-backdrop-custom {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+
+.modal-dialog-custom {
+    background: #111111;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 580px;
+    padding: 2.2rem;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .dashboard-container { padding: 1.2rem; }
+    .kpi-grid { grid-template-columns: 1fr; }
+    .dash-header { flex-direction: column; gap: 1rem; }
+    .bracket-viewport { flex-direction: column; }
+}

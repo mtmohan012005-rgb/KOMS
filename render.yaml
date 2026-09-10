@@ -1,0 +1,23 @@
+# Render Blueprint Specification for KOMS
+# Deploy instantly on Render via Infrastructure-as-Code
+services:
+  - type: web
+    name: koms-app
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/index.php
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DB_HOST
+        sync: false
+      - key: DB_NAME
+        value: koms
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_PORT
+        value: "3306"
