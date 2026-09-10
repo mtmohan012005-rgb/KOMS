@@ -39,21 +39,44 @@ function require_role($required_role) {
     }
 }
 
-function login_user($pdo, $email, $password) {
+/**
+ * Ensure the KOMS member_id column exists for databases created before
+ * member IDs were introduced. This keeps the live database compatible
+ * without requiring a manual migration step.
+ */
+function ensure_member_id_column(PDO $pdo): void {
+    $check = $pdo->query(
+        "SELECT COUNT(*)
+         FROM information_schema.columns
+         WHERE table_schema = DATABASE()
+           AND table_name = 'users'
+           AND column_name = 'member_id'"
+    );
+
+    if ((int)$check->fetchColumn() === 0) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN member_id VARCHAR(100) NULL UNIQUE AFTER id");
+    }
+}
+
+function login_user($pdo, $login, $password) {
     try {
+        ensure_member_id_column($pdo);
+
+        $login = trim((string)$login);
+
         $stmt = $pdo->prepare(
             "SELECT id, first_name, last_name, password_hash, role, status
              FROM users
-             WHERE email = ?
+             WHERE email = ? OR member_id = ?
              LIMIT 1"
         );
-        $stmt->execute([$email]);
+        $stmt->execute([$login, $login]);
         $user = $stmt->fetch();
 
         if (!$user || !password_verify($password, $user['password_hash'])) {
             return [
                 "success" => false,
-                "message" => "Invalid email or password."
+                "message" => "Invalid email / User ID or password."
             ];
         }
 
