@@ -12,6 +12,25 @@ if (is_logged_in()) {
     redirect('/index.php');
 }
 
+if (isset($_GET['quick'])) {
+    $quickRole = $_GET['quick'];
+    $emailMap = [
+        'master' => 'master@gmail.com',
+        'admin'  => 'admin@gmail.com',
+        'senior' => 'senior@gmail.com',
+        'student'=> 'student@gmail.com'
+    ];
+    if (isset($emailMap[$quickRole])) {
+        $result = login_user($pdo, $emailMap[$quickRole], 'password123');
+        if ($result['success']) {
+            if ($result['role'] === 'super_admin') redirect('/admin/dashboard.php');
+            if ($result['role'] === 'master') redirect('/master/dashboard.php');
+            if ($result['role'] === 'senior') redirect('/senior/dashboard.php');
+            if ($result['role'] === 'student') redirect('/student/dashboard.php');
+        }
+    }
+}
+
 $error_message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {

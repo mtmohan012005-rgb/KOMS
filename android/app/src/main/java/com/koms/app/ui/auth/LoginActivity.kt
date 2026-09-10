@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.koms.app.databinding.ActivityLoginBinding
+import com.koms.app.ui.master.MasterDashboardActivity
 import com.koms.app.ui.student.StudentDashboardActivity
 import com.koms.app.utils.SessionManager
 
@@ -186,9 +187,10 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun navigateToDashboard(role: String) {
-        val intent = when (role) {
+        val intent = when (role.lowercase()) {
+            "master" -> Intent(this, MasterDashboardActivity::class.java)
             "student" -> Intent(this, StudentDashboardActivity::class.java)
-            else -> Intent(this, StudentDashboardActivity::class.java)
+            else -> Intent(this, MasterDashboardActivity::class.java)
         }
         startActivity(intent)
         finish()

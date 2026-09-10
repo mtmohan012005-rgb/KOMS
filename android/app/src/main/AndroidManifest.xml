@@ -25,7 +25,11 @@
 
         <activity
             android:name=".ui.student.StudentDashboardActivity"
-            android:exported="false" />
+            android:exported="true" />
+
+        <activity
+            android:name=".ui.master.MasterDashboardActivity"
+            android:exported="true" />
 
         <activity
             android:name=".ui.student.DojosActivity"
