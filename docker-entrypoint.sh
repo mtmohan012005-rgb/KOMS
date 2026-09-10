@@ -15,177 +15,111 @@ DB_PORT="${DB_PORT:-3306}"
 
 EXT_DB_OK=0
 
-# Exact legacy demo accounts that were previously bundled with KOMS.
-# They are removed once from an existing database, then a marker prevents
-# the cleanup from running again. New users are never created automatically.
-run_legacy_demo_cleanup() {
-    local MYSQL_CMD="mysql $1"
-    local DB_ARGS="$2"
+cleanup_legacy_demo_accounts() {
+    local MYSQL_ARGS=("$@")
 
-    $MYSQL_CMD $DB_ARGS "$DB_NAME" <<'SQL'
-CREATE TABLE IF NOT EXISTS koms_system_flags (
-    flag_name VARCHAR(100) PRIMARY KEY,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    "${MYSQL_ARGS[@]}" -N -s -e "CREATE TABLE IF NOT EXISTS koms_system_flags (flag_name VARCHAR(100) PRIMARY KEY, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);" "$DB_NAME"
 
-SET @cleanup_needed := (
-    SELECT COUNT(*) = 0
-    FROM koms_system_flags
-    WHERE flag_name = 'legacy_demo_accounts_removed_v1'
-);
+    local ALREADY_DONE
+    ALREADY_DONE=$("${MYSQL_ARGS[@]}" -N -s -e "SELECT COUNT(*) FROM koms_system_flags WHERE flag_name='legacy_demo_accounts_removed_v1';" "$DB_NAME" 2>/dev/null || echo 0)
 
+    if [ "$ALREADY_DONE" = "1" ]; then
+        echo "Legacy demo-account cleanup already completed."
+        return 0
+    fi
+
+    echo "Removing legacy KOMS demo accounts and their demo records..."
+    "${MYSQL_ARGS[@]}" "$DB_NAME" <<'SQL'
 SET FOREIGN_KEY_CHECKS = 0;
 
 DELETE FROM audit_logs
-WHERE user_id IN (
-    SELECT id FROM users WHERE email IN (
-        'admin@gmail.com',
-        'master@gmail.com',
-        'senior@gmail.com',
-        'student@gmail.com',
-        'minor@gmail.com',
-        'ryu@gmail.com',
-        'ken@gmail.com',
-        'chunli@gmail.com',
-        'rubeshwaran.t@koms.local'
-    )
-);
+WHERE user_id IN (SELECT id FROM users WHERE email IN ('admin@gmail.com','master@gmail.com','senior@gmail.com','student@gmail.com','minor@gmail.com','ryu@gmail.com','ken@gmail.com','chunli@gmail.com','rubeshwaran.t@koms.local'));
 
 DELETE FROM tournament_registrations
-WHERE student_id IN (
-    SELECT id FROM users WHERE email IN (
-        'student@gmail.com','minor@gmail.com','ryu@gmail.com','ken@gmail.com','chunli@gmail.com'
-    )
-);
+WHERE student_id IN (SELECT id FROM users WHERE email IN ('student@gmail.com','minor@gmail.com','ryu@gmail.com','ken@gmail.com','chunli@gmail.com'));
 
 DELETE FROM tournament_brackets
-WHERE tournament_id IN (
-    SELECT id FROM tournaments WHERE name = 'All-Valley Shorin Ryu Championship'
-);
+WHERE tournament_id IN (SELECT id FROM tournaments WHERE name='All-Valley Shorin Ryu Championship');
 
 DELETE FROM tournaments
-WHERE name = 'All-Valley Shorin Ryu Championship';
+WHERE name='All-Valley Shorin Ryu Championship';
 
 DELETE FROM grading_history
-WHERE student_id IN (
-    SELECT id FROM users WHERE email IN ('student@gmail.com','minor@gmail.com','ryu@gmail.com','ken@gmail.com','chunli@gmail.com')
-)
-OR instructor_id IN (
-    SELECT id FROM users WHERE email IN ('admin@gmail.com','master@gmail.com','senior@gmail.com')
-);
+WHERE student_id IN (SELECT id FROM users WHERE email IN ('student@gmail.com','minor@gmail.com','ryu@gmail.com','ken@gmail.com','chunli@gmail.com'))
+   OR instructor_id IN (SELECT id FROM users WHERE email IN ('admin@gmail.com','master@gmail.com','senior@gmail.com'));
 
 DELETE FROM achievements
-WHERE student_id IN (
-    SELECT id FROM users WHERE email IN ('student@gmail.com','minor@gmail.com','ryu@gmail.com','ken@gmail.com','chunli@gmail.com')
-)
-OR added_by IN (
-    SELECT id FROM users WHERE email IN ('admin@gmail.com','master@gmail.com','senior@gmail.com')
-);
+WHERE student_id IN (SELECT id FROM users WHERE email IN ('student@gmail.com','minor@gmail.com','ryu@gmail.com','ken@gmail.com','chunli@gmail.com'))
+   OR added_by IN (SELECT id FROM users WHERE email IN ('admin@gmail.com','master@gmail.com','senior@gmail.com'));
 
 DELETE FROM attendance_entries
-WHERE student_id IN (
-    SELECT id FROM users WHERE email IN ('student@gmail.com','minor@gmail.com','ryu@gmail.com','ken@gmail.com','chunli@gmail.com')
-)
-OR marked_by IN (
-    SELECT id FROM users WHERE email IN ('admin@gmail.com','master@gmail.com','senior@gmail.com')
-);
+WHERE student_id IN (SELECT id FROM users WHERE email IN ('student@gmail.com','minor@gmail.com','ryu@gmail.com','ken@gmail.com','chunli@gmail.com'))
+   OR marked_by IN (SELECT id FROM users WHERE email IN ('admin@gmail.com','master@gmail.com','senior@gmail.com'));
 
 DELETE FROM attendance_sessions
-WHERE instructor_id IN (
-    SELECT id FROM users WHERE email IN ('admin@gmail.com','master@gmail.com','senior@gmail.com')
-)
-OR dojo_id IN (
-    SELECT id FROM dojos WHERE name IN ('Mass Dragon Dojo','Okinawa Shorin Ryu Central')
-);
+WHERE instructor_id IN (SELECT id FROM users WHERE email IN ('admin@gmail.com','master@gmail.com','senior@gmail.com'))
+   OR dojo_id IN (SELECT id FROM dojos WHERE name IN ('Mass Dragon Dojo','Okinawa Shorin Ryu Central'));
 
 DELETE FROM payments
-WHERE student_id IN (
-    SELECT id FROM users WHERE email IN ('student@gmail.com','minor@gmail.com','ryu@gmail.com','ken@gmail.com','chunli@gmail.com')
-);
+WHERE student_id IN (SELECT id FROM users WHERE email IN ('student@gmail.com','minor@gmail.com','ryu@gmail.com','ken@gmail.com','chunli@gmail.com'));
 
 DELETE FROM fee_records
-WHERE student_id IN (
-    SELECT id FROM users WHERE email IN ('student@gmail.com','minor@gmail.com','ryu@gmail.com','ken@gmail.com','chunli@gmail.com')
-)
-OR fee_structure_id IN (
-    SELECT id FROM fee_structures WHERE dojo_id IN (
-        SELECT id FROM dojos WHERE name IN ('Mass Dragon Dojo','Okinawa Shorin Ryu Central')
-    )
-);
+WHERE student_id IN (SELECT id FROM users WHERE email IN ('student@gmail.com','minor@gmail.com','ryu@gmail.com','ken@gmail.com','chunli@gmail.com'))
+   OR fee_structure_id IN (SELECT id FROM fee_structures WHERE dojo_id IN (SELECT id FROM dojos WHERE name IN ('Mass Dragon Dojo','Okinawa Shorin Ryu Central')));
 
 DELETE FROM fee_structures
-WHERE dojo_id IN (
-    SELECT id FROM dojos WHERE name IN ('Mass Dragon Dojo','Okinawa Shorin Ryu Central')
-);
+WHERE dojo_id IN (SELECT id FROM dojos WHERE name IN ('Mass Dragon Dojo','Okinawa Shorin Ryu Central'));
 
 DELETE FROM announcements
-WHERE created_by IN (
-    SELECT id FROM users WHERE email IN ('admin@gmail.com','master@gmail.com','senior@gmail.com')
-)
-OR dojo_id IN (
-    SELECT id FROM dojos WHERE name IN ('Mass Dragon Dojo','Okinawa Shorin Ryu Central')
-);
+WHERE created_by IN (SELECT id FROM users WHERE email IN ('admin@gmail.com','master@gmail.com','senior@gmail.com'))
+   OR dojo_id IN (SELECT id FROM dojos WHERE name IN ('Mass Dragon Dojo','Okinawa Shorin Ryu Central'));
 
 DELETE FROM dojo_memberships
-WHERE student_id IN (
-    SELECT id FROM users WHERE email IN ('student@gmail.com','minor@gmail.com','ryu@gmail.com','ken@gmail.com','chunli@gmail.com')
-)
-OR dojo_id IN (
-    SELECT id FROM dojos WHERE name IN ('Mass Dragon Dojo','Okinawa Shorin Ryu Central')
-);
+WHERE student_id IN (SELECT id FROM users WHERE email IN ('student@gmail.com','minor@gmail.com','ryu@gmail.com','ken@gmail.com','chunli@gmail.com'))
+   OR dojo_id IN (SELECT id FROM dojos WHERE name IN ('Mass Dragon Dojo','Okinawa Shorin Ryu Central'));
 
 DELETE FROM student_profiles
-WHERE user_id IN (
-    SELECT id FROM users WHERE email IN ('student@gmail.com','minor@gmail.com','ryu@gmail.com','ken@gmail.com','chunli@gmail.com')
-);
+WHERE user_id IN (SELECT id FROM users WHERE email IN ('student@gmail.com','minor@gmail.com','ryu@gmail.com','ken@gmail.com','chunli@gmail.com'));
 
 DELETE FROM dojos
 WHERE name IN ('Mass Dragon Dojo','Okinawa Shorin Ryu Central');
 
 DELETE FROM users
-WHERE email IN (
-    'admin@gmail.com',
-    'master@gmail.com',
-    'senior@gmail.com',
-    'student@gmail.com',
-    'minor@gmail.com',
-    'ryu@gmail.com',
-    'ken@gmail.com',
-    'chunli@gmail.com',
-    'rubeshwaran.t@koms.local'
-)
-OR member_id = 'master.rubeshwaran2004.koms';
+WHERE email IN ('admin@gmail.com','master@gmail.com','senior@gmail.com','student@gmail.com','minor@gmail.com','ryu@gmail.com','ken@gmail.com','chunli@gmail.com','rubeshwaran.t@koms.local')
+   OR member_id='master.rubeshwaran2004.koms';
 
 SET FOREIGN_KEY_CHECKS = 1;
 
-INSERT IGNORE INTO koms_system_flags (flag_name)
+INSERT IGNORE INTO koms_system_flags(flag_name)
 VALUES ('legacy_demo_accounts_removed_v1');
 SQL
+
+    echo "Legacy demo-account cleanup completed."
 }
 
-if [ -n "$DATABASE_URL" ] || ([ -n "$DB_HOST" ] && [ "$DB_HOST" != "localhost" ] && [ "$DB_HOST" != "127.0.0.1"]); then
+if [ -n "$DATABASE_URL" ] || ([ -n "$DB_HOST" ] && [ "$DB_HOST" != "localhost" ] && [ "$DB_HOST" != "127.0.0.1" ]); then
     echo "Checking external database connection to $DB_HOST:$DB_PORT..."
-    MYSQL_SSL_OPTS="--ssl=1 --ssl-verify-server-cert=0 --connect-timeout=4"
+    MYSQL_SSL_OPTS=(--ssl=1 --ssl-verify-server-cert=0 --connect-timeout=4)
+    MYSQL_BASE=(mysql "${MYSQL_SSL_OPTS[@]}" -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD")
+    MYSQL_ADMIN=(mysqladmin "${MYSQL_SSL_OPTS[@]}" -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD")
 
-    if mysqladmin $MYSQL_SSL_OPTS -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" ping --silent 2>/dev/null; then
+    if "${MYSQL_ADMIN[@]}" ping --silent 2>/dev/null; then
         echo "External database is reachable and authenticated!"
         EXT_DB_OK=1
 
-        TABLES_EXIST=$(mysql $MYSQL_SSL_OPTS -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" -N -s -e "SELECT count(*) FROM information_schema.tables WHERE table_schema = '$DB_NAME';" 2>/dev/null || echo "0")
+        TABLES_EXIST=$("${MYSQL_BASE[@]}" -N -s -e "SELECT count(*) FROM information_schema.tables WHERE table_schema = '$DB_NAME';" 2>/dev/null || echo "0")
 
         if [ "$TABLES_EXIST" = "0" ] || [ -z "$TABLES_EXIST" ]; then
             if [ -f "/var/www/html/database/schema.sql" ]; then
                 echo "Importing initial database schema into external database..."
-                mysql $MYSQL_SSL_OPTS -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /var/www/html/database/schema.sql || true
+                "${MYSQL_BASE[@]}" "$DB_NAME" < /var/www/html/database/schema.sql || true
                 echo "External database schema import complete."
             fi
         else
             echo "External database $DB_NAME already contains $TABLES_EXIST tables."
         fi
 
-        echo "Removing legacy KOMS demo accounts from external database (one time)..."
-        run_legacy_demo_cleanup "$MYSQL_SSL_OPTS" "-h '$DB_HOST' -P '$DB_PORT' -u '$DB_USER' -p'$DB_PASSWORD'"
-        echo "Legacy demo-account cleanup completed."
+        cleanup_legacy_demo_accounts "${MYSQL_BASE[@]}"
     else
         echo "External database ($DB_HOST) was not reachable or credentials were not provided."
         echo "Activating container internal MariaDB fallback for high availability..."
@@ -245,15 +179,12 @@ EOF
             echo "$DB_NAME already contains $TABLES_EXIST tables."
         fi
 
-        echo "Removing legacy KOMS demo accounts from internal database (one time)..."
-        run_legacy_demo_cleanup "" ""
-        echo "Legacy demo-account cleanup completed."
+        cleanup_legacy_demo_accounts mysql
     else
         echo "Warning: MariaDB did not become ready in time."
     fi
 fi
 
-# Ensure uploads directory has correct permissions
 mkdir -p /var/www/html/uploads
 chown -R www-data:www-data /var/www/html/uploads 2>/dev/null || true
 chmod -R 775 /var/www/html/uploads 2>/dev/null || true
