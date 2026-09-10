@@ -16,6 +16,7 @@ scratch/
 # Uploads directory (keep directory with .gitkeep)
 uploads/*
 !uploads/.gitkeep
+!uploads/koms-mobile.apk
 
 # Android Studio & Gradle Artifacts
 android/.gradle/
