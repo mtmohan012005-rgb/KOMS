@@ -8,22 +8,28 @@ echo "Configuring Apache to listen on port ${APACHE_PORT}..."
 sed -i "s/Listen [0-9]*/Listen ${APACHE_PORT}/g" /etc/apache2/ports.conf 2>/dev/null || true
 sed -i "s/<VirtualHost \*:[0-9]*>/<VirtualHost *:${APACHE_PORT}>/g" /etc/apache2/sites-available/000-default.conf 2>/dev/null || true
 
-DB_NAME="${DB_NAME:-koms_db}"
+DB_NAME="${DB_NAME:-koms}"
 DB_USER="${DB_USER:-root}"
 DB_PASSWORD="${DB_PASSWORD:-}"
 
 if [ -n "$DATABASE_URL" ] || ([ -n "$DB_HOST" ] && [ "$DB_HOST" != "localhost" ] && [ "$DB_HOST" != "127.0.0.1" ]); then
     echo "Using configured external database..."
-    # Import schema if tables don't exist in external DB
     DB_PORT="${DB_PORT:-3306}"
-    TABLES_EXIST=$(mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" -N -s -e "SELECT count(*) FROM information_schema.tables WHERE table_schema = '$DB_NAME';" 2>/dev/null || echo "0")
+
+    # Aiven uses TLS. The CA chain may not be present in the container,
+    # so the CLI client is told not to verify the server certificate.
+    MYSQL_SSL_OPTS="--ssl=1 --ssl-verify-server-cert=0"
+
+    echo "Checking external database connection..."
+    TABLES_EXIST=$(mysql $MYSQL_SSL_OPTS -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" -N -s -e "SELECT count(*) FROM information_schema.tables WHERE table_schema = '$DB_NAME';" 2>/dev/null || echo "0")
+
     if [ "$TABLES_EXIST" = "0" ] || [ -z "$TABLES_EXIST" ]; then
         if [ -f "/var/www/html/database/schema.sql" ]; then
             echo "Importing initial database schema..."
-            mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /var/www/html/database/schema.sql || true
+            mysql $MYSQL_SSL_OPTS -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /var/www/html/database/schema.sql || true
             if [ -f "/var/www/html/database/seed.sql" ]; then
                 echo "Importing seed data..."
-                mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /var/www/html/database/seed.sql || true
+                mysql $MYSQL_SSL_OPTS -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /var/www/html/database/seed.sql || true
             fi
             echo "External database import complete!"
         fi
