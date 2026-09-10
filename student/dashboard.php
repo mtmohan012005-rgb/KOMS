@@ -5,318 +5,257 @@ require_once '../includes/auth.php';
 
 require_role('student');
 
-$page_title = 'Student Dashboard';
-$user_id = (int)$_SESSION['user_id'];
+$user_id = (int)($_SESSION['user_id'] ?? 0);
 
-// Current approved/pending dojo membership.
-$membership_stmt = $pdo->prepare("
-    SELECT d.id AS dojo_id, d.name AS dojo_name, d.location, d.training_days, d.training_timings, m.status, m.joined_at
-    FROM dojo_memberships m
-    JOIN dojos d ON d.id = m.dojo_id
-    WHERE m.student_id = ?
-    ORDER BY CASE WHEN m.status = 'approved' THEN 0 WHEN m.status = 'pending' THEN 1 ELSE 2 END, m.created_at DESC
-    LIMIT 1
-");
+$user_stmt = $pdo->prepare("SELECT id, first_name, last_name, email, dob, gender, phone, address, profile_photo, created_at FROM users WHERE id = ? LIMIT 1");
+$user_stmt->execute([$user_id]);
+$user = $user_stmt->fetch() ?: [];
+
+$student_name = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')) ?: 'Student';
+$student_id = 'MD-' . str_pad((string)$user_id, 5, '0', STR_PAD_LEFT);
+$initials = strtoupper(substr($user['first_name'] ?? 'S', 0, 1) . substr($user['last_name'] ?? '', 0, 1));
+
+$membership_stmt = $pdo->prepare("SELECT d.id AS dojo_id, d.name AS dojo_name, d.location, d.training_days, d.training_timings, m.status, m.joined_at FROM dojo_memberships m JOIN dojos d ON d.id = m.dojo_id WHERE m.student_id = ? ORDER BY CASE WHEN m.status = 'approved' THEN 0 WHEN m.status = 'pending' THEN 1 ELSE 2 END, m.created_at DESC LIMIT 1");
 $membership_stmt->execute([$user_id]);
 $membership = $membership_stmt->fetch();
 
-// Student profile name.
-$user_stmt = $pdo->prepare("SELECT first_name, last_name, email, profile_photo FROM users WHERE id = ? LIMIT 1");
-$user_stmt->execute([$user_id]);
-$user = $user_stmt->fetch() ?: [];
-$student_name = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
-
-$belt_stmt = $pdo->prepare("SELECT new_belt, exam_date, grade FROM grading_history WHERE student_id = ? ORDER BY exam_date DESC, id DESC LIMIT 1");
+$belt_stmt = $pdo->prepare("SELECT new_belt, previous_belt, exam_date, grade FROM grading_history WHERE student_id = ? ORDER BY exam_date DESC, id DESC LIMIT 1");
 $belt_stmt->execute([$user_id]);
 $current_belt = $belt_stmt->fetch();
+$belt_name = $current_belt['new_belt'] ?? 'White Belt';
+$next_belt = 'Next grading level';
 
-// Attendance percentage over all available records.
-$attendance_stmt = $pdo->prepare("
-    SELECT
-        COUNT(*) AS total_records,
-        SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) AS present_records,
-        SUM(CASE WHEN status = 'late' THEN 1 ELSE 0 END) AS late_records
-    FROM attendance_entries
-    WHERE student_id = ?");
+$attendance_stmt = $pdo->prepare("SELECT COUNT(*) AS total_records, SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) AS present_records, SUM(CASE WHEN status = 'late' THEN 1 ELSE 0 END) AS late_records FROM attendance_entries WHERE student_id = ?");
 $attendance_stmt->execute([$user_id]);
 $attendance = $attendance_stmt->fetch() ?: ['total_records' => 0, 'present_records' => 0, 'late_records' => 0];
 $total_attendance = (int)$attendance['total_records'];
 $present_attendance = (int)$attendance['present_records'];
+$late_attendance = (int)$attendance['late_records'];
 $attendance_rate = $total_attendance > 0 ? round(($present_attendance / $total_attendance) * 100) : 0;
 
-// Outstanding balance with recorded payments deducted.
-$fee_stmt = $pdo->prepare("
-    SELECT COALESCE(SUM(GREATEST(fr.amount_due - COALESCE(p.paid, 0), 0)), 0)
-    FROM fee_records fr
-    LEFT JOIN (
-        SELECT fee_record_id, SUM(amount) AS paid
-        FROM payments
-        GROUP BY fee_record_id
-    ) p ON p.fee_record_id = fr.id
-    WHERE fr.student_id = ? AND fr.status IN ('pending', 'partially_paid', 'overdue')");
+$fee_stmt = $pdo->prepare("SELECT COALESCE(SUM(GREATEST(fr.amount_due - COALESCE(p.paid, 0), 0)), 0) FROM fee_records fr LEFT JOIN (SELECT fee_record_id, SUM(amount) AS paid FROM payments GROUP BY fee_record_id) p ON p.fee_record_id = fr.id WHERE fr.student_id = ? AND fr.status IN ('pending','partially_paid','overdue')");
 $fee_stmt->execute([$user_id]);
 $outstanding_fees = (float)$fee_stmt->fetchColumn();
 
-// Tournament registrations.
-$tournament_stmt = $pdo->prepare("
-    SELECT COUNT(*)
-    FROM tournament_registrations
-    WHERE student_id = ? AND status <> 'rejected'");
+$tournament_stmt = $pdo->prepare("SELECT COUNT(*) FROM tournament_registrations WHERE student_id = ? AND status <> 'rejected'");
 $tournament_stmt->execute([$user_id]);
 $tournament_count = (int)$tournament_stmt->fetchColumn();
 
-// Recent attendance.
-$recent_att_stmt = $pdo->prepare("
-    SELECT s.session_date, s.start_time, d.name AS dojo_name, e.status
-    FROM attendance_entries e
-    JOIN attendance_sessions s ON s.id = e.session_id
-    JOIN dojos d ON d.id = s.dojo_id
-    WHERE e.student_id = ?
-    ORDER BY s.session_date DESC, s.id DESC
-    LIMIT 6");
+$recent_att_stmt = $pdo->prepare("SELECT s.session_date, s.start_time, d.name AS dojo_name, e.status FROM attendance_entries e JOIN attendance_sessions s ON s.id=e.session_id JOIN dojos d ON d.id=s.dojo_id WHERE e.student_id=? ORDER BY s.session_date DESC, s.id DESC LIMIT 5");
 $recent_att_stmt->execute([$user_id]);
 $recent_attendance = $recent_att_stmt->fetchAll();
 
-// Announcements visible to the student's dojo.
-$recent_announcements = [];
+$announcements = [];
 if ($membership && $membership['status'] === 'approved') {
-    $ann_stmt = $pdo->prepare("
-        SELECT title, content, level, publish_date
-        FROM announcements
-        WHERE status = 'active'
-          AND publish_date <= CURDATE()
-          AND (expiry_date IS NULL OR expiry_date >= CURDATE())
-          AND (level = 'global' OR (level = 'dojo' AND dojo_id = ?))
-        ORDER BY publish_date DESC, id DESC
-        LIMIT 4");
+    $ann_stmt = $pdo->prepare("SELECT title, content, publish_date FROM announcements WHERE status='active' AND publish_date<=CURDATE() AND (expiry_date IS NULL OR expiry_date>=CURDATE()) AND (level='global' OR (level='dojo' AND dojo_id=?)) ORDER BY publish_date DESC, id DESC LIMIT 4");
     $ann_stmt->execute([(int)$membership['dojo_id']]);
-    $recent_announcements = $ann_stmt->fetchAll();
+    $announcements = $ann_stmt->fetchAll();
+} else {
+    $ann_stmt = $pdo->query("SELECT title, content, publish_date FROM announcements WHERE status='active' AND publish_date<=CURDATE() AND (expiry_date IS NULL OR expiry_date>=CURDATE()) AND level='global' ORDER BY publish_date DESC, id DESC LIMIT 4");
+    $announcements = $ann_stmt->fetchAll();
 }
 
-// Recent grading history.
-$grading_stmt = $pdo->prepare("
-    SELECT previous_belt, new_belt, exam_date, grade
-    FROM grading_history
-    WHERE student_id = ?
-    ORDER BY exam_date DESC, id DESC
-    LIMIT 4");
+$grading_stmt = $pdo->prepare("SELECT previous_belt, new_belt, exam_date, grade FROM grading_history WHERE student_id=? ORDER BY exam_date DESC, id DESC LIMIT 4");
 $grading_stmt->execute([$user_id]);
 $grading_history = $grading_stmt->fetchAll();
 
-require_once '../includes/header.php';
+if ($grading_history) {
+    $belt_order = ['White'=>0,'Yellow'=>1,'Orange'=>2,'Green'=>3,'Blue'=>4,'Purple'=>5,'Brown'=>6,'Black'=>7];
+    $current_base = strtolower(trim(explode(' ', (string)$belt_name)[0]));
+    $map = ['white'=>'Yellow','yellow'=>'Orange','orange'=>'Green','green'=>'Blue','blue'=>'Purple','purple'=>'Brown','brown'=>'Black','black'=>'Advanced'];
+    $next_belt = $map[$current_base] ?? 'Next grading level';
+}
+
+$quick_stats = [
+    ['label'=>'Attendance','value'=>$attendance_rate.'%','icon'=>'✓','tone'=>'green','note'=>$present_attendance.' of '.$total_attendance.' present'],
+    ['label'=>'Pending Fees','value'=>'₹'.number_format($outstanding_fees, 0),'icon'=>'₹','tone'=>'red','note'=>$outstanding_fees > 0 ? 'Payment required' : 'All clear'],
+    ['label'=>'Tournament Entries','value'=>(string)$tournament_count,'icon'=>'★','tone'=>'orange','note'=>'Active registrations'],
+    ['label'=>'Current Belt','value'=>$belt_name,'icon'=>'🥋','tone'=>'gold','note'=>$next_belt],
+];
+
+function student_h($value) {
+    return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+}
 ?>
-
-<style>
-    .student-shell { margin-top: 1.5rem; }
-    .student-hero {
-        position: relative;
-        overflow: hidden;
-        border-radius: 26px;
-        padding: 2rem;
-        color: #fff;
-        background: linear-gradient(135deg, #070707 0%, #181818 56%, #470909 100%);
-        box-shadow: 0 24px 60px rgba(0,0,0,.16);
-    }
-    .student-hero::before {
-        content: '';
-        position: absolute;
-        right: -90px;
-        top: -120px;
-        width: 300px;
-        height: 300px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(220,20,60,.42), transparent 68%);
-    }
-    .student-kicker { color: #ffcf5c; font-size: .74rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
-    .student-title { font-size: clamp(1.9rem, 4vw, 3.1rem); font-weight: 900; margin: .35rem 0 .5rem; }
-    .student-copy { color: rgba(255,255,255,.72); margin: 0; max-width: 760px; }
-    .student-avatar {
-        width: 72px; height: 72px; border-radius: 22px;
-        display: inline-flex; align-items: center; justify-content: center;
-        background: linear-gradient(135deg,#fff,#e8e8e8); color: #111;
-        font-size: 1.6rem; font-weight: 900; flex: 0 0 auto;
-    }
-    .student-stat { border: 0; border-radius: 20px; background: #fff; box-shadow: 0 14px 38px rgba(17,24,39,.08); height: 100%; }
-    .stat-icon { width: 46px; height: 46px; border-radius: 15px; display:inline-flex; align-items:center; justify-content:center; background:#111; color:#fff; }
-    .stat-label { margin-top: .85rem; color:#8b8b8b; font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; font-weight:800; }
-    .stat-value { margin-top:.25rem; font-size:1.9rem; font-weight:900; line-height:1.1; }
-    .student-panel { border:0; border-radius:20px; overflow:hidden; box-shadow:0 14px 38px rgba(17,24,39,.08); }
-    .student-panel .card-header { background:#fff; border:0; padding:1.15rem 1.25rem; }
-    .student-panel .card-body { background:#fff; }
-    .panel-kicker { font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:#8b8b8b; font-weight:800; }
-    .dojo-card { border-radius:18px; background:linear-gradient(135deg,#111,#2c0a0a); color:#fff; padding:1.25rem; }
-    .dojo-card small { color:rgba(255,255,255,.64); }
-    .dojo-name { font-size:1.35rem; font-weight:900; }
-    .action-card { display:block; text-decoration:none; color:#161616; background:#f7f7f7; border-radius:16px; padding:1rem; height:100%; transition:transform .2s, box-shadow .2s; }
-    .action-card:hover { color:#161616; transform:translateY(-3px); box-shadow:0 10px 22px rgba(0,0,0,.08); }
-    .action-card i { color:#b51212; font-size:1.15rem; }
-    .status-badge { border-radius:999px; padding:.36rem .7rem; font-size:.72rem; font-weight:800; text-transform:uppercase; }
-    .history-row { border-bottom:1px solid #eee; padding:.85rem 0; }
-    .history-row:last-child { border-bottom:0; padding-bottom:0; }
-    .announcement-item { border-bottom:1px solid #eee; padding:1rem 0; }
-    .announcement-item:last-child { border-bottom:0; padding-bottom:0; }
-    .progress-track { height:9px; background:#ededed; border-radius:999px; overflow:hidden; }
-    .progress-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,#111,#c51414); }
-    @media (max-width:767.98px) {
-        .student-shell { margin-top:1rem; }
-        .student-hero { padding:1.35rem; border-radius:18px; }
-    }
-</style>
-
-<div class="student-shell">
-    <section class="student-hero mb-4">
-        <div class="d-flex flex-wrap align-items-center gap-3 position-relative">
-            <div class="student-avatar">
-                <?php
-                $initials = strtoupper(substr($user['first_name'] ?? 'S', 0, 1) . substr($user['last_name'] ?? '', 0, 1));
-                echo htmlspecialchars($initials ?: 'S');
-                ?>
-            </div>
-            <div>
-                <div class="student-kicker">KOMS • Student Portal</div>
-                <div class="student-title">Welcome, <?= htmlspecialchars($student_name ?: 'Student') ?></div>
-                <p class="student-copy">Track your training, attendance, belt progress, tournaments and important dojo updates from one place.</p>
-            </div>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><?= student_h($student_name) ?> • Mass Dragon Student Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="<?= APP_URL ?>/assets/css/student-portal.css?v=1">
+</head>
+<body>
+<div class="student-portal">
+    <div class="sp-overlay" id="studentOverlay"></div>
+    <aside class="sp-sidebar" id="studentSidebar">
+        <div class="sp-brand">
+            <div class="sp-brand-logo">🥋</div>
+            <div><strong>MASS DRAGON DOJO</strong><small>KOMS Student Portal</small></div>
         </div>
-    </section>
+        <div class="sp-heading"><h1>Student Portal</h1><p>Your progress. Our pride.</p></div>
+        <nav class="sp-nav" id="studentNav">
+            <a class="active" href="<?= APP_URL ?>/student/dashboard.php"><span class="ico">⌂</span>Dashboard</a>
+            <a href="<?= APP_URL ?>/profile.php"><span class="ico">◉</span>Profile</a>
+            <a href="<?= APP_URL ?>/student/attendance.php"><span class="ico">✓</span>Attendance</a>
+            <a href="<?= APP_URL ?>/student/grading.php"><span class="ico">🥋</span>Belt Progress</a>
+            <a href="<?= APP_URL ?>/student/achievements.php"><span class="ico">★</span>Achievements</a>
+            <a href="<?= APP_URL ?>/student/fees.php"><span class="ico">₹</span>Fees &amp; Payments</a>
+            <a href="<?= APP_URL ?>/student/announcements.php"><span class="ico">◈</span>Announcements</a>
+            <a href="<?= APP_URL ?>/student/tournaments.php"><span class="ico">▣</span>Tournaments</a>
+            <a href="<?= APP_URL ?>/student/my_dojo.php"><span class="ico">⌘</span>My Dojo</a>
+            <a href="<?= APP_URL ?>/logout.php"><span class="ico">↪</span>Sign Out</a>
+        </nav>
+        <div class="sp-side-note"><strong>Stay disciplined.</strong><br>Train consistently, track your progress and keep moving toward your next belt.</div>
+    </aside>
 
-    <?php if (!$membership): ?>
-        <div class="card student-panel mb-4">
-            <div class="card-body p-4 p-lg-5 text-center">
-                <div class="mb-3"><i class="fas fa-house-chimney fa-3x"></i></div>
-                <h3 class="fw-bold">Your KOMS journey starts here</h3>
-                <p class="text-muted mx-auto" style="max-width:650px;">You are not connected to a dojo yet. Find an approved dojo and send a membership request to begin training and tracking your progress.</p>
-                <a href="<?= APP_URL ?>/find_dojo.php" class="btn btn-dark px-4"><i class="fas fa-search me-2"></i>Find a Dojo</a>
+    <main class="sp-main">
+        <header class="sp-topbar">
+            <div class="sp-top-left">
+                <button class="sp-menu" id="studentMenu" type="button" aria-label="Open student menu">☰</button>
+                <div class="sp-title"><h2>Dashboard</h2><p>Training, attendance, fees and progress at a glance.</p></div>
             </div>
-        </div>
-    <?php elseif ($membership['status'] === 'pending'): ?>
-        <div class="card student-panel mb-4">
-            <div class="card-body p-4">
-                <div class="d-flex align-items-start gap-3">
-                    <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
-                    <div>
-                        <div class="panel-kicker">Membership Status</div>
-                        <h3 class="fw-bold mb-2">Waiting for dojo approval</h3>
-                        <p class="text-muted mb-2">Your request to join <strong><?= htmlspecialchars($membership['dojo_name']) ?></strong> is currently pending with the Dojo Master.</p>
-                        <span class="status-badge bg-warning text-dark">Pending</span>
-                    </div>
+            <div class="sp-user"><div class="sp-avatar"><?= student_h($initials ?: 'S') ?></div><div><b><?= student_h($student_name) ?></b><span><?= student_h($student_id) ?></span></div></div>
+        </header>
+
+        <section class="sp-content">
+            <section class="sp-hero">
+                <div class="sp-kicker">KOMS • Mass Dragon Dojo</div>
+                <h1>Welcome back, <?= student_h($student_name) ?></h1>
+                <p>Keep your training record, attendance, belt journey, tournaments and important dojo updates in one professional student portal.</p>
+                <div class="sp-hero-actions">
+                    <a class="sp-btn sp-btn-light" href="<?= APP_URL ?>/student/attendance.php"><i class="fa-solid fa-calendar-check"></i>View Attendance</a>
+                    <a class="sp-btn sp-btn-dark" href="<?= APP_URL ?>/profile.php"><i class="fa-solid fa-user-pen"></i>My Profile</a>
                 </div>
-            </div>
-        </div>
-    <?php elseif ($membership['status'] === 'approved'): ?>
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-xl-3">
-                <div class="card student-stat"><div class="card-body p-3 p-lg-4"><span class="stat-icon"><i class="fas fa-calendar-check"></i></span><div class="stat-label">Attendance</div><div class="stat-value"><?= $attendance_rate ?>%</div><div class="small text-muted mt-1"><?= $present_attendance ?> of <?= $total_attendance ?> marked present</div></div></div>
-            </div>
-            <div class="col-6 col-xl-3">
-                <div class="card student-stat"><div class="card-body p-3 p-lg-4"><span class="stat-icon"><i class="fas fa-medal"></i></span><div class="stat-label">Current Belt</div><div class="stat-value" style="font-size:1.35rem;"><?= htmlspecialchars($current_belt['new_belt'] ?? 'White Belt') ?></div><div class="small text-muted mt-1"><?= $current_belt ? date('M j, Y', strtotime($current_belt['exam_date'])) : 'No grading record yet' ?></div></div></div>
-            </div>
-            <div class="col-6 col-xl-3">
-                <div class="card student-stat"><div class="card-body p-3 p-lg-4"><span class="stat-icon"><i class="fas fa-wallet"></i></span><div class="stat-label">Outstanding Fees</div><div class="stat-value">₹<?= number_format($outstanding_fees, 2) ?></div><div class="small text-muted mt-1">Current unpaid balance</div></div></div>
-            </div>
-            <div class="col-6 col-xl-3">
-                <div class="card student-stat"><div class="card-body p-3 p-lg-4"><span class="stat-icon"><i class="fas fa-trophy"></i></span><div class="stat-label">Tournament Entries</div><div class="stat-value"><?= number_format($tournament_count) ?></div><div class="small text-muted mt-1">Active registrations</div></div></div>
-            </div>
-        </div>
+            </section>
 
-        <div class="row g-4">
-            <div class="col-xl-8">
-                <div class="card student-panel mb-4">
-                    <div class="card-header"><div class="panel-kicker">My Training Base</div><h5 class="mb-0 mt-1">Dojo Overview</h5></div>
-                    <div class="card-body">
-                        <div class="dojo-card mb-3">
-                            <div class="d-flex justify-content-between align-items-start gap-3">
-                                <div>
-                                    <div class="panel-kicker" style="color:#ffcf5c;">Approved Membership</div>
-                                    <div class="dojo-name mt-1"><?= htmlspecialchars($membership['dojo_name']) ?></div>
-                                    <small><i class="fas fa-location-dot me-1"></i><?= htmlspecialchars($membership['location']) ?></small>
+            <?php if ($membership && $membership['status'] === 'pending'): ?>
+                <div class="sp-panel" style="margin-top:18px;border-left:4px solid #f4a300;">
+                    <div class="sp-panel-head"><h3>Membership awaiting approval</h3><span class="sp-badge badge-gold">Pending</span></div>
+                    <p style="font-size:11px;color:#6f747a;margin:0;">Your request to join <strong><?= student_h($membership['dojo_name']) ?></strong> is waiting for the Dojo Master.</p>
+                </div>
+            <?php elseif (!$membership): ?>
+                <div class="sp-panel" style="margin-top:18px;border-left:4px solid #b51218;">
+                    <div class="sp-panel-head"><h3>No dojo assigned yet</h3><a href="<?= APP_URL ?>/find_dojo.php">Find a Dojo</a></div>
+                    <p style="font-size:11px;color:#6f747a;margin:0;">Choose an approved dojo and submit a membership request to start tracking your training.</p>
+                </div>
+            <?php endif; ?>
+
+            <section class="sp-stats">
+                <?php foreach ($quick_stats as $stat): ?>
+                    <div class="sp-card <?= student_h('tone-'.$stat['tone']) ?>">
+                        <div class="sp-stat-top"><div class="sp-stat-icon"><?= $stat['icon'] ?></div></div>
+                        <div class="sp-stat-label"><?= student_h($stat['label']) ?></div>
+                        <div class="sp-stat-value"><?= student_h($stat['value']) ?></div>
+                        <div class="sp-stat-note"><?= student_h($stat['note']) ?></div>
+                    </div>
+                <?php endforeach; ?>
+            </section>
+
+            <section class="sp-grid">
+                <div>
+                    <div class="sp-panel">
+                        <div class="sp-panel-head"><h3>My Training Base</h3><a href="<?= APP_URL ?>/student/my_dojo.php">View dojo</a></div>
+                        <?php if ($membership && $membership['status'] === 'approved'): ?>
+                            <div class="sp-dojo">
+                                <div class="sp-kicker">Approved Membership</div>
+                                <div class="sp-dojo-name"><?= student_h($membership['dojo_name']) ?></div>
+                                <small><i class="fa-solid fa-location-dot"></i> <?= student_h($membership['location']) ?></small>
+                                <div class="sp-dojo-meta">
+                                    <div><small>Training Days</small><strong><?= student_h($membership['training_days'] ?: 'See dojo schedule') ?></strong></div>
+                                    <div><small>Training Time</small><strong><?= student_h($membership['training_timings'] ?: 'See dojo schedule') ?></strong></div>
                                 </div>
-                                <span class="status-badge bg-light text-dark">Active</span>
                             </div>
-                            <div class="row g-3 mt-2">
-                                <div class="col-md-6"><small><i class="fas fa-calendar-days me-1"></i>Training Days</small><div class="fw-semibold mt-1"><?= htmlspecialchars($membership['training_days'] ?: 'See dojo schedule') ?></div></div>
-                                <div class="col-md-6"><small><i class="fas fa-clock me-1"></i>Training Time</small><div class="fw-semibold mt-1"><?= htmlspecialchars($membership['training_timings'] ?: 'See dojo schedule') ?></div></div>
-                            </div>
+                        <?php else: ?>
+                            <div class="sp-dojo"><div class="sp-dojo-name">No approved dojo</div><small>Membership information will appear here after approval.</small></div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="sp-panel" style="margin-top:18px;">
+                        <div class="sp-panel-head"><h3>Recent Attendance</h3><a href="<?= APP_URL ?>/student/attendance.php">View all</a></div>
+                        <div style="overflow:auto">
+                            <table class="sp-table">
+                                <thead><tr><th>Date</th><th>Dojo</th><th>Status</th></tr></thead>
+                                <tbody>
+                                <?php if (!$recent_attendance): ?>
+                                    <tr><td colspan="3" style="text-align:center;color:#999;padding:22px 8px;">No attendance records yet.</td></tr>
+                                <?php else: foreach ($recent_attendance as $row):
+                                    $status = strtolower($row['status']);
+                                    $badge = $status === 'present' ? 'badge-green' : ($status === 'absent' ? 'badge-red' : 'badge-gold');
+                                ?>
+                                    <tr>
+                                        <td><?= student_h(date('M j, Y', strtotime($row['session_date']))) ?></td>
+                                        <td><?= student_h($row['dojo_name']) ?></td>
+                                        <td><span class="sp-badge <?= $badge ?>"><?= student_h($row['status']) ?></span></td>
+                                    </tr>
+                                <?php endforeach; endif; ?>
+                                </tbody>
+                            </table>
                         </div>
-                        <a href="my_dojo.php" class="btn btn-outline-dark"><i class="fas fa-arrow-right me-2"></i>View Full Dojo Details</a>
+                    </div>
+
+                    <div class="sp-panel" style="margin-top:18px;">
+                        <div class="sp-panel-head"><h3>Latest Announcements</h3><a href="<?= APP_URL ?>/student/announcements.php">View all</a></div>
+                        <?php if (!$announcements): ?>
+                            <p style="font-size:10px;color:#8b8b8b;margin:0;">No active announcements right now.</p>
+                        <?php else: foreach ($announcements as $announcement): ?>
+                            <div class="sp-announce"><div class="sp-announce-icon">📢</div><div><strong><?= student_h($announcement['title']) ?></strong><small><?= student_h(date('M j, Y', strtotime($announcement['publish_date']))) ?></small></div></div>
+                        <?php endforeach; endif; ?>
                     </div>
                 </div>
 
-                <div class="card student-panel mb-4">
-                    <div class="card-header d-flex justify-content-between align-items-center"><div><div class="panel-kicker">Recent Training Record</div><h5 class="mb-0 mt-1">Attendance History</h5></div><a href="attendance.php" class="btn btn-sm btn-outline-dark">View All</a></div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive"><table class="table table-hover align-middle mb-0">
-                            <thead><tr><th class="ps-4">Date</th><th>Dojo</th><th>Time</th><th class="pe-4">Status</th></tr></thead>
-                            <tbody>
-                            <?php if (!$recent_attendance): ?>
-                                <tr><td colspan="4" class="text-center py-5 text-muted">No attendance records yet.</td></tr>
-                            <?php else: foreach ($recent_attendance as $row):
-                                $badge_class = $row['status'] === 'present' ? 'bg-success text-white' : ($row['status'] === 'absent' ? 'bg-danger text-white' : 'bg-warning text-dark');
-                            ?>
-                                <tr>
-                                    <td class="ps-4 fw-semibold"><?= date('M j, Y', strtotime($row['session_date'])) ?></td>
-                                    <td><?= htmlspecialchars($row['dojo_name']) ?></td>
-                                    <td><?= $row['start_time'] ? date('g:i A', strtotime($row['start_time'])) : 'Scheduled' ?></td>
-                                    <td class="pe-4"><span class="status-badge <?= $badge_class ?>"><?= htmlspecialchars($row['status']) ?></span></td>
-                                </tr>
-                            <?php endforeach; endif; ?>
-                            </tbody>
-                        </table></div>
+                <div>
+                    <div class="sp-panel">
+                        <div class="sp-panel-head"><h3>Quick Actions</h3></div>
+                        <div class="sp-actions">
+                            <a class="sp-action" href="<?= APP_URL ?>/student/attendance.php"><i class="fa-solid fa-calendar-check"></i><b>Attendance</b><small>Training record</small></a>
+                            <a class="sp-action" href="<?= APP_URL ?>/student/fees.php"><i class="fa-solid fa-wallet"></i><b>Fees</b><small>Payments &amp; dues</small></a>
+                            <a class="sp-action" href="<?= APP_URL ?>/student/grading.php"><i class="fa-solid fa-medal"></i><b>Grading</b><small>Belt progress</small></a>
+                            <a class="sp-action" href="<?= APP_URL ?>/student/tournaments.php"><i class="fa-solid fa-trophy"></i><b>Tournaments</b><small>Events &amp; entry</small></a>
+                            <a class="sp-action" href="<?= APP_URL ?>/student/achievements.php"><i class="fa-solid fa-star"></i><b>Achievements</b><small>Your records</small></a>
+                            <a class="sp-action" href="<?= APP_URL ?>/profile.php"><i class="fa-solid fa-user"></i><b>Profile</b><small>Account details</small></a>
+                        </div>
                     </div>
-                </div>
 
-                <div class="card student-panel">
-                    <div class="card-header"><div class="panel-kicker">Martial Arts Progress</div><h5 class="mb-0 mt-1">Grading History</h5></div>
-                    <div class="card-body">
+                    <div class="sp-panel" style="margin-top:18px;">
+                        <div class="sp-panel-head"><h3>Attendance Rate</h3><span><?= $attendance_rate ?>%</span></div>
+                        <div class="sp-track"><div class="sp-fill" style="width:<?= max(0,min(100,$attendance_rate)) ?>%"></div></div>
+                        <div style="display:flex;justify-content:space-between;margin-top:9px;color:#8b8b8b;font-size:9px;"><span><?= $present_attendance ?> present</span><span><?= $late_attendance ?> late</span></div>
+                    </div>
+
+                    <div class="sp-panel" style="margin-top:18px;">
+                        <div class="sp-panel-head"><h3>Belt History</h3><a href="<?= APP_URL ?>/student/grading.php">Details</a></div>
                         <?php if (!$grading_history): ?>
-                            <div class="text-center text-muted py-4">No grading history has been recorded yet.</div>
+                            <p style="font-size:10px;color:#8b8b8b;margin:0;">No grading history has been recorded yet.</p>
                         <?php else: foreach ($grading_history as $grade): ?>
-                            <div class="history-row d-flex justify-content-between align-items-center gap-3">
-                                <div><div class="fw-bold"><?= htmlspecialchars($grade['new_belt']) ?></div><div class="small text-muted"><?= date('M j, Y', strtotime($grade['exam_date'])) ?><?= $grade['grade'] ? ' • Grade ' . htmlspecialchars($grade['grade']) : '' ?></div></div>
-                                <span class="belt-badge status-badge bg-dark text-white"><?= htmlspecialchars($grade['previous_belt'] ?: 'Start') ?> → <?= htmlspecialchars($grade['new_belt']) ?></span>
-                            </div>
+                            <div class="sp-announce"><div class="sp-announce-icon">🥋</div><div><strong><?= student_h($grade['new_belt']) ?></strong><small><?= student_h(date('M j, Y', strtotime($grade['exam_date']))) ?><?= $grade['grade'] ? ' • '.student_h($grade['grade']) : '' ?></small></div></div>
                         <?php endforeach; endif; ?>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="col-xl-4">
-                <div class="card student-panel mb-4">
-                    <div class="card-header"><div class="panel-kicker">My KOMS</div><h5 class="mb-0 mt-1">Quick Actions</h5></div>
-                    <div class="card-body"><div class="row g-2">
-                        <div class="col-6"><a class="action-card" href="attendance.php"><i class="fas fa-calendar-check"></i><div class="fw-bold mt-2">Attendance</div><small class="text-muted">Training record</small></a></div>
-                        <div class="col-6"><a class="action-card" href="fees.php"><i class="fas fa-wallet"></i><div class="fw-bold mt-2">Fees</div><small class="text-muted">Payments & dues</small></a></div>
-                        <div class="col-6"><a class="action-card" href="grading.php"><i class="fas fa-medal"></i><div class="fw-bold mt-2">Grading</div><small class="text-muted">Belt progress</small></a></div>
-                        <div class="col-6"><a class="action-card" href="tournaments.php"><i class="fas fa-trophy"></i><div class="fw-bold mt-2">Tournaments</div><small class="text-muted">Events & entry</small></a></div>
-                        <div class="col-12"><a class="action-card" href="announcements.php"><i class="fas fa-bullhorn"></i><div class="fw-bold mt-2">Announcements</div><small class="text-muted">Latest dojo and KOMS notices</small></a></div>
-                    </div></div>
-                </div>
-
-                <div class="card student-panel mb-4">
-                    <div class="card-header"><div class="panel-kicker">Performance</div><h5 class="mb-0 mt-1">Attendance Rate</h5></div>
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between mb-2"><span class="text-muted">Present</span><strong><?= $attendance_rate ?>%</strong></div>
-                        <div class="progress-track"><div class="progress-fill" style="width:<?= $attendance_rate ?>%"></div></div>
-                        <div class="small text-muted mt-2">Late sessions: <?= (int)$attendance['late_records'] ?></div>
-                    </div>
-                </div>
-
-                <div class="card student-panel">
-                    <div class="card-header"><div class="panel-kicker">Communication</div><h5 class="mb-0 mt-1">Latest Announcements</h5></div>
-                    <div class="card-body">
-                        <?php if (!$recent_announcements): ?>
-                            <div class="text-muted py-2">No active announcements right now.</div>
-                        <?php else: foreach ($recent_announcements as $announcement): ?>
-                            <div class="announcement-item">
-                                <div class="d-flex justify-content-between align-items-start gap-2"><div class="fw-bold"><?= htmlspecialchars($announcement['title']) ?></div><small class="text-muted"><?= date('M j', strtotime($announcement['publish_date'])) ?></small></div>
-                                <div class="small text-muted mt-2"><?= htmlspecialchars(mb_strimwidth(strip_tags($announcement['content']), 0, 125, '…')) ?></div>
-                            </div>
-                        <?php endforeach; endif; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-    <?php endif; ?>
+            <div class="sp-footer">Mass Dragon Dojo Student Portal • KOMS • <?= date('Y') ?></div>
+        </section>
+    </main>
 </div>
-
-<?php require_once '../includes/footer.php'; ?>
+<script src="<?= APP_URL ?>/assets/js/app.js?v=1"></script>
+<script>
+(function(){
+    const sidebar=document.getElementById('studentSidebar');
+    const overlay=document.getElementById('studentOverlay');
+    const menu=document.getElementById('studentMenu');
+    function closeMenu(){ if(sidebar) sidebar.classList.remove('open'); if(overlay) overlay.classList.remove('show'); document.body.style.overflow=''; }
+    function openMenu(){ if(sidebar) sidebar.classList.add('open'); if(overlay) overlay.classList.add('show'); document.body.style.overflow='hidden'; }
+    if(menu) menu.addEventListener('click',()=> sidebar.classList.contains('open')?closeMenu():openMenu());
+    if(overlay) overlay.addEventListener('click',closeMenu);
+    document.addEventListener('keydown',e=>{if(e.key==='Escape') closeMenu();});
+    document.querySelectorAll('#studentNav a').forEach(a=>a.addEventListener('click',closeMenu));
+    window.addEventListener('resize',()=>{if(window.innerWidth>850) closeMenu();});
+})();
+</script>
+</body>
+</html>
