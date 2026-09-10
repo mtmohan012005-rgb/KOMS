@@ -14,7 +14,7 @@ services:
       - key: DB_USER
         value: avnadmin
       - key: DB_NAME
-        value: defaultdb
+        value: koms
       - key: DB_PORT
         value: "15346"
       - key: PORT
