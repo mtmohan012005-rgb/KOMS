@@ -5,11 +5,10 @@ require_once 'includes/auth.php';
 
 require_login();
 
-$user_id = $_SESSION['user_id'];
+$user_id = (int)$_SESSION['user_id'];
 $page_title = 'My Profile';
 
-// Fetch user data
-$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
+$stmt = $pdo->prepare('SELECT * FROM users WHERE id = ? LIMIT 1');
 $stmt->execute([$user_id]);
 $user = $stmt->fetch();
 
@@ -17,204 +16,179 @@ if (!$user) {
     redirect('/logout.php');
 }
 
-// Fetch student profile for DPDP compliance if applicable
 $student_profile = null;
 if ($user['role'] === 'student') {
-    $sp_stmt = $pdo->prepare("SELECT * FROM student_profiles WHERE user_id = ?");
+    $sp_stmt = $pdo->prepare('SELECT * FROM student_profiles WHERE user_id = ? LIMIT 1');
     $sp_stmt->execute([$user_id]);
     $student_profile = $sp_stmt->fetch();
 }
 
-// Handle Profile Update
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
-    if (!verify_csrf_token($_POST['csrf_token'])) {
-        $_SESSION['error_msg'] = "Invalid form submission.";
-    } else {
-        $first_name = sanitize_input($_POST['first_name']);
-        $last_name = sanitize_input($_POST['last_name']);
-        $phone = sanitize_input($_POST['phone']);
-        $address = sanitize_input($_POST['address']);
-        $emergency_contact = sanitize_input($_POST['emergency_contact']);
+$error_message = '';
 
-        $stmt = $pdo->prepare("UPDATE users SET first_name = ?, last_name = ?, phone = ?, address = ?, emergency_contact = ? WHERE id = ?");
-        if ($stmt->execute([$first_name, $last_name, $phone, $address, $emergency_contact, $user_id])) {
-            $_SESSION['user_name'] = "$first_name $last_name";
-            $_SESSION['success_msg'] = "Profile details updated successfully.";
-            log_audit_action($pdo, $user_id, 'UPDATE', 'profile', $user_id, 'User updated personal profile details');
-            redirect('/profile.php');
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Invalid form submission. Please refresh and try again.';
+    } elseif (isset($_POST['update_profile'])) {
+        $first_name = trim($_POST['first_name'] ?? '');
+        $last_name = trim($_POST['last_name'] ?? '');
+        $phone = trim($_POST['phone'] ?? '');
+        $address = trim($_POST['address'] ?? '');
+        $emergency_contact = trim($_POST['emergency_contact'] ?? '');
+
+        if ($first_name === '' || $last_name === '') {
+            $error_message = 'First name and last name are required.';
+        } elseif (mb_strlen($first_name) > 100 || mb_strlen($last_name) > 100) {
+            $error_message = 'Name fields are too long.';
         } else {
-            $_SESSION['error_msg'] = "Failed to update profile.";
+            $update = $pdo->prepare('UPDATE users SET first_name = ?, last_name = ?, phone = ?, address = ?, emergency_contact = ? WHERE id = ?');
+            if ($update->execute([$first_name, $last_name, $phone, $address, $emergency_contact, $user_id])) {
+                $_SESSION['user_name'] = $first_name . ' ' . $last_name;
+                try {
+                    log_audit_action($pdo, $user_id, 'UPDATE', 'profile', $user_id, 'User updated personal profile details');
+                } catch (Throwable $e) {
+                    // Audit failure must not break a successful profile update.
+                }
+                $_SESSION['success_msg'] = 'Profile details updated successfully.';
+                redirect('/profile.php');
+            }
+            $error_message = 'Unable to update your profile right now.';
+        }
+    } elseif (isset($_POST['change_password'])) {
+        $current_pass = $_POST['current_password'] ?? '';
+        $new_pass = $_POST['new_password'] ?? '';
+        $confirm_pass = $_POST['confirm_password'] ?? '';
+
+        if (!password_verify($current_pass, $user['password_hash'])) {
+            $error_message = 'Current password is incorrect.';
+        } elseif (strlen($new_pass) < 8) {
+            $error_message = 'New password must be at least 8 characters long.';
+        } elseif ($new_pass !== $confirm_pass) {
+            $error_message = 'New passwords do not match.';
+        } elseif (password_verify($new_pass, $user['password_hash'])) {
+            $error_message = 'New password must be different from your current password.';
+        } else {
+            $new_hash = password_hash($new_pass, PASSWORD_DEFAULT);
+            $update = $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
+            if ($update->execute([$new_hash, $user_id])) {
+                try {
+                    log_audit_action($pdo, $user_id, 'UPDATE', 'auth', $user_id, 'User changed account password');
+                } catch (Throwable $e) {
+                    // Audit failure must not break a successful password change.
+                }
+                $_SESSION['success_msg'] = 'Password changed successfully.';
+                redirect('/profile.php');
+            }
+            $error_message = 'Unable to change your password right now.';
         }
     }
 }
 
-// Handle Password Change
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
-    if (!verify_csrf_token($_POST['csrf_token'])) {
-        $_SESSION['error_msg'] = "Invalid form submission.";
-    } else {
-        $current_pass = $_POST['current_password'];
-        $new_pass = $_POST['new_password'];
-        $confirm_pass = $_POST['confirm_password'];
-
-        if (!password_verify($current_pass, $user['password_hash'])) {
-            $_SESSION['error_msg'] = "Current password is incorrect.";
-        } elseif ($new_pass !== $confirm_pass) {
-            $_SESSION['error_msg'] = "New passwords do not match.";
-        } elseif (strlen($new_pass) < 8) {
-            $_SESSION['error_msg'] = "New password must be at least 8 characters long.";
-        } else {
-            $new_hash = password_hash($new_pass, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
-            if ($stmt->execute([$new_hash, $user_id])) {
-                $_SESSION['success_msg'] = "Password changed successfully.";
-                log_audit_action($pdo, $user_id, 'UPDATE', 'auth', $user_id, 'User changed account password');
-                redirect('/profile.php');
-            } else {
-                $_SESSION['error_msg'] = "Failed to update password.";
-            }
-        }
-    }
+$dash_url = '/index.php';
+switch ($user['role']) {
+    case 'super_admin': $dash_url = '/admin/dashboard.php'; break;
+    case 'master': $dash_url = '/master/dashboard.php'; break;
+    case 'senior': $dash_url = '/senior/dashboard.php'; break;
+    case 'student': $dash_url = '/student/dashboard.php'; break;
 }
 
 require_once 'includes/header.php';
-
-// Determine dashboard redirect URL based on role
-$dash_url = '/index.php';
-if ($user['role'] === 'super_admin') $dash_url = '/admin/dashboard.php';
-elseif ($user['role'] === 'master') $dash_url = '/master/dashboard.php';
-elseif ($user['role'] === 'senior') $dash_url = '/senior/dashboard.php';
-elseif ($user['role'] === 'student') $dash_url = '/student/dashboard.php';
 ?>
 
-<div class="row mb-4">
-    <div class="col-12 d-flex justify-content-between align-items-center">
-        <div>
-            <h2>User Profile & Security</h2>
-            <p class="text-muted">Manage your personal information and account credentials.</p>
-        </div>
-        <a href="<?= APP_URL . $dash_url ?>" class="btn btn-outline-primary">
-            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-        </a>
-    </div>
-</div>
+<style>
+    .profile-page{max-width:1180px;margin:1.5rem auto 3rem}.profile-hero{background:linear-gradient(135deg,#090909,#1b1b1b 60%,#4a0909);color:#fff;border-radius:24px;padding:1.8rem;position:relative;overflow:hidden;box-shadow:0 20px 55px rgba(0,0,0,.16)}
+    .profile-hero:after{content:'';position:absolute;right:-80px;top:-100px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(229,9,20,.35),transparent 68%)}
+    .avatar{width:82px;height:82px;border-radius:24px;background:linear-gradient(135deg,#fff,#e7e7e7);color:#111;display:flex;align-items:center;justify-content:center;font-size:1.7rem;font-weight:900;flex:0 0 auto}
+    .eyebrow{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:#f4bd17}.hero-title{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;margin:.3rem 0}.hero-copy{color:rgba(255,255,255,.72);margin:0}.profile-card{border:0;border-radius:20px;overflow:hidden;box-shadow:0 14px 38px rgba(17,24,39,.08)}.profile-card .card-header{background:#fff;border:0;padding:1.1rem 1.25rem;font-weight:800}.profile-card .card-body{padding:1.35rem}
+    .info-pill{background:#f7f7f7;border-radius:14px;padding:.9rem 1rem;margin-bottom:.65rem}.info-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:#888;font-weight:800}.info-value{font-weight:700;margin-top:.15rem;word-break:break-word}.role-badge{display:inline-flex;align-items:center;border-radius:999px;padding:.4rem .7rem;background:#111;color:#fff;font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em}.security-box{background:linear-gradient(135deg,#fff8f8,#fff);border:1px solid rgba(229,9,20,.1);border-radius:16px;padding:1rem}.btn-dark-red{background:linear-gradient(90deg,#9d0b0b,#e02323);border:0;color:#fff}.btn-dark-red:hover{color:#fff;opacity:.94}.minor-box{border-left:4px solid #f4bd17;background:#fffaf0}
+    @media(max-width:767px){.profile-page{margin-top:1rem}.profile-hero{padding:1.25rem;border-radius:18px}.avatar{width:66px;height:66px;border-radius:19px}}
+</style>
 
-<div class="row">
-    <!-- Profile Card & Information -->
-    <div class="col-md-4 mb-4">
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-body text-center p-4">
-                <div class="mb-3">
-                    <i class="fas fa-user-circle fa-5x text-primary"></i>
+<div class="profile-page">
+    <section class="profile-hero mb-4">
+        <div class="d-flex flex-wrap align-items-center gap-3 position-relative" style="z-index:2">
+            <div class="avatar">
+                <?= htmlspecialchars(strtoupper(substr($user['first_name'] ?? 'U',0,1).substr($user['last_name'] ?? '',0,1)) ?: 'U') ?>
+            </div>
+            <div>
+                <div class="eyebrow">KOMS • Account Center</div>
+                <div class="hero-title">My Profile & Security</div>
+                <p class="hero-copy">Keep your account details current and protect your KOMS credentials.</p>
+            </div>
+        </div>
+    </section>
+
+    <?php if ($error_message): ?>
+        <div class="alert alert-danger profile-card border-0 mb-4"><i class="fas fa-circle-exclamation me-2"></i><?= htmlspecialchars($error_message) ?></div>
+    <?php endif; ?>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card profile-card mb-4">
+                <div class="card-body text-center">
+                    <div class="avatar mx-auto mb-3"><?= htmlspecialchars(strtoupper(substr($user['first_name'] ?? 'U',0,1).substr($user['last_name'] ?? '',0,1)) ?: 'U') ?></div>
+                    <h3 class="fw-bold mb-1"><?= htmlspecialchars($user['first_name'].' '.$user['last_name']) ?></h3>
+                    <p class="text-muted mb-3"><?= htmlspecialchars($user['email']) ?></p>
+                    <span class="role-badge"><i class="fas fa-user-shield me-2"></i><?= htmlspecialchars(str_replace('_',' ',$user['role'])) ?></span>
+                    <hr class="my-4">
+                    <div class="text-start">
+                        <div class="info-pill"><div class="info-label">Phone</div><div class="info-value"><?= htmlspecialchars($user['phone'] ?: 'Not set') ?></div></div>
+                        <div class="info-pill"><div class="info-label">Date of Birth</div><div class="info-value"><?= $user['dob'] ? date('M j, Y',strtotime($user['dob'])) : 'Not set' ?></div></div>
+                        <div class="info-pill"><div class="info-label">Gender</div><div class="info-value"><?= htmlspecialchars(ucfirst($user['gender'] ?: 'Not specified')) ?></div></div>
+                        <div class="info-pill"><div class="info-label">Account Status</div><div class="info-value"><span class="badge bg-success"><?= htmlspecialchars(ucfirst($user['status'])) ?></span></div></div>
+                        <div class="info-pill mb-0"><div class="info-label">Member Since</div><div class="info-value"><?= date('M Y',strtotime($user['created_at'])) ?></div></div>
+                    </div>
                 </div>
-                <h4><?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) ?></h4>
-                <p class="text-muted mb-2"><?= htmlspecialchars($user['email']) ?></p>
-                <span class="badge bg-primary text-uppercase px-3 py-2">
-                    <?= str_replace('_', ' ', $user['role']) ?>
-                </span>
+            </div>
 
-                <hr class="my-4">
+            <?php if ($student_profile && $student_profile['is_minor']): ?>
+                <div class="card profile-card minor-box">
+                    <div class="card-body">
+                        <h5 class="fw-bold text-warning-emphasis"><i class="fas fa-user-shield me-2"></i>Minor Account</h5>
+                        <p class="small text-muted">Parental consent information recorded for this student profile.</p>
+                        <div class="small"><strong>Parent/Guardian:</strong> <?= htmlspecialchars($student_profile['parent_name'] ?: 'Not recorded') ?></div>
+                        <div class="small mt-1"><strong>Consent:</strong> <?= htmlspecialchars(ucfirst($student_profile['parent_consent_status'])) ?></div>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
 
-                <div class="text-start">
-                    <p class="mb-2"><strong><i class="fas fa-calendar-alt text-muted me-2"></i>Date of Birth:</strong> <?= $user['dob'] ? date('M j, Y', strtotime($user['dob'])) : 'Not set' ?></p>
-                    <p class="mb-2"><strong><i class="fas fa-venus-mars text-muted me-2"></i>Gender:</strong> <?= ucfirst($user['gender'] ?? 'Not specified') ?></p>
-                    <p class="mb-2"><strong><i class="fas fa-shield-alt text-muted me-2"></i>Status:</strong> <span class="badge bg-success"><?= ucfirst($user['status']) ?></span></p>
-                    <p class="mb-0"><strong><i class="fas fa-clock text-muted me-2"></i>Member Since:</strong> <?= date('M Y', strtotime($user['created_at'])) ?></p>
+        <div class="col-lg-8">
+            <div class="card profile-card mb-4">
+                <div class="card-header"><i class="fas fa-user-pen text-danger me-2"></i>Personal Information</div>
+                <div class="card-body">
+                    <form method="post">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
+                        <input type="hidden" name="update_profile" value="1">
+                        <div class="row g-3">
+                            <div class="col-md-6"><label class="form-label fw-semibold">First Name</label><input name="first_name" class="form-control" maxlength="100" value="<?= htmlspecialchars($user['first_name']) ?>" required></div>
+                            <div class="col-md-6"><label class="form-label fw-semibold">Last Name</label><input name="last_name" class="form-control" maxlength="100" value="<?= htmlspecialchars($user['last_name']) ?>" required></div>
+                            <div class="col-md-6"><label class="form-label fw-semibold">Email</label><input type="email" class="form-control bg-light" value="<?= htmlspecialchars($user['email']) ?>" readonly></div>
+                            <div class="col-md-6"><label class="form-label fw-semibold">Phone</label><input name="phone" class="form-control" maxlength="20" value="<?= htmlspecialchars($user['phone'] ?? '') ?>"></div>
+                            <div class="col-12"><label class="form-label fw-semibold">Address</label><textarea name="address" class="form-control" rows="3"><?= htmlspecialchars($user['address'] ?? '') ?></textarea></div>
+                            <div class="col-12"><label class="form-label fw-semibold">Emergency Contact</label><input name="emergency_contact" class="form-control" maxlength="100" value="<?= htmlspecialchars($user['emergency_contact'] ?? '') ?>" placeholder="Name and phone number"></div>
+                        </div>
+                        <button class="btn btn-dark-red mt-4 px-4"><i class="fas fa-check me-2"></i>Save Changes</button>
+                    </form>
                 </div>
             </div>
-        </div>
 
-        <?php if ($student_profile && $student_profile['is_minor']): ?>
-        <div class="card shadow-sm border-0 border-start border-warning border-4">
-            <div class="card-body">
-                <h5 class="card-title text-warning"><i class="fas fa-user-shield me-2"></i>DPDP Act 2023 Compliance</h5>
-                <p class="small text-muted mb-2">This account belongs to a minor with Verifiable Parental Consent (VPC).</p>
-                <ul class="list-unstyled small mb-0">
-                    <li><strong>Parent/Guardian:</strong> <?= htmlspecialchars($student_profile['parent_name'] ?: 'Not recorded') ?></li>
-                    <li><strong>Parent Contact:</strong> <?= htmlspecialchars($student_profile['parent_contact'] ?: 'Not recorded') ?></li>
-                    <li><strong>Consent Method:</strong> <span class="badge bg-info text-uppercase"><?= str_replace('_', ' ', $student_profile['parent_consent_method'] ?: 'Pending') ?></span></li>
-                    <li><strong>Artifact Ref:</strong> <code><?= htmlspecialchars($student_profile['parent_consent_artifact'] ?: 'N/A') ?></code></li>
-                </ul>
+            <div class="card profile-card mb-4">
+                <div class="card-header"><i class="fas fa-lock text-danger me-2"></i>Security</div>
+                <div class="card-body">
+                    <div class="security-box mb-3"><strong>Protect your account.</strong><div class="small text-muted mt-1">Use a unique password of at least 8 characters. Changing your password updates the stored password hash.</div></div>
+                    <form method="post" autocomplete="off">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
+                        <input type="hidden" name="change_password" value="1">
+                        <div class="mb-3"><label class="form-label fw-semibold">Current Password</label><input type="password" name="current_password" class="form-control" autocomplete="current-password" required></div>
+                        <div class="row g-3"><div class="col-md-6"><label class="form-label fw-semibold">New Password</label><input type="password" name="new_password" class="form-control" minlength="8" autocomplete="new-password" required></div><div class="col-md-6"><label class="form-label fw-semibold">Confirm New Password</label><input type="password" name="confirm_password" class="form-control" minlength="8" autocomplete="new-password" required></div></div>
+                        <button class="btn btn-outline-danger mt-4 px-4"><i class="fas fa-key me-2"></i>Update Password</button>
+                    </form>
+                </div>
             </div>
-        </div>
-        <?php endif; ?>
-    </div>
 
-    <!-- Edit Profile & Change Password Forms -->
-    <div class="col-md-8">
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="fas fa-edit me-2 text-primary"></i>Edit Profile Details</h5>
-            </div>
-            <div class="card-body p-4">
-                <form method="POST" action="">
-                    <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
-                    <input type="hidden" name="update_profile" value="1">
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">First Name</label>
-                            <input type="text" name="first_name" class="form-control" value="<?= htmlspecialchars($user['first_name']) ?>" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Last Name</label>
-                            <input type="text" name="last_name" class="form-control" value="<?= htmlspecialchars($user['last_name']) ?>" required>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Email Address (Read-only)</label>
-                            <input type="email" class="form-control bg-light" value="<?= htmlspecialchars($user['email']) ?>" readonly>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Phone Number</label>
-                            <input type="text" name="phone" class="form-control" value="<?= htmlspecialchars($user['phone'] ?? '') ?>">
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Address</label>
-                        <textarea name="address" class="form-control" rows="2"><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Emergency Contact Info</label>
-                        <input type="text" name="emergency_contact" class="form-control" value="<?= htmlspecialchars($user['emergency_contact'] ?? '') ?>" placeholder="Name & Phone Number">
-                    </div>
-
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Save Profile Changes</button>
-                </form>
-            </div>
-        </div>
-
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="fas fa-key me-2 text-danger"></i>Change Password</h5>
-            </div>
-            <div class="card-body p-4">
-                <form method="POST" action="">
-                    <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
-                    <input type="hidden" name="change_password" value="1">
-
-                    <div class="mb-3">
-                        <label class="form-label">Current Password</label>
-                        <input type="password" name="current_password" class="form-control" required>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">New Password</label>
-                            <input type="password" name="new_password" class="form-control" minlength="8" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Confirm New Password</label>
-                            <input type="password" name="confirm_password" class="form-control" minlength="8" required>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-outline-danger"><i class="fas fa-shield-alt me-2"></i>Update Password</button>
-                </form>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="<?= htmlspecialchars(APP_URL.$dash_url) ?>" class="btn btn-outline-dark"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+                <a href="<?= htmlspecialchars(APP_URL.'/logout.php') ?>" class="btn btn-outline-secondary"><i class="fas fa-right-from-bracket me-2"></i>Sign Out</a>
             </div>
         </div>
     </div>
