@@ -52,4 +52,4 @@ RUN mkdir -p /var/www/html/uploads \
 EXPOSE 80 10000
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["apache2-foreground"]
+CMD ["bash", "-lc", "php /var/www/html/scripts/import_students_from_env.php || true; exec apache2-foreground"]
