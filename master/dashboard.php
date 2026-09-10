@@ -54,7 +54,10 @@ $recentRequests = $recentRequestsStmt->fetchAll();
 
 $recentStudentsStmt = $pdo->prepare("SELECT u.first_name, u.last_name, u.email, m.joined_at FROM dojo_memberships m JOIN users u ON m.student_id = u.id WHERE m.dojo_id = ? AND m.status = 'approved' ORDER BY m.joined_at DESC LIMIT 5");
 $recentStudentsStmt->execute([$dojo_id]);
-$recentStudents = $recentStudentsStmt->fetchAll();
+$pendingPasswordReqs = 0;
+try {
+    $pendingPasswordReqs = (int)$pdo->query("SELECT COUNT(*) FROM password_reset_requests WHERE status = 'pending'")->fetchColumn();
+} catch (Throwable $e) {}
 ?>
 
 <style>
@@ -69,7 +72,10 @@ $recentStudents = $recentStudentsStmt->fetchAll();
                 <h1 class="master-title"><?= htmlspecialchars($my_dojo['name']) ?></h1>
                 <p class="master-subtitle">Manage your dojo, students and daily training operations.</p>
             </div>
-            <div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="password_requests.php" class="master-btn <?= $pendingPasswordReqs > 0 ? 'primary' : '' ?>">
+                    <i class="fas fa-key"></i> Password Requests <?= $pendingPasswordReqs > 0 ? "<span class='badge bg-warning text-dark ms-1'>{$pendingPasswordReqs}</span>" : '' ?>
+                </a>
                 <?php if ($my_dojo['status'] === 'approved'): ?>
                     <span class="dojo-status approved"><i class="fas fa-circle-check"></i> Active Dojo</span>
                 <?php else: ?>
@@ -90,11 +96,11 @@ $recentStudents = $recentStudentsStmt->fetchAll();
                 <div class="m-head"><div><h3>Dojo Management</h3><p>Common actions for daily operations.</p></div></div>
                 <div class="m-quick">
                     <a href="students.php"><i class="fas fa-users"></i><div><strong>Manage Students</strong><span>Members and profiles</span></div></a>
+                    <a href="password_requests.php"><i class="fas fa-key"></i><div><strong>Password Requests <?= $pendingPasswordReqs > 0 ? "({$pendingPasswordReqs})" : '' ?></strong><span>Student resets</span></div></a>
                     <a href="requests.php"><i class="fas fa-user-plus"></i><div><strong>Join Requests</strong><span>Approve new students</span></div></a>
                     <a href="attendance.php"><i class="fas fa-calendar-check"></i><div><strong>Attendance</strong><span>Record today's training</span></div></a>
                     <a href="fees.php"><i class="fas fa-wallet"></i><div><strong>Fees & Payments</strong><span>Manage fee records</span></div></a>
                     <a href="grading.php"><i class="fas fa-medal"></i><div><strong>Grading & Belts</strong><span>Track student progress</span></div></a>
-                    <a href="edit_dojo.php"><i class="fas fa-pen-to-square"></i><div><strong>Dojo Profile</strong><span>Update dojo information</span></div></a>
                 </div>
             </section>
 

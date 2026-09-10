@@ -101,6 +101,7 @@ require_once '../includes/header.php';
         <p class="requests-sub">Review students who requested to join <?= htmlspecialchars($dojo['name']) ?>. Approving a request makes the student an active dojo member.</p>
         <div class="d-flex flex-wrap gap-2 mt-3">
             <a href="index.php" class="btn btn-light"><i class="fas fa-arrow-left me-2"></i>Dashboard</a>
+            <a href="password_requests.php" class="btn btn-warning"><i class="fas fa-key me-2"></i>Password Requests</a>
             <a href="students.php" class="btn btn-outline-light"><i class="fas fa-users me-2"></i>Students</a>
         </div>
     </section>

@@ -558,14 +558,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endif; ?>
 
             <div class="input-group">
-                <i class="fa-regular fa-envelope icon-left"></i>
-                <input type="email" name="email" id="email" placeholder="Gmail Address (@gmail.com)" required autocomplete="email" value="<?= htmlspecialchars($_POST['email'] ?? 'admin@gmail.com') ?>">
+                <i class="fa-solid fa-id-card-clip icon-left" style="color:#ffd21a;"></i>
+                <input type="text" name="email" id="email" placeholder="User ID or Gmail Address" required autocomplete="username" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
             </div>
 
             <div class="input-group">
                 <i class="fa-solid fa-lock icon-left"></i>
-                <input type="password" name="password" id="password" placeholder="Password" required autocomplete="current-password" value="password123">
+                <input type="password" name="password" id="password" placeholder="Password (DOB: DD.MM.YYYY for students)" required autocomplete="current-password" value="<?= htmlspecialchars($_POST['password'] ?? '') ?>">
                 <i class="fa-regular fa-eye icon-right" id="togglePassword" title="Toggle password visibility"></i>
+            </div>
+
+            <div style="font-size: 11px; color: #a0a0a0; margin: -6px 0 14px 4px; display: flex; align-items: center; gap: 6px;">
+                <i class="fas fa-shield-halved" style="color: #ffd21a; font-size: 11px;"></i>
+                <span>Accepts <strong>User ID</strong> (e.g. <code>sairohan2012.koms</code>) or <strong>Gmail</strong></span>
             </div>
 
             <button type="submit" class="login-btn" id="submitBtn">
@@ -577,7 +582,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="demo-roles-container">
                 <div class="demo-roles-label">
                     <span><i class="fas fa-key me-1"></i> Quick Demo Roles</span>
-                    <span style="font-size: 9px; opacity: 0.7;">Password: password123</span>
+                    <span style="font-size: 9px; opacity: 0.7;">Gmail or Student User ID</span>
                 </div>
                 <div class="demo-pills">
                     <button type="button" class="demo-pill" onclick="fillRole('admin@gmail.com', 'password123', 'Grand Master')">
@@ -586,17 +591,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <button type="button" class="demo-pill" onclick="fillRole('master@gmail.com', 'password123', 'Dojo Master')">
                         <i class="fas fa-torii-gate"></i> <strong>Dojo Master</strong>
                     </button>
-                    <button type="button" class="demo-pill" onclick="fillRole('senior@gmail.com', 'password123', 'Senior')">
-                        <i class="fas fa-user-ninja"></i> <strong>Senior Student</strong>
+                    <button type="button" class="demo-pill" onclick="fillRole('sairohan2012.koms', '20.10.2012', 'Sai Rohan (Student ID)')" title="User ID: sairohan2012.koms | Pass: 20.10.2012">
+                        <i class="fas fa-user-ninja"></i> <strong>Sai Rohan (ID)</strong>
                     </button>
-                    <button type="button" class="demo-pill" onclick="fillRole('student@gmail.com', 'password123', 'Student')">
-                        <i class="fas fa-user-graduate"></i> <strong>Student</strong>
+                    <button type="button" class="demo-pill" onclick="fillRole('dguhan2015.koms', '25.09.2015', 'Guhan (Student ID)')" title="User ID: dguhan2015.koms | Pass: 25.09.2015">
+                        <i class="fas fa-user-graduate"></i> <strong>Guhan (ID)</strong>
                     </button>
                 </div>
             </div>
 
             <!-- Portal Links -->
             <div class="footer-links">
+                <a href="forgot_password.php" title="Request Password Reset from Master Portal" style="color:#ffd21a;"><i class="fas fa-key me-1"></i> Reset Password</a>
                 <a href="register.php"><i class="fas fa-user-plus me-1"></i> Register</a>
                 <a href="find_dojo.php"><i class="fas fa-compass me-1"></i> Find Dojo</a>
                 <a href="uploads/koms-mobile.apk" download title="Download KOMS Android App (APK)"><i class="fab fa-android me-1" style="color: #3ddc84;"></i> Mobile App</a>

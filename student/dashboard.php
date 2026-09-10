@@ -7,12 +7,12 @@ require_role('student');
 
 $user_id = (int)($_SESSION['user_id'] ?? 0);
 
-$user_stmt = $pdo->prepare("SELECT id, first_name, last_name, email, dob, gender, phone, address, profile_photo, created_at FROM users WHERE id = ? LIMIT 1");
+$user_stmt = $pdo->prepare("SELECT id, member_id, first_name, last_name, email, dob, gender, phone, address, profile_photo, created_at, must_change_password, password_change_count FROM users WHERE id = ? LIMIT 1");
 $user_stmt->execute([$user_id]);
 $user = $user_stmt->fetch() ?: [];
 
 $student_name = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')) ?: 'Student';
-$student_id = 'MD-' . str_pad((string)$user_id, 5, '0', STR_PAD_LEFT);
+$student_id = !empty($user['member_id']) ? $user['member_id'] : ('MD-' . str_pad((string)$user_id, 5, '0', STR_PAD_LEFT));
 $initials = strtoupper(substr($user['first_name'] ?? 'S', 0, 1) . substr($user['last_name'] ?? '', 0, 1));
 
 $membership_stmt = $pdo->prepare("SELECT d.id AS dojo_id, d.name AS dojo_name, d.location, d.training_days, d.training_timings, m.status, m.joined_at FROM dojo_memberships m JOIN dojos d ON d.id = m.dojo_id WHERE m.student_id = ? ORDER BY CASE WHEN m.status = 'approved' THEN 0 WHEN m.status = 'pending' THEN 1 ELSE 2 END, m.created_at DESC LIMIT 1");
@@ -132,6 +132,24 @@ function student_h($value) {
                     <a class="sp-btn sp-btn-dark" href="<?= APP_URL ?>/profile.php"><i class="fa-solid fa-user-pen"></i>My Profile</a>
                 </div>
             </section>
+
+            <?php if (!empty($user['must_change_password']) || (int)($user['password_change_count'] ?? 0) === 0): ?>
+                <div class="sp-panel" style="margin-top:18px;border-left:4px solid #ffd21a;background:linear-gradient(135deg, rgba(30, 24, 5, 0.95), rgba(18, 18, 18, 0.95));border-radius:12px;padding:16px;box-shadow:0 8px 25px rgba(0,0,0,0.3);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <i class="fa-solid fa-key" style="color:#ffd21a;font-size:18px;"></i>
+                            <h3 style="color:#ffd21a;margin:0;font-size:14px;font-weight:700;">1-Time Password Change Notice</h3>
+                        </div>
+                        <span class="sp-badge badge-gold" style="background:#ffd21a;color:#111;font-weight:800;padding:3px 8px;border-radius:6px;font-size:10px;">1 Direct Change Allowed</span>
+                    </div>
+                    <p style="font-size:12px;color:#ccc;margin:8px 0 12px;line-height:1.5;">
+                        You are currently using your default <strong>Date of Birth</strong> password. As per academy rules, you can change your password <strong>once</strong> directly. Subsequent changes will require Master approval.
+                    </p>
+                    <a href="<?= APP_URL ?>/profile.php" class="sp-btn sp-btn-light" style="padding:6px 14px;font-size:11px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-weight:700;">
+                        <i class="fa-solid fa-lock-open"></i>Change Password in Profile
+                    </a>
+                </div>
+            <?php endif; ?>
 
             <?php if ($membership && $membership['status'] === 'pending'): ?>
                 <div class="sp-panel" style="margin-top:18px;border-left:4px solid #f4a300;">

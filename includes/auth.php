@@ -88,7 +88,9 @@ function login_user($pdo, $login, $password) {
         }
 
         // Prevent session fixation after successful authentication.
-        session_regenerate_id(true);
+        if (!headers_sent() && session_status() === PHP_SESSION_ACTIVE) {
+            @session_regenerate_id(true);
+        }
 
         $_SESSION['user_id'] = (int)$user['id'];
         $_SESSION['user_name'] = trim($user['first_name'] . ' ' . $user['last_name']);

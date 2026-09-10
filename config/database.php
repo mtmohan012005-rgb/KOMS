@@ -57,6 +57,31 @@ function ensure_user_column(PDO $pdo, string $column, string $definition): void 
     }
 }
 
+function ensure_security_tables(PDO $pdo): void {
+    try {
+        ensure_user_column($pdo, 'must_change_password', 'must_change_password TINYINT(1) NOT NULL DEFAULT 1 AFTER status');
+        ensure_user_column($pdo, 'password_change_count', 'password_change_count INT NOT NULL DEFAULT 0 AFTER must_change_password');
+        $pdo->exec("CREATE TABLE IF NOT EXISTS password_reset_requests (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            dojo_id INT NULL,
+            reason TEXT NULL,
+            status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+            master_notes TEXT NULL,
+            reviewed_by INT NULL,
+            reviewed_at TIMESTAMP NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_user (user_id),
+            INDEX idx_status (status)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    } catch (Throwable $e) {
+        error_log('KOMS ensure_security_tables error: ' . $e->getMessage());
+    }
+}
+
+ensure_security_tables($pdo);
+
 /**
  * Import the user-provided student spreadsheet through a Render secret.
  * The JSON payload is never stored in the public Git repository.

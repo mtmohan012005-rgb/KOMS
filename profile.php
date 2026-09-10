@@ -58,7 +58,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $new_pass = $_POST['new_password'] ?? '';
         $confirm_pass = $_POST['confirm_password'] ?? '';
 
-        if (!password_verify($current_pass, $user['password_hash'])) {
+        if (!can_user_change_password($user)) {
+            $error_message = 'You have already reached the maximum 1 direct password change. Please submit a request to the Master Portal below.';
+        } elseif (!password_verify($current_pass, $user['password_hash'])) {
             $error_message = 'Current password is incorrect.';
         } elseif (strlen($new_pass) < 8) {
             $error_message = 'New password must be at least 8 characters long.';
@@ -68,19 +70,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error_message = 'New password must be different from your current password.';
         } else {
             $new_hash = password_hash($new_pass, PASSWORD_DEFAULT);
-            $update = $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
-            if ($update->execute([$new_hash, $user_id])) {
+            $new_count = ((int)($user['password_change_count'] ?? 0)) + 1;
+            $update = $pdo->prepare('UPDATE users SET password_hash = ?, password_change_count = ?, must_change_password = 0, updated_at = NOW() WHERE id = ?');
+            if ($update->execute([$new_hash, $new_count, $user_id])) {
                 try {
-                    log_audit_action($pdo, $user_id, 'UPDATE', 'auth', $user_id, 'User changed account password');
+                    log_audit_action($pdo, $user_id, 'UPDATE', 'auth', $user_id, 'User changed account password (Total changes: ' . $new_count . ')');
                 } catch (Throwable $e) {
                     // Audit failure must not break a successful password change.
                 }
-                $_SESSION['success_msg'] = 'Password changed successfully.';
+                $_SESSION['success_msg'] = 'Password changed successfully! You have completed your 1-time direct password change. Future password changes must be requested through the Master Portal.';
                 redirect('/profile.php');
             }
             $error_message = 'Unable to change your password right now.';
         }
+    } elseif (isset($_POST['request_password_reset'])) {
+        $reason = trim($_POST['reset_reason'] ?? '');
+        if ($reason === '') {
+            $error_message = 'Please provide a reason for the password change request.';
+        } else {
+            $chk = $pdo->prepare("SELECT id FROM password_reset_requests WHERE user_id = ? AND status = 'pending' LIMIT 1");
+            $chk->execute([$user_id]);
+            if ($chk->fetch()) {
+                $error_message = 'You already have a pending password reset request awaiting Master approval.';
+            } else {
+                $dojo_stmt = $pdo->prepare("SELECT dojo_id FROM dojo_memberships WHERE student_id = ? ORDER BY id DESC LIMIT 1");
+                $dojo_stmt->execute([$user_id]);
+                $student_dojo_id = (int)$dojo_stmt->fetchColumn() ?: null;
+
+                $ins = $pdo->prepare("INSERT INTO password_reset_requests (user_id, dojo_id, reason, status) VALUES (?, ?, ?, 'pending')");
+                if ($ins->execute([$user_id, $student_dojo_id, $reason])) {
+                    try {
+                        log_audit_action($pdo, $user_id, 'CREATE', 'password_request', $pdo->lastInsertId(), 'Student submitted password change request to Master Portal');
+                    } catch (Throwable $e) {}
+                    $_SESSION['success_msg'] = 'Your password reset request has been submitted to the Master Portal! Your Dojo Master will review it.';
+                    redirect('/profile.php');
+                } else {
+                    $error_message = 'Unable to submit request right now. Please try again.';
+                }
+            }
+        }
     }
+}
+
+$latest_password_request = null;
+if ($user['role'] === 'student') {
+    $req_stmt = $pdo->prepare("SELECT * FROM password_reset_requests WHERE user_id = ? ORDER BY id DESC LIMIT 1");
+    $req_stmt->execute([$user_id]);
+    $latest_password_request = $req_stmt->fetch();
 }
 
 $dash_url = '/index.php';
@@ -173,16 +209,111 @@ require_once 'includes/header.php';
             </div>
 
             <div class="card profile-card mb-4">
-                <div class="card-header"><i class="fas fa-lock text-danger me-2"></i>Security</div>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div><i class="fas fa-lock text-danger me-2"></i>Security &amp; Password</div>
+                    <?php if ($user['role'] === 'student'): ?>
+                        <?php if (can_user_change_password($user)): ?>
+                            <span class="badge bg-success"><i class="fas fa-shield-check me-1"></i> 1 Direct Change Allowed</span>
+                        <?php else: ?>
+                            <span class="badge bg-danger"><i class="fas fa-lock me-1"></i> 1-Time Change Limit Reached</span>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </div>
                 <div class="card-body">
-                    <div class="security-box mb-3"><strong>Protect your account.</strong><div class="small text-muted mt-1">Use a unique password of at least 8 characters. Changing your password updates the stored password hash.</div></div>
-                    <form method="post" autocomplete="off">
-                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
-                        <input type="hidden" name="change_password" value="1">
-                        <div class="mb-3"><label class="form-label fw-semibold">Current Password</label><input type="password" name="current_password" class="form-control" autocomplete="current-password" required></div>
-                        <div class="row g-3"><div class="col-md-6"><label class="form-label fw-semibold">New Password</label><input type="password" name="new_password" class="form-control" minlength="8" autocomplete="new-password" required></div><div class="col-md-6"><label class="form-label fw-semibold">Confirm New Password</label><input type="password" name="confirm_password" class="form-control" minlength="8" autocomplete="new-password" required></div></div>
-                        <button class="btn btn-outline-danger mt-4 px-4"><i class="fas fa-key me-2"></i>Update Password</button>
-                    </form>
+                    <?php if ($user['role'] === 'student' && !can_user_change_password($user)): ?>
+                        <!-- 1-Time Limit Reached: Must Request Master Portal -->
+                        <div class="alert alert-dark border-danger mb-4" style="background: rgba(198, 26, 26, 0.08); border-left: 4px solid #c61a1a;">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-shield-halved fa-2x text-danger me-3 mt-1"></i>
+                                <div>
+                                    <h6 class="fw-bold text-danger mb-1">Direct Password Change Limit Reached</h6>
+                                    <p class="small text-muted mb-0">
+                                        As a student, you have already used your <strong>1-time direct password change</strong>. 
+                                        To change or reset your password again, academy policy requires requesting approval from the <strong>Master Portal</strong>.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <?php if ($latest_password_request && $latest_password_request['status'] === 'pending'): ?>
+                            <div class="card border-warning mb-3">
+                                <div class="card-body bg-light">
+                                    <div class="d-flex align-items-center">
+                                        <div class="spinner-border spinner-border-sm text-warning me-2" role="status"></div>
+                                        <h6 class="mb-0 fw-bold text-dark">Password Reset Request Pending Review</h6>
+                                    </div>
+                                    <p class="small text-muted mt-2 mb-1">
+                                        Submitted on: <strong><?= date('M d, Y - h:i A', strtotime($latest_password_request['created_at'])) ?></strong>
+                                    </p>
+                                    <div class="small p-2 bg-white rounded border">
+                                        <strong>Your submitted reason:</strong> <?= htmlspecialchars($latest_password_request['reason'] ?? 'Not specified') ?>
+                                    </div>
+                                    <div class="small text-secondary mt-2">
+                                        <i class="fas fa-info-circle text-warning me-1"></i> Your Dojo Master / Sensei will review and approve this request shortly.
+                                    </div>
+                                </div>
+                            </div>
+                        <?php else: ?>
+                            <?php if ($latest_password_request && $latest_password_request['status'] === 'rejected'): ?>
+                                <div class="alert alert-warning small mb-3">
+                                    <i class="fas fa-circle-exclamation me-1"></i> Previous request rejected: <?= htmlspecialchars($latest_password_request['master_notes'] ?? 'Please contact your Sensei.') ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <form method="post">
+                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
+                                <input type="hidden" name="request_password_reset" value="1">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Reason for Password Change Request <span class="text-danger">*</span></label>
+                                    <textarea name="reset_reason" class="form-control" rows="3" placeholder="e.g. Forgot password, device change, or routine security reset" required></textarea>
+                                    <div class="form-text">Your request will be routed directly to your Dojo Master in the Master Portal.</div>
+                                </div>
+                                <button type="submit" class="btn btn-warning px-4 fw-bold">
+                                    <i class="fas fa-paper-plane me-2"></i>Submit Request to Master Portal
+                                </button>
+                            </form>
+                        <?php endif; ?>
+
+                    <?php else: ?>
+                        <!-- Allowed to Change Password Directly -->
+                        <?php if ($user['role'] === 'student'): ?>
+                            <div class="alert alert-info d-flex align-items-center mb-3">
+                                <i class="fas fa-info-circle fa-2x text-primary me-3"></i>
+                                <div class="small">
+                                    <strong>Default Password Policy:</strong> Your initial password is your <strong>Date of Birth (DD.MM.YYYY)</strong>. 
+                                    You can change it <strong>once</strong> directly. Subsequent changes will require a request to the <strong>Master Portal</strong>.
+                                </div>
+                            </div>
+                        <?php else: ?>
+                            <div class="security-box mb-3">
+                                <strong>Protect your account.</strong>
+                                <div class="small text-muted mt-1">Use a unique password of at least 8 characters. Changing your password updates the stored password hash.</div>
+                            </div>
+                        <?php endif; ?>
+
+                        <form method="post" autocomplete="off">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
+                            <input type="hidden" name="change_password" value="1">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Current Password</label>
+                                <input type="password" name="current_password" class="form-control" autocomplete="current-password" placeholder="<?= $user['role'] === 'student' && ((int)($user['password_change_count'] ?? 0) === 0) ? 'Enter your Date of Birth (DD.MM.YYYY)' : 'Enter current password' ?>" required>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">New Password</label>
+                                    <input type="password" name="new_password" class="form-control" minlength="8" autocomplete="new-password" placeholder="At least 8 characters" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Confirm New Password</label>
+                                    <input type="password" name="confirm_password" class="form-control" minlength="8" autocomplete="new-password" placeholder="Repeat new password" required>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline-danger mt-4 px-4">
+                                <i class="fas fa-key me-2"></i>Update Password <?= $user['role'] === 'student' ? '(1-Time Direct Change)' : '' ?>
+                            </button>
+                        </form>
+                    <?php endif; ?>
                 </div>
             </div>
 

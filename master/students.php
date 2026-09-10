@@ -61,6 +61,7 @@ require_once '../includes/header.php';
         <div class="hero-sub">Manage approved students from the Master Portal. Search by name, email, phone or KOMS User ID and open attendance or grading for each student.</div>
         <div class="d-flex flex-wrap gap-2 mt-3">
             <a href="index.php" class="btn btn-light"><i class="fas fa-arrow-left me-2"></i>Master Dashboard</a>
+            <a href="password_requests.php" class="btn btn-warning"><i class="fas fa-key me-2"></i>Password Requests</a>
             <a href="requests.php" class="btn btn-outline-light"><i class="fas fa-user-plus me-2"></i>Join Requests</a>
             <a href="attendance.php" class="btn btn-outline-light"><i class="fas fa-calendar-check me-2"></i>Attendance</a>
             <a href="grading.php" class="btn btn-outline-light"><i class="fas fa-medal me-2"></i>Grading</a>
@@ -108,7 +109,7 @@ require_once '../includes/header.php';
                         <td><span class="belt"><?= htmlspecialchars($student['current_belt'] ?: 'White Belt') ?></span></td>
                         <td><span class="<?= $att_class ?>"><?= $att ?>%</span><div class="small text-muted"><?= (int)$student['present_count'] ?> / <?= (int)$student['attendance_count'] ?> present</div></td>
                         <td><?= !empty($student['joined_at']) ? date('M j, Y', strtotime($student['joined_at'])) : '—' ?></td>
-                        <td><div class="d-flex gap-1 flex-wrap"><a href="attendance.php?student_id=<?= (int)$student['id'] ?>" class="btn btn-sm btn-outline-secondary action-link"><i class="fas fa-calendar-check"></i>Attendance</a><a href="grading.php?student_id=<?= (int)$student['id'] ?>" class="btn btn-sm btn-outline-dark action-link"><i class="fas fa-medal"></i>Grading</a></div></td>
+                        <td><div class="d-flex gap-1 flex-wrap"><a href="attendance.php?student_id=<?= (int)$student['id'] ?>" class="btn btn-sm btn-outline-secondary action-link"><i class="fas fa-calendar-check"></i>Attendance</a><a href="grading.php?student_id=<?= (int)$student['id'] ?>" class="btn btn-sm btn-outline-dark action-link"><i class="fas fa-medal"></i>Grading</a><a href="password_requests.php" class="btn btn-sm btn-outline-warning action-link" title="Student Password Management"><i class="fas fa-key"></i>Password</a></div></td>
                     </tr>
                 <?php endforeach; ?>
                 <?php if (!$students): ?><tr><td colspan="7" class="empty"><i class="fas fa-user-slash fa-2x mb-3 d-block"></i><?= $search !== '' ? 'No students matched your search.' : 'No approved students found in your dojo yet.' ?></td></tr><?php endif; ?>

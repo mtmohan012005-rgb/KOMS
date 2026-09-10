@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS users (
     emergency_contact VARCHAR(100),
     profile_photo VARCHAR(255),
     status ENUM('active', 'inactive') DEFAULT 'active',
-    must_change_password TINYINT(1) NOT NULL DEFAULT 0,
+    must_change_password TINYINT(1) NOT NULL DEFAULT 1,
+    password_change_count INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -266,4 +267,21 @@ CREATE TABLE IF NOT EXISTS tournament_brackets (
     status ENUM('scheduled', 'in_progress', 'completed') DEFAULT 'scheduled',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE
+);
+
+-- Password Reset Requests (Enforces 1 self-service change rule)
+CREATE TABLE IF NOT EXISTS password_reset_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    dojo_id INT NULL,
+    reason TEXT NULL,
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    master_notes TEXT NULL,
+    reviewed_by INT NULL,
+    reviewed_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user (user_id),
+    INDEX idx_status (status)
 );

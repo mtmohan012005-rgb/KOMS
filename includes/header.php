@@ -33,6 +33,7 @@
                     <?php elseif (has_role('master')): ?>
                         <li class="nav-item"><a class="nav-link" href="<?= APP_URL ?>/master/index.php"><i class="fas fa-gauge-high me-1"></i>Dashboard</a></li>
                         <li class="nav-item"><a class="nav-link" href="<?= APP_URL ?>/master/students.php"><i class="fas fa-users me-1"></i>Students</a></li>
+                        <li class="nav-item"><a class="nav-link" href="<?= APP_URL ?>/master/password_requests.php"><i class="fas fa-key me-1"></i>Password Requests</a></li>
                         <li class="nav-item"><a class="nav-link" href="<?= APP_URL ?>/master/attendance.php"><i class="fas fa-calendar-check me-1"></i>Attendance</a></li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-layer-group me-1"></i>Management</a>

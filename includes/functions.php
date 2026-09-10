@@ -96,4 +96,43 @@ function redirect($url) {
     header("Location: " . APP_URL . $url);
     exit();
 }
+
+/**
+ * Format a Date of Birth (YYYY-MM-DD or other formats) into the student's default initial password (DD.MM.YYYY).
+ */
+function format_dob_password(?string $dob): ?string {
+    if (!$dob) return null;
+    $trimmed = trim($dob);
+    if (preg_match('/^(\d{2})\.(\d{2})\.(\d{4})$/', $trimmed)) {
+        return $trimmed;
+    }
+    $ts = strtotime($trimmed);
+    if ($ts === false) return null;
+    return date('d.m.Y', $ts);
+}
+
+/**
+ * Check whether a user is eligible to directly change their password.
+ * Students have a strict maximum limit of 1 self-service change.
+ */
+function can_user_change_password(array $user): bool {
+    if (($user['role'] ?? '') !== 'student') {
+        return true;
+    }
+    return (int)($user['password_change_count'] ?? 0) < 1;
+}
+
+/**
+ * Fetch the latest pending password reset request for a given user.
+ */
+function get_pending_password_reset_request(PDO $pdo, int $userId): ?array {
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM password_reset_requests WHERE user_id = ? AND status = 'pending' ORDER BY id DESC LIMIT 1");
+        $stmt->execute([$userId]);
+        $res = $stmt->fetch();
+        return $res ?: null;
+    } catch (Throwable $e) {
+        return null;
+    }
+}
 ?>
