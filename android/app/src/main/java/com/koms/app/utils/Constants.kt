@@ -1,8 +1,9 @@
 package com.koms.app.utils
 
 object Constants {
-    // Production Cloud Backend on Render
-    const val BASE_URL = "https://koms-backend.onrender.com/api/"
+    // Live ngrok Backend pointing to local Canteenshoping XAMPP database
+    const val BASE_URL = "https://jaybird-trowel-pusher.ngrok-free.dev/Canteenshoping/api/"
+    const val RENDER_URL = "https://koms-backend.onrender.com/api/"
     const val LOCAL_URL = "http://127.0.0.1:8080/api/"
     const val EMULATOR_URL = "http://10.0.2.2:8080/api/"
     
