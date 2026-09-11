@@ -23,14 +23,36 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 var request = mapOf("email" to email, "password" to pass)
-                var response = ApiClient.apiService.login(request)
+                var response = try {
+                    val cloudResp = ApiClient.apiService.login(request)
+                    if (cloudResp.isSuccessful && cloudResp.body()?.data != null) {
+                        cloudResp
+                    } else {
+                        try {
+                            val localResp = ApiClient.localApiService.login(request)
+                            if (localResp.isSuccessful) localResp else cloudResp
+                        } catch (_: Exception) {
+                            cloudResp
+                        }
+                    }
+                } catch (netEx: Exception) {
+                    try {
+                        ApiClient.localApiService.login(request)
+                    } catch (_: Exception) {
+                        throw netEx
+                    }
+                }
 
                 // If credentials mismatch, try alternate password (password <-> password123)
                 if (!response.isSuccessful && response.code() == 401) {
                     val alternatePass = if (pass == "password123") "password" else if (pass == "password") "password123" else null
                     if (alternatePass != null) {
                         request = mapOf("email" to email, "password" to alternatePass)
-                        val retryResponse = ApiClient.apiService.login(request)
+                        val retryResponse = try {
+                            ApiClient.apiService.login(request)
+                        } catch (_: Exception) {
+                            ApiClient.localApiService.login(request)
+                        }
                         if (retryResponse.isSuccessful && retryResponse.body() != null) {
                             response = retryResponse
                         }

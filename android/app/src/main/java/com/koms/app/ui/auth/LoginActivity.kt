@@ -11,7 +11,6 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.koms.app.databinding.ActivityLoginBinding
-import com.koms.app.ui.master.MasterDashboardActivity
 import com.koms.app.ui.student.StudentDashboardActivity
 import com.koms.app.utils.SessionManager
 
@@ -42,10 +41,10 @@ class LoginActivity : AppCompatActivity() {
             isPasswordVisible = !isPasswordVisible
             if (isPasswordVisible) {
                 binding.etPassword.transformationMethod = HideReturnsTransformationMethod.getInstance()
-                binding.ivTogglePassword.setImageResource(com.koms.app.R.drawable.ic_eye_off)
+                binding.ivTogglePassword.animate().alpha(0.5f).duration = 150
             } else {
                 binding.etPassword.transformationMethod = PasswordTransformationMethod.getInstance()
-                binding.ivTogglePassword.setImageResource(com.koms.app.R.drawable.ic_eye)
+                binding.ivTogglePassword.animate().alpha(1f).duration = 150
             }
             binding.etPassword.setSelection(binding.etPassword.text.length)
         }
@@ -61,22 +60,23 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
+        // 1-Click Demo Buttons
         binding.btnDemoStudent.setOnClickListener {
             binding.etEmail.setText("student@gmail.com")
             binding.etPassword.setText("password123")
-            viewModel.login("student@gmail.com", "password123")
+            binding.btnLogin.performClick()
         }
 
         binding.btnDemoMaster.setOnClickListener {
-            binding.etEmail.setText("master@gmail.com")
-            binding.etPassword.setText("password123")
-            viewModel.login("master@gmail.com", "password123")
+            binding.etEmail.setText("master@koms.com")
+            binding.etPassword.setText("masterpass")
+            binding.btnLogin.performClick()
         }
 
         binding.btnDemoAdmin.setOnClickListener {
-            binding.etEmail.setText("admin@gmail.com")
-            binding.etPassword.setText("password123")
-            viewModel.login("admin@gmail.com", "password123")
+            binding.etEmail.setText("admin@koms.com")
+            binding.etPassword.setText("adminpass")
+            binding.btnLogin.performClick()
         }
     }
 
@@ -187,10 +187,9 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun navigateToDashboard(role: String) {
-        val intent = when (role.lowercase()) {
-            "master" -> Intent(this, MasterDashboardActivity::class.java)
+        val intent = when (role) {
             "student" -> Intent(this, StudentDashboardActivity::class.java)
-            else -> Intent(this, MasterDashboardActivity::class.java)
+            else -> Intent(this, StudentDashboardActivity::class.java)
         }
         startActivity(intent)
         finish()

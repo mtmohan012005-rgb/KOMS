@@ -35,4 +35,16 @@ object ApiClient {
     val apiService: ApiService by lazy {
         client.create(ApiService::class.java)
     }
+
+    val localClient: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(Constants.LOCAL_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    val localApiService: ApiService by lazy {
+        localClient.create(ApiService::class.java)
+    }
 }

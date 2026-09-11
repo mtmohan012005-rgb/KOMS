@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#080808">
+
+    <!-- Logo Animation Wrapper -->
+    <FrameLayout
+        android:id="@+id/logoWrapper"
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:layout_gravity="center">
+
+        <!-- Golden Flare Effect -->
+        <View
+            android:id="@+id/flareView"
+            android:layout_width="4dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="#FFFFFF" />
+
+        <!-- Logo Halves (Steps 1 & 2) -->
+        <FrameLayout
+            android:id="@+id/logoHalvesContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/ivLogoLeft"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter"
+                android:src="@drawable/shorin_ryu_crest"
+                android:contentDescription="Shorin Ryu Logo Left" />
+
+            <ImageView
+                android:id="@+id/ivLogoRight"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter"
+                android:src="@drawable/shorin_ryu_crest"
+                android:contentDescription="Shorin Ryu Logo Right" />
+        </FrameLayout>
+
+        <!-- Full Converged Glowing Logo (Step 3) -->
+        <ImageView
+            android:id="@+id/ivLogoFull"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter"
+            android:src="@drawable/shorin_ryu_crest"
+            android:contentDescription="Shorin Ryu Crest Full" />
+    </FrameLayout>
+
+    <!-- Title Section -->
+    <LinearLayout
+        android:id="@+id/titleSection"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginBottom="60dp"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MASS DRAGON DOJO"
+            android:textColor="#FFCC00"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.05" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Karate Organization Management System"
+            android:textColor="#AAAAAA"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+</FrameLayout>
