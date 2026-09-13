@@ -110,8 +110,8 @@ class WebViewActivity : AppCompatActivity() {
         settings.useWideViewPort = true
         settings.setSupportZoom(true)
         settings.builtInZoomControls = false
-        settings.displayZoomControls = false
-        settings.cacheMode = WebSettings.LOAD_DEFAULT
+        settings.cacheMode = WebSettings.LOAD_NO_CACHE
+        binding.komsWebView.clearCache(true)
         settings.mediaPlaybackRequiresUserGesture = false
 
         // Register Real-Time Native Bridge
