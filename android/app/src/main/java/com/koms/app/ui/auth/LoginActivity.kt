@@ -60,24 +60,6 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        // 1-Click Demo Buttons
-        binding.btnDemoStudent.setOnClickListener {
-            binding.etEmail.setText("student@gmail.com")
-            binding.etPassword.setText("password123")
-            binding.btnLogin.performClick()
-        }
-
-        binding.btnDemoMaster.setOnClickListener {
-            binding.etEmail.setText("master@koms.com")
-            binding.etPassword.setText("masterpass")
-            binding.btnLogin.performClick()
-        }
-
-        binding.btnDemoAdmin.setOnClickListener {
-            binding.etEmail.setText("admin@koms.com")
-            binding.etPassword.setText("adminpass")
-            binding.btnLogin.performClick()
-        }
     }
 
     private fun setupCinematicStoryboardAnimations() {

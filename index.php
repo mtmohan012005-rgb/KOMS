@@ -568,28 +568,6 @@ try {
             <span>Enter Dojo</span>
         </button>
     </form>
-
-    <!-- 1-Click Quick Demo Pill Buttons -->
-    <div style="margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);">
-        <div style="font-size:0.72rem;letter-spacing:1px;color:var(--koms-gold);font-weight:700;margin-bottom:12px;text-transform:uppercase;">
-            <i class="fas fa-key me-1"></i> Quick 1-Click Demo Accounts
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <button type="button" onclick="quickLogin('admin@koms.com','password123')" class="koms-btn koms-btn-outline" style="padding:7px 10px;font-size:0.72rem;text-align:left;justify-content:flex-start;">
-                <i class="fas fa-crown text-warning me-1"></i> Grand Master
-            </button>
-            <button type="button" onclick="quickLogin('master@koms.com','password123')" class="koms-btn koms-btn-outline" style="padding:7px 10px;font-size:0.72rem;text-align:left;justify-content:flex-start;">
-                <i class="fas fa-torii-gate text-danger me-1"></i> Dojo Master
-            </button>
-            <button type="button" onclick="quickLogin('sairohan2012.koms','20.10.2012')" class="koms-btn koms-btn-outline" style="padding:7px 10px;font-size:0.72rem;text-align:left;justify-content:flex-start;">
-                <i class="fas fa-user-graduate text-info me-1"></i> Sai Rohan (DOB)
-            </button>
-            <button type="button" onclick="quickLogin('dguhan2015.koms','25.09.2015')" class="koms-btn koms-btn-outline" style="padding:7px 10px;font-size:0.72rem;text-align:left;justify-content:flex-start;">
-                <i class="fas fa-user-graduate text-success me-1"></i> D. Guhan (DOB)
-            </button>
-        </div>
-    </div>
 </div>
 
 <!-- MOBILE BOTTOM NAVIGATION BAR (FOR EFFORTLESS ONE-HANDED SMARTPHONE USE) -->

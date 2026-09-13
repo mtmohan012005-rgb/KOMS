@@ -631,32 +631,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <a href="uploads/koms-mobile.apk" download title="Download KOMS Android App (APK)"><i class="fab fa-android me-1" style="color: #3ddc84;"></i> Android App</a>
             </div>
 
-            <!-- Demo 1-Click Role Fillers -->
-            <div class="demo-roles-container">
-                <div class="demo-roles-label">
-                    <span><i class="fas fa-bolt me-1"></i> 1-Click Demo Accounts</span>
-                    <span style="color:#777; font-weight:normal;">Gmail or Student User ID</span>
-                </div>
-                <div class="demo-pills">
-                    <button type="button" class="demo-pill" onclick="fillCredentials('admin@gmail.com', 'password123')">
-                        <i class="fas fa-crown"></i>
-                        <span>Grand Master</span>
-                    </button>
-                    <button type="button" class="demo-pill" onclick="fillCredentials('master@gmail.com', 'password123')">
-                        <i class="fas fa-user-ninja"></i>
-                        <span>Sensei Master</span>
-                    </button>
-                    <button type="button" class="demo-pill" onclick="fillCredentials('sairohan2012.koms', '20.10.2012')" title="User ID: sairohan2012.koms | Pass: 20.10.2012">
-                        <i class="fas fa-user-ninja"></i>
-                        <span>Sai Rohan (ID)</span>
-                    </button>
-                    <button type="button" class="demo-pill" onclick="fillCredentials('dguhan2015.koms', '25.09.2015')" title="User ID: dguhan2015.koms | Pass: 25.09.2015">
-                        <i class="fas fa-user-graduate"></i>
-                        <span>Guhan (ID)</span>
-                    </button>
-                </div>
-            </div>
-
             <div class="footer-links"> 
                 Dream &nbsp;&bull;&nbsp; Discipline &nbsp;&bull;&nbsp; Dojo 
             </div> 
