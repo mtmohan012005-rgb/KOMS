@@ -97,12 +97,17 @@ class SplashActivity : AppCompatActivity() {
                 .duration = 800
         }, 1800)
 
-        // Step 5: Transition to Login/Dashboard after intro animation (2.8s)
+        // Step 5: Transition to Public Home or Role Dashboard after intro animation (2.8s)
         binding.root.postDelayed({
             if (sessionManager.isLoggedIn()) {
-                startActivity(Intent(this, StudentDashboardActivity::class.java))
+                val role = sessionManager.getUserRole()
+                if (role.equals("master", ignoreCase = true) || role.equals("grand_master", ignoreCase = true) || role.equals("admin", ignoreCase = true) || role.equals("senior", ignoreCase = true)) {
+                    startActivity(Intent(this, com.koms.app.ui.master.MasterDashboardActivity::class.java))
+                } else {
+                    startActivity(Intent(this, StudentDashboardActivity::class.java))
+                }
             } else {
-                startActivity(Intent(this, LoginActivity::class.java))
+                startActivity(Intent(this, PublicHomeActivity::class.java))
             }
             overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
             finish()

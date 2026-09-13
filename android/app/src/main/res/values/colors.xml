@@ -50,4 +50,18 @@
     <color name="stat_gold_fg">#EAB308</color>
     <color name="stat_purple_bg">#F5F3FF</color>
     <color name="stat_purple_fg">#8B5CF6</color>
+
+    <!-- Dark Martial Arts Theme (Image 4 & Public Home) -->
+    <color name="dark_bg">#090B10</color>
+    <color name="dark_card">#12151E</color>
+    <color name="dark_card_stroke">#232838</color>
+    <color name="dark_surface">#171B26</color>
+    <color name="dark_bottom_nav">#0B0D13</color>
+    <color name="crimson_badge">#DC2626</color>
+    <color name="crimson_circle">#7F1D1D</color>
+    <color name="gold_title">#EAB308</color>
+    <color name="blue_badge">#2563EB</color>
+    <color name="green_badge">#059669</color>
+    <color name="text_muted_dark">#94A3B8</color>
+    <color name="nav_inactive">#64748B</color>
 </resources>

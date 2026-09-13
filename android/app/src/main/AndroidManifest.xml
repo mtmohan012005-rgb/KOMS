@@ -29,8 +29,16 @@
         </activity>
 
         <activity
+            android:name=".ui.auth.PublicHomeActivity"
+            android:exported="true" />
+
+        <activity
             android:name=".ui.auth.LoginActivity"
             android:exported="true" />
+
+        <activity
+            android:name=".ui.master.MasterDashboardActivity"
+            android:exported="false" />
 
         <activity
             android:name=".ui.webview.WebViewActivity"

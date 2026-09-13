@@ -31,6 +31,11 @@ class WebViewActivity : AppCompatActivity() {
     private val LOCAL_URL = "http://10.0.2.2:8080/"
     private val LOCAL_DEV_URL = "http://localhost:8080/"
     
+    companion object {
+        const val EXTRA_URL = "target_url"
+        const val EXTRA_TITLE = "extra_title"
+    }
+
     private var currentUrl = CLOUD_URL
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
 
