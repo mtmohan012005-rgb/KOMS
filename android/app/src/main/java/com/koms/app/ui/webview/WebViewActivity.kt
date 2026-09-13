@@ -223,6 +223,14 @@ class WebViewActivity : AppCompatActivity() {
         binding.btnSwitchServer.setOnClickListener {
             showServerSwitchDialog()
         }
+
+        binding.btnSwitchToNative.setOnClickListener {
+            val intent = Intent(this, com.koms.app.ui.auth.LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            startActivity(intent)
+            finish()
+        }
     }
 
     private fun loadPortal(url: String) {

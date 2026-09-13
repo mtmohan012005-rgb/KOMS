@@ -457,25 +457,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             40%, 80% { transform: translateX(6px); }
         }
 
-        /* Fast forward / Skip button for rapid workflows */
-        .skip-intro-btn {
+        /* Top Right Corner Actions & Toggle */
+        .top-corner-actions {
             position: absolute;
             top: 15px;
             right: 15px;
-            background: rgba(20, 20, 20, 0.6);
-            border: 1px solid #333;
-            color: #888;
-            font-size: 11px;
-            padding: 5px 10px;
-            border-radius: 20px;
-            cursor: pointer;
-            z-index: 20;
-            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 50;
         }
 
-        .skip-intro-btn:hover {
+        .top-action-btn {
+            background: rgba(20, 20, 20, 0.75);
+            border: 1px solid rgba(255, 204, 0, 0.35);
+            color: #e0e0e0;
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .top-action-btn:hover {
             color: var(--accent-yellow);
             border-color: var(--accent-yellow);
+            background: rgba(30, 30, 30, 0.9);
+            transform: translateY(-1px);
         }
 
         /* Immediate display class when skipping intro */
@@ -511,9 +527,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="slash-overlay"></div>
     <canvas id="particleCanvas"></canvas>
 
-    <button type="button" class="skip-intro-btn" id="skipIntroBtn" title="Skip animation">
-        <i class="fas fa-forward me-1"></i> Skip Intro
-    </button>
+    <div class="top-corner-actions">
+        <a href="uploads/koms-mobile.apk" class="top-action-btn" title="Open / Download KOMS Android Native App" download>
+            <i class="fab fa-android" style="color: #3ddc84; font-size: 13px;"></i>
+            <span>Native App</span>
+        </a>
+        <button type="button" class="top-action-btn" id="skipIntroBtn" title="Skip animation">
+            <i class="fas fa-forward" style="color: #ffd21a; font-size: 11px;"></i>
+            <span>Skip Intro</span>
+        </button>
+    </div>
 
     <div class="main-container" id="mainContainer">
         

@@ -83,6 +83,17 @@
             android:src="@drawable/ic_dojo"
             app:tint="#FBBF24" />
 
+        <!-- Native App Toggle Button -->
+        <ImageButton
+            android:id="@+id/btnSwitchToNative"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="4dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Switch to Native App"
+            android:src="@drawable/ic_mobile_phone"
+            app:tint="#3DDC84" />
+
     </LinearLayout>
 
     <!-- Top Loading Progress Bar -->
