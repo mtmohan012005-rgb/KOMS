@@ -27,11 +27,33 @@ class WebViewActivity : AppCompatActivity() {
     
     // Server URLs
     private val CLOUD_URL = "https://koms-backend.onrender.com/"
+    private val LOCAL_WIFI_URL = "http://10.127.5.177/koms/"
     private val LOCAL_URL = "http://10.0.2.2:8080/"
     private val LOCAL_DEV_URL = "http://localhost:8080/"
     
     private var currentUrl = CLOUD_URL
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
+
+    // Native Bridge for real-time mobile push, haptics & toasts
+    inner class KomsNativeBridge {
+        @android.webkit.JavascriptInterface
+        fun vibrate(durationMs: Long) {
+            val vibrator = getSystemService(android.content.Context.VIBRATOR_SERVICE) as? android.os.Vibrator
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                vibrator?.vibrate(android.os.VibrationEffect.createOneShot(durationMs, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                @Suppress("DEPRECATION")
+                vibrator?.vibrate(durationMs)
+            }
+        }
+
+        @android.webkit.JavascriptInterface
+        fun showToast(message: String) {
+            runOnUiThread {
+                Toast.makeText(this@WebViewActivity, message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     // Activity result launcher for file uploads (photos, documents, receipts)
     private val fileChooserLauncher = registerForActivityResult(
@@ -63,6 +85,11 @@ class WebViewActivity : AppCompatActivity() {
         binding = ActivityWebviewBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        val targetUrl = intent?.getStringExtra("target_url")
+        if (!targetUrl.isNullOrBlank()) {
+            currentUrl = targetUrl
+        }
+
         setupWebView()
         setupTopBarActions()
         setupBackNavigation()
@@ -86,6 +113,9 @@ class WebViewActivity : AppCompatActivity() {
         settings.displayZoomControls = false
         settings.cacheMode = WebSettings.LOAD_DEFAULT
         settings.mediaPlaybackRequiresUserGesture = false
+
+        // Register Real-Time Native Bridge
+        binding.komsWebView.addJavascriptInterface(KomsNativeBridge(), "KomsNativeBridge")
 
         // Custom WebViewClient to stay inside app and catch errors
         binding.komsWebView.webViewClient = object : WebViewClient() {
@@ -214,6 +244,7 @@ class WebViewActivity : AppCompatActivity() {
     private fun showServerSwitchDialog() {
         val servers = arrayOf(
             "Cloud Production (Render.com)",
+            "Local Wi-Fi PC (http://10.127.5.177/koms/)",
             "Local Dev (http://localhost:8080/)",
             "Android Emulator (http://10.0.2.2:8080/)",
             "Custom URL..."
@@ -224,9 +255,10 @@ class WebViewActivity : AppCompatActivity() {
             .setItems(servers) { _, which ->
                 when (which) {
                     0 -> loadPortal(CLOUD_URL)
-                    1 -> loadPortal(LOCAL_DEV_URL)
-                    2 -> loadPortal(LOCAL_URL)
-                    3 -> showCustomUrlDialog()
+                    1 -> loadPortal(LOCAL_WIFI_URL)
+                    2 -> loadPortal(LOCAL_DEV_URL)
+                    3 -> loadPortal(LOCAL_URL)
+                    4 -> showCustomUrlDialog()
                 }
             }
             .setNegativeButton("Cancel", null)

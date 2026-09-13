@@ -53,6 +53,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $announcement_id = (int)$pdo->lastInsertId();
                 log_audit_action($pdo, $master_id, 'CREATE', 'announcements', $announcement_id, 'Created dojo announcement: ' . $title);
+
+                require_once '../includes/realtime.php';
+                dispatch_realtime_event($pdo, 'ANNOUNCEMENT_NEW', [
+                    'id' => $announcement_id,
+                    'title' => $title,
+                    'content' => $content,
+                    'level' => 'dojo',
+                    'author' => 'Sensei'
+                ], null, 'student', (int)$dojo_id);
+
                 $_SESSION['success_msg'] = 'Announcement published successfully.';
                 redirect('/master/announcements.php');
             }

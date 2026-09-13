@@ -81,5 +81,17 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Unified KOMS Portal JS -->
 <script src="<?= APP_URL ?>/assets/js/koms-portal.js?v=2"></script>
+
+<?php if (is_logged_in()): ?>
+<script>
+    window.KOMS_SESSION = {
+        userId: <?= (int)$_SESSION['user_id'] ?>,
+        role: '<?= htmlspecialchars($_SESSION['role'] ?? '', ENT_QUOTES) ?>',
+        dojoId: <?= isset($_SESSION['dojo_id']) && $_SESSION['dojo_id'] ? (int)$_SESSION['dojo_id'] : 'null' ?>,
+        baseUrl: '<?= APP_URL ?>'
+    };
+</script>
+<script src="<?= APP_URL ?>/assets/js/koms-realtime.js?v=2"></script>
+<?php endif; ?>
 </body>
 </html>

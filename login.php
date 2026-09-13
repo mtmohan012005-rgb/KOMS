@@ -174,7 +174,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             top: 0; left: 0;
             width: 100%; height: 100%;
             object-fit: contain;
-            border-radius: 50%;
         }
 
         /* Left and Right halves using clip-path on the authentic Shorin Ryu crest */

@@ -73,6 +73,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_payment'])) {
 
                 $pdo->commit();
 
+                require_once '../includes/realtime.php';
+                dispatch_realtime_event($pdo, 'PAYMENT_RECEIVED', [
+                    'fee_record_id' => (int)$record_id,
+                    'student_id' => (int)$record['student_id'],
+                    'amount_paid' => $amount_paid,
+                    'new_status' => $new_status,
+                    'payment_method' => $method,
+                    'payment_date' => $date
+                ], (int)$record['student_id'], 'student', (int)$record['dojo_id']);
+
                 log_audit_action($pdo, $_SESSION['user_id'], 'CREATE', 'payments', (int)$payment_id, 'Recorded fee payment for student ' . $record['student_id']);
                 $_SESSION['success_msg'] = 'Payment of ₹' . number_format($amount_paid, 2) . ' recorded successfully.';
                 redirect('/master/fees.php');

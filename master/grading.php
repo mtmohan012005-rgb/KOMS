@@ -45,6 +45,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_grading'])) {
 
                 $grading_id = (int)$pdo->lastInsertId();
                 log_audit_action($pdo, $_SESSION['user_id'], 'CREATE', 'grading', $grading_id, 'Added grading record for student ' . $student_id);
+                require_once '../includes/realtime.php';
+                dispatch_realtime_event($pdo, 'BELT_PROMOTED', [
+                    'student_id' => $student_id,
+                    'previous_belt' => $prev_belt,
+                    'new_belt' => $new_belt,
+                    'grade' => $grade,
+                    'exam_date' => $date,
+                    'remarks' => $remarks
+                ], $student_id, 'student', (int)$dojo_id);
                 $_SESSION['success_msg'] = 'Grading record saved successfully.';
                 redirect('/master/grading.php');
             }

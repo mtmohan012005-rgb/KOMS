@@ -2,6 +2,7 @@
 require_once '../config/database.php';
 require_once '../includes/functions.php';
 require_once '../includes/auth.php';
+require_once '../includes/realtime.php';
 
 if (!has_role('master') && !has_role('senior') && !has_role('super_admin')) {
     $_SESSION['error_msg'] = 'Unauthorized access.';
@@ -43,6 +44,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $pdo->prepare('UPDATE attendance_sessions SET is_locked = 1 WHERE id = ?')->execute([$session_id]);
             log_audit_action($pdo, $_SESSION['user_id'], 'UPDATE', 'attendance', $session_id, "Locked attendance session #$session_id");
+            dispatch_realtime_event($pdo, 'ATTENDANCE_LOCKED', [
+                'session_id' => $session_id,
+                'session_date' => $session['session_date'],
+                'dojo_name' => $session['dojo_name']
+            ], null, 'student', (int)$session['dojo_id']);
             $_SESSION['success_msg'] = 'Attendance session locked successfully.';
         }
         redirect('/master/mark_attendance.php?session_id=' . $session_id);
@@ -79,6 +85,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $insert->execute([$session_id, $student_id, $status, $remarks, $_SESSION['user_id']]);
             }
             $saved++;
+
+            // Real-time notification dispatched to student
+            dispatch_realtime_event($pdo, 'ATTENDANCE_MARKED', [
+                'student_id' => $student_id,
+                'session_id' => $session_id,
+                'session_date' => $session['session_date'],
+                'status' => $status,
+                'remarks' => $remarks,
+                'marked_by' => ($_SESSION['first_name'] ?? 'Sensei') . ' ' . ($_SESSION['last_name'] ?? '')
+            ], $student_id, 'student', (int)$session['dojo_id']);
         }
 
         log_audit_action($pdo, $_SESSION['user_id'], 'UPDATE', 'attendance', $session_id, "Saved attendance for $saved student(s)");
