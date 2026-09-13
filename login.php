@@ -376,57 +376,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             transform: translateY(1px);
         }
 
-        /* Demo Role Pills for Instant 1-Click Access */
-        .demo-roles-container {
-            margin-top: 18px;
-            padding-top: 14px;
-            border-top: 1px solid #1a1a1a;
-        }
-
-        .demo-roles-label {
-            font-size: 10.5px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--accent-yellow-gold);
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 600;
-        }
-
-        .demo-pills {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-
-        .demo-pill {
-            background: #141414;
-            border: 1px solid #282828;
-            color: #bbb;
-            font-size: 11px;
-            padding: 6px 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            text-align: left;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .demo-pill:hover {
-            background: #202020;
-            border-color: var(--accent-yellow);
-            color: #fff;
-        }
-
-        .demo-pill i {
-            color: var(--accent-yellow);
-            font-size: 11px;
-        }
-
         .footer-links {
             text-align: center;
             margin-top: 18px;
