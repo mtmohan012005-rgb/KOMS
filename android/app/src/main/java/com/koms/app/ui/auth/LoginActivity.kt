@@ -29,7 +29,12 @@ class LoginActivity : AppCompatActivity() {
         
         sessionManager = SessionManager(this)
 
-        if (sessionManager.isLoggedIn()) {
+        val autoUser = intent.getStringExtra("auto_user")
+        val autoPass = intent.getStringExtra("auto_pass")
+        if (!autoUser.isNullOrBlank() && !autoPass.isNullOrBlank()) {
+            sessionManager.logout()
+            viewModel.login(autoUser, autoPass)
+        } else if (sessionManager.isLoggedIn()) {
             navigateToDashboard(sessionManager.getUserRole() ?: "")
         }
 
