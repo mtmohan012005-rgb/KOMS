@@ -1,7 +1,7 @@
 package com.koms.app.utils
 
 object Constants {
-    // Production Cloud Backend over the Internet (cellular / Wi-Fi)
+    // Point to live KOMS cloud server on Render for real internet mobile operations
     const val BASE_URL = "https://koms-backend.onrender.com/api/"
     const val RENDER_URL = "https://koms-backend.onrender.com/api/"
     const val LOCAL_URL = "http://127.0.0.1:8080/api/"

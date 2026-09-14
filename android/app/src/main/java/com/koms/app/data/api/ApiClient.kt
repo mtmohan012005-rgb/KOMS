@@ -39,9 +39,9 @@ object ApiClient {
 
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
-            .connectTimeout(25, TimeUnit.SECONDS)
-            .readTimeout(25, TimeUnit.SECONDS)
-            .writeTimeout(25, TimeUnit.SECONDS)
+            .connectTimeout(35, TimeUnit.SECONDS)
+            .readTimeout(35, TimeUnit.SECONDS)
+            .writeTimeout(35, TimeUnit.SECONDS)
             .addInterceptor(authInterceptor)
             .addInterceptor(loggingInterceptor)
             .retryOnConnectionFailure(true)

@@ -152,9 +152,10 @@ function import_runtime_students(PDO $pdo): void {
             if ($existingId) {
                 $update->execute([$firstName, $lastName, $email, $dob, $gender, $bloodGroup, $fatherName, $motherName, $phone, $alternatePhone, $address, $joining, (int)$existingId]);
             } else {
-                $defaultPwd = $dob ? date('d.m.Y', strtotime($dob)) : 'password123';
-                $defaultHash = password_hash($defaultPwd, PASSWORD_DEFAULT);
-                $insert->execute([$memberId, $firstName, $lastName, $email, $defaultHash, $dob, $gender, $bloodGroup, $fatherName, $motherName, $phone, $alternatePhone, $address, $joining]);
+                // Generate and immediately discard a random password. The account
+                // cannot be used until an administrator sets a real password.
+                $unusableHash = password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT);
+                $insert->execute([$memberId, $firstName, $lastName, $email, $unusableHash, $dob, $gender, $bloodGroup, $fatherName, $motherName, $phone, $alternatePhone, $address, $joining]);
             }
 
             $processed++;

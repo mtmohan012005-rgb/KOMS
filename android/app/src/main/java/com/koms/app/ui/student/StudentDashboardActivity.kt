@@ -30,71 +30,7 @@ class StudentDashboardActivity : AppCompatActivity() {
         setupDrawer()
         setupCardClicks()
         setupDrawerClicks()
-        syncLiveDataFromCloud()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        syncLiveDataFromCloud()
-    }
-
-    private fun syncLiveDataFromCloud() {
-        val studentId = sessionManager.getUserId()
-        if (studentId <= 0) return
-
-        lifecycleScope.launch {
-            // 1. Fetch Profile over Internet
-            try {
-                val profileRes = ApiClient.apiService.getStudentProfile(studentId)
-                if (profileRes.isSuccessful && profileRes.body()?.data != null) {
-                    val profile = profileRes.body()!!.data!!
-                    val name = profile.fullName ?: profile.firstName ?: ""
-                    if (name.isNotBlank()) {
-                        binding.tvStudentName.text = name
-                        binding.tvHeroWelcome.text = "Welcome back, $name"
-                        val initials = name.trim().split("\\s+".toRegex())
-                            .filter { it.isNotEmpty() }
-                            .take(2)
-                            .map { it[0].uppercaseChar() }
-                            .joinToString("")
-                        binding.tvAvatarInitials.text = if (initials.isNotEmpty()) initials else "JD"
-                    }
-                    if (!profile.memberId.isNullOrBlank()) {
-                        binding.tvStudentCode.text = profile.memberId
-                    }
-                }
-            } catch (_: Exception) {}
-
-            // 2. Fetch Attendance over Internet
-            try {
-                val attRes = ApiClient.apiService.getAttendanceHistory(studentId)
-                if (attRes.isSuccessful && !attRes.body()?.data.isNullOrEmpty()) {
-                    val list = attRes.body()!!.data!!
-                    val total = list.size
-                    val present = list.count { it.status.equals("present", ignoreCase = true) }
-                    val pct = if (total > 0) ((present * 100) / total) else 0
-                    binding.tvStatAttendance.text = "$pct%"
-                    binding.tvStatAttendanceSub.text = "$present of $total present"
-                }
-            } catch (_: Exception) {}
-
-            // 3. Fetch Fees over Internet
-            try {
-                val feeRes = ApiClient.apiService.getFeeRecords(studentId)
-                if (feeRes.isSuccessful && !feeRes.body()?.data.isNullOrEmpty()) {
-                    val list = feeRes.body()!!.data!!
-                    val pending = list.filter { it.status.equals("pending", ignoreCase = true) }
-                    val totalPending = pending.sumOf { it.amountDue }
-                    if (totalPending <= 0.0) {
-                        binding.tvStatFees.text = "₹0"
-                        binding.tvStatFeesSub.text = "All fees cleared"
-                    } else {
-                        binding.tvStatFees.text = "₹%.0f".format(totalPending)
-                        binding.tvStatFeesSub.text = "${pending.size} payment pending"
-                    }
-                }
-            } catch (_: Exception) {}
-        }
+        fetchDashboardStats()
     }
 
     private fun setupStudentProfile() {
@@ -262,4 +198,60 @@ class StudentDashboardActivity : AppCompatActivity() {
             finish()
         }
     }
+
+    private fun fetchDashboardStats() {
+        val studentId = sessionManager.getUserId()
+        lifecycleScope.launch {
+            try {
+                val response = ApiClient.apiService.getDashboardStats(if (studentId > 0) studentId else null)
+                if (response.isSuccessful && response.body()?.data != null) {
+                    val data = response.body()!!.data!!
+
+                    val name = data.studentName
+                    if (!name.isNullOrBlank()) {
+                        binding.tvStudentName.text = name
+                        binding.tvHeroWelcome.text = "Welcome back, $name"
+                        val initials = name.trim().split("\\s+".toRegex())
+                            .filter { it.isNotEmpty() }
+                            .take(2)
+                            .map { it[0].uppercaseChar() }
+                            .joinToString("")
+                        if (initials.isNotEmpty()) {
+                            binding.tvAvatarInitials.text = initials
+                        }
+                    }
+
+                    if (!data.studentCode.isNullOrBlank()) {
+                        binding.tvStudentCode.text = data.studentCode
+                    }
+
+                    // Stat 1: Attendance
+                    binding.tvStatAttendance.text = "${data.attendancePercentage}%"
+                    binding.tvStatAttendanceSub.text = "${data.presentCount} of ${data.totalCount} present"
+
+                    // Stat 2: Fees
+                    binding.tvStatFees.text = "₹${data.pendingFees.toInt()}"
+
+                    // Stat 3: Tournaments
+                    binding.tvStatTournaments.text = "${data.tournamentEntries}"
+
+                    // Stat 4: Belt
+                    if (!data.currentBelt.isNullOrBlank()) {
+                        binding.tvStatBelt.text = data.currentBelt
+                    }
+
+                    // Training Base
+                    if (!data.dojoName.isNullOrBlank()) {
+                        binding.tvDojoName.text = data.dojoName
+                    }
+                    if (!data.dojoDetails.isNullOrBlank()) {
+                        binding.tvDojoDetails.text = data.dojoDetails
+                    }
+                }
+            } catch (_: Exception) {
+                // Retain offline cache safely
+            }
+        }
+    }
 }
+

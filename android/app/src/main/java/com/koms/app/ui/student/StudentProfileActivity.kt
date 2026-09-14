@@ -39,7 +39,7 @@ class StudentProfileActivity : AppCompatActivity() {
 
         setupStudentData()
         setupListeners()
-        fetchCloudProfile()
+        fetchStudentProfile()
     }
 
     private fun setupStudentData() {
@@ -74,52 +74,6 @@ class StudentProfileActivity : AppCompatActivity() {
         binding.tvStatBloodGroup.text = bloodGroup
         binding.tvInfoBloodGroup.text = bloodGroup
         binding.tvAddress.text = address
-    }
-
-    private fun fetchCloudProfile() {
-        val studentId = sessionManager.getUserId()
-        if (studentId <= 0) return
-
-        lifecycleScope.launch {
-            try {
-                val res = ApiClient.apiService.getStudentProfile(studentId)
-                if (res.isSuccessful && res.body()?.data != null) {
-                    val p = res.body()!!.data!!
-                    val name = p.fullName ?: p.firstName ?: ""
-                    if (name.isNotBlank()) {
-                        binding.tvHeroStudentName.text = name
-                        binding.tvInfoFullName.text = name
-                    }
-                    if (!p.memberId.isNullOrBlank()) {
-                        binding.tvHeroStudentId.text = p.memberId
-                    }
-                    if (!p.fatherName.isNullOrBlank()) {
-                        binding.tvFatherName.text = p.fatherName
-                    }
-                    if (!p.motherName.isNullOrBlank()) {
-                        binding.tvMotherName.text = p.motherName
-                    }
-                    if (!p.phone.isNullOrBlank()) {
-                        binding.tvPhoneNumber.text = p.phone
-                    }
-                    if (!p.alternatePhone.isNullOrBlank()) {
-                        binding.tvAlternatePhone.text = p.alternatePhone
-                    }
-                    if (!p.bloodGroup.isNullOrBlank()) {
-                        binding.tvStatBloodGroup.text = p.bloodGroup
-                        binding.tvInfoBloodGroup.text = p.bloodGroup
-                    }
-                    if (!p.address.isNullOrBlank()) {
-                        binding.tvAddress.text = p.address
-                    }
-                    val age = p.age
-                    val dob = p.formattedDob ?: p.dob ?: ""
-                    if (dob.isNotBlank()) {
-                        binding.tvHeroAgeMeta.text = "Age: $age years | DOB: $dob"
-                    }
-                }
-            } catch (_: Exception) {}
-        }
     }
 
     private fun setupListeners() {
@@ -174,7 +128,7 @@ class StudentProfileActivity : AppCompatActivity() {
                 val newBlood = dialogBinding.etBloodGroup.text.toString().trim()
                 val newAddr = dialogBinding.etAddress.text.toString().trim()
 
-                // Save to SharedPreferences for instant local access
+                // Save to SharedPreferences
                 val prefs = getSharedPreferences(PREFS_PROFILE, Context.MODE_PRIVATE)
                 prefs.edit()
                     .putString(KEY_FATHER_NAME, newFather)
@@ -185,30 +139,29 @@ class StudentProfileActivity : AppCompatActivity() {
                     .putString(KEY_ADDRESS, newAddr)
                     .apply()
 
-                // Update UI instantly
+                // Update UI
                 binding.tvFatherName.text = newFather
                 binding.tvMotherName.text = newMother
                 binding.tvPhoneNumber.text = newPhone
                 binding.tvAlternatePhone.text = newAltPhone
                 binding.tvStatBloodGroup.text = newBlood
                 binding.tvInfoBloodGroup.text = newBlood
-                binding.tvAddress.text = newAddr
-
-                // Sync to Cloud Backend over Internet
+                // Sync with live cloud server asynchronously
                 val studentId = sessionManager.getUserId()
-                if (studentId > 0) {
-                    lifecycleScope.launch {
-                        try {
-                            val params = mapOf(
-                                "father_name" to newFather,
-                                "mother_name" to newMother,
-                                "phone" to newPhone,
-                                "alternate_phone" to newAltPhone,
-                                "blood_group" to newBlood,
-                                "address" to newAddr
-                            )
-                            ApiClient.apiService.updateStudentProfile(studentId, params)
-                        } catch (_: Exception) {}
+                lifecycleScope.launch {
+                    try {
+                        val body = mapOf(
+                            "student_id" to studentId.toString(),
+                            "father_name" to newFather,
+                            "mother_name" to newMother,
+                            "phone" to newPhone,
+                            "alternate_phone" to newAltPhone,
+                            "blood_group" to newBlood,
+                            "address" to newAddr
+                        )
+                        ApiClient.apiService.updateStudentProfile(body)
+                    } catch (_: Exception) {
+                        // Keep local persistence if offline
                     }
                 }
 
@@ -216,5 +169,57 @@ class StudentProfileActivity : AppCompatActivity() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    private fun fetchStudentProfile() {
+        val studentId = sessionManager.getUserId()
+        lifecycleScope.launch {
+            try {
+                val response = ApiClient.apiService.getStudentProfile(if (studentId > 0) studentId else null)
+                if (response.isSuccessful && response.body()?.data != null) {
+                    val profile = response.body()!!.data!!
+
+                    if (!profile.name.isNullOrBlank()) {
+                        binding.tvHeroStudentName.text = profile.name
+                        binding.tvInfoFullName.text = profile.name
+                    }
+                    if (!profile.memberId.isNullOrBlank()) {
+                        binding.tvHeroStudentId.text = profile.memberId
+                    }
+                    if (!profile.fatherName.isNullOrBlank()) {
+                        binding.tvFatherName.text = profile.fatherName
+                    }
+                    if (!profile.motherName.isNullOrBlank()) {
+                        binding.tvMotherName.text = profile.motherName
+                    }
+                    if (!profile.phone.isNullOrBlank()) {
+                        binding.tvPhoneNumber.text = profile.phone
+                    }
+                    if (!profile.alternatePhone.isNullOrBlank()) {
+                        binding.tvAlternatePhone.text = profile.alternatePhone
+                    }
+                    if (!profile.bloodGroup.isNullOrBlank()) {
+                        binding.tvStatBloodGroup.text = profile.bloodGroup
+                        binding.tvInfoBloodGroup.text = profile.bloodGroup
+                    }
+                    if (!profile.address.isNullOrBlank()) {
+                        binding.tvAddress.text = profile.address
+                    }
+
+                    // Save back to SharedPreferences for offline caching
+                    val prefs = getSharedPreferences(PREFS_PROFILE, Context.MODE_PRIVATE)
+                    prefs.edit()
+                        .putString(KEY_FATHER_NAME, binding.tvFatherName.text.toString())
+                        .putString(KEY_MOTHER_NAME, binding.tvMotherName.text.toString())
+                        .putString(KEY_PHONE, binding.tvPhoneNumber.text.toString())
+                        .putString(KEY_ALT_PHONE, binding.tvAlternatePhone.text.toString())
+                        .putString(KEY_BLOOD_GROUP, binding.tvStatBloodGroup.text.toString())
+                        .putString(KEY_ADDRESS, binding.tvAddress.text.toString())
+                        .apply()
+                }
+            } catch (_: Exception) {
+                // Retain offline cache safely
+            }
+        }
     }
 }

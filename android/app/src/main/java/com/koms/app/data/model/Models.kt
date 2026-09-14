@@ -57,3 +57,50 @@ data class Announcement(
     @field:SerializedName("content") val content: String,
     @field:SerializedName("publish_date") val publishDate: String,
 )
+
+data class StudentProfileData(
+    @field:SerializedName("student_id") val studentId: Int = 0,
+    @field:SerializedName("member_id") val memberId: String? = null,
+    @field:SerializedName("name") val name: String? = null,
+    @field:SerializedName("first_name") val firstName: String? = null,
+    @field:SerializedName("last_name") val lastName: String? = null,
+    @field:SerializedName("email") val email: String? = null,
+    @field:SerializedName("role") val role: String? = null,
+    @field:SerializedName("dob") val dob: String? = null,
+    @field:SerializedName("age") val age: Int = 0,
+    @field:SerializedName("gender") val gender: String? = null,
+    @field:SerializedName("blood_group") val bloodGroup: String? = null,
+    @field:SerializedName("father_name") val fatherName: String? = null,
+    @field:SerializedName("mother_name") val motherName: String? = null,
+    @field:SerializedName("phone") val phone: String? = null,
+    @field:SerializedName("alternate_phone") val alternatePhone: String? = null,
+    @field:SerializedName("address") val address: String? = null,
+    @field:SerializedName("date_of_joining") val dateOfJoining: String? = null,
+    @field:SerializedName("dojo_name") val dojoName: String? = null,
+    @field:SerializedName("dojo_location") val dojoLocation: String? = null,
+    @field:SerializedName("training_schedule") val trainingSchedule: String? = null,
+    @field:SerializedName("current_belt") val currentBelt: String? = null,
+    @field:SerializedName("target_belt") val targetBelt: String? = null,
+    @field:SerializedName("attendance_percentage") val attendancePercentage: Int = 0,
+    @field:SerializedName("classes_attended") val classesAttended: Int = 0,
+    @field:SerializedName("total_classes") val totalClasses: Int = 0,
+    @field:SerializedName("pending_fees") val pendingFees: Double = 0.0,
+    @field:SerializedName("tournament_entries") val tournamentEntries: Int = 0,
+    @field:SerializedName("achievements_count") val achievementsCount: Int = 0,
+    @field:SerializedName("certificates_count") val certificatesCount: Int = 0
+)
+
+data class StudentDashboardStats(
+    @field:SerializedName("student_id") val studentId: Int = 0,
+    @field:SerializedName("student_name") val studentName: String? = null,
+    @field:SerializedName("student_code") val studentCode: String? = null,
+    @field:SerializedName("attendance_percentage") val attendancePercentage: Int = 0,
+    @field:SerializedName("present_count") val presentCount: Int = 0,
+    @field:SerializedName("total_count") val totalCount: Int = 0,
+    @field:SerializedName("pending_fees") val pendingFees: Double = 0.0,
+    @field:SerializedName("tournament_entries") val tournamentEntries: Int = 0,
+    @field:SerializedName("current_belt") val currentBelt: String? = null,
+    @field:SerializedName("dojo_name") val dojoName: String? = null,
+    @field:SerializedName("dojo_details") val dojoDetails: String? = null
+)
+
