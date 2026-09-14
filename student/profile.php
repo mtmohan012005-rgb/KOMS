@@ -5,9 +5,9 @@
  * Matching official KOMS martial arts design language
  */
 
-require_once 'config/database.php';
-require_once 'includes/functions.php';
-require_once 'includes/auth.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 // Allow logged in users or default to demo view
 $current_user_id = is_logged_in() ? (int)$_SESSION['user_id'] : null;
