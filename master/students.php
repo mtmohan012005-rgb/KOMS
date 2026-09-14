@@ -101,7 +101,7 @@ require_once '../includes/header.php';
                             <div class="d-flex align-items-center gap-3">
                                 <?php if (!empty($student['profile_photo'])): ?><img class="student-avatar" src="<?= htmlspecialchars($student['profile_photo']) ?>" alt="">
                                 <?php else: ?><div class="student-avatar"><?= htmlspecialchars($initials) ?></div><?php endif; ?>
-                                <div><div class="fw-bold"><?= htmlspecialchars($full_name) ?></div><div class="small text-muted">Student #<?= (int)$student['id'] ?></div></div>
+                                <div><a href="/student_profile.php?id=<?= (int)$student['id'] ?>" class="fw-bold text-decoration-none text-dark"><?= htmlspecialchars($full_name) ?></a><div class="small text-muted">Student #<?= (int)$student['id'] ?></div></div>
                             </div>
                         </td>
                         <td><div><?= htmlspecialchars($student['email']) ?></div><div class="small text-muted"><?= htmlspecialchars($student['phone'] ?: 'No phone') ?></div></td>
@@ -109,7 +109,7 @@ require_once '../includes/header.php';
                         <td><span class="belt"><?= htmlspecialchars($student['current_belt'] ?: 'White Belt') ?></span></td>
                         <td><span class="<?= $att_class ?>"><?= $att ?>%</span><div class="small text-muted"><?= (int)$student['present_count'] ?> / <?= (int)$student['attendance_count'] ?> present</div></td>
                         <td><?= !empty($student['joined_at']) ? date('M j, Y', strtotime($student['joined_at'])) : '—' ?></td>
-                        <td><div class="d-flex gap-1 flex-wrap"><a href="attendance.php?student_id=<?= (int)$student['id'] ?>" class="btn btn-sm btn-outline-secondary action-link"><i class="fas fa-calendar-check"></i>Attendance</a><a href="grading.php?student_id=<?= (int)$student['id'] ?>" class="btn btn-sm btn-outline-dark action-link"><i class="fas fa-medal"></i>Grading</a><a href="password_requests.php" class="btn btn-sm btn-outline-warning action-link" title="Student Password Management"><i class="fas fa-key"></i>Password</a></div></td>
+                        <td><div class="d-flex gap-1 flex-wrap"><a href="/student_profile.php?id=<?= (int)$student['id'] ?>" class="btn btn-sm btn-danger action-link"><i class="fas fa-id-card"></i>Profile</a><a href="attendance.php?student_id=<?= (int)$student['id'] ?>" class="btn btn-sm btn-outline-secondary action-link"><i class="fas fa-calendar-check"></i>Attendance</a><a href="grading.php?student_id=<?= (int)$student['id'] ?>" class="btn btn-sm btn-outline-dark action-link"><i class="fas fa-medal"></i>Grading</a><a href="password_requests.php" class="btn btn-sm btn-outline-warning action-link" title="Student Password Management"><i class="fas fa-key"></i>Password</a></div></td>
                     </tr>
                 <?php endforeach; ?>
                 <?php if (!$students): ?><tr><td colspan="7" class="empty"><i class="fas fa-user-slash fa-2x mb-3 d-block"></i><?= $search !== '' ? 'No students matched your search.' : 'No approved students found in your dojo yet.' ?></td></tr><?php endif; ?>
