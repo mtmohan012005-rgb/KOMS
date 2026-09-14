@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import com.koms.app.databinding.ActivityStudentDashboardBinding
 import com.koms.app.ui.auth.LoginActivity
+import com.koms.app.ui.webview.WebViewActivity
 import com.koms.app.utils.SessionManager
 
 class StudentDashboardActivity : AppCompatActivity() {
@@ -80,11 +81,19 @@ class StudentDashboardActivity : AppCompatActivity() {
         }
 
         binding.btnHeroProfile.setOnClickListener {
-            Toast.makeText(this, "Profile: ${binding.tvStudentName.text} (${binding.tvStudentCode.text})", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, WebViewActivity::class.java).apply {
+                putExtra(WebViewActivity.EXTRA_URL, "https://koms-backend.onrender.com/student_profile.php")
+                putExtra(WebViewActivity.EXTRA_TITLE, "Student Profile")
+            }
+            startActivity(intent)
         }
 
         binding.btnTopProfile.setOnClickListener {
-            Toast.makeText(this, "Logged in as ${binding.tvStudentName.text}", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, WebViewActivity::class.java).apply {
+                putExtra(WebViewActivity.EXTRA_URL, "https://koms-backend.onrender.com/student_profile.php")
+                putExtra(WebViewActivity.EXTRA_TITLE, "Student Profile")
+            }
+            startActivity(intent)
         }
 
         // 4 Stat Cards
@@ -146,7 +155,11 @@ class StudentDashboardActivity : AppCompatActivity() {
 
         binding.navProfile.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
-            Toast.makeText(this, "Student Profile: ${binding.tvStudentName.text}", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, WebViewActivity::class.java).apply {
+                putExtra(WebViewActivity.EXTRA_URL, "https://koms-backend.onrender.com/student_profile.php")
+                putExtra(WebViewActivity.EXTRA_TITLE, "Student Profile")
+            }
+            startActivity(intent)
         }
 
         binding.navAttendance.setOnClickListener {
