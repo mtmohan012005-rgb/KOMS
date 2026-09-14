@@ -12,7 +12,6 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.koms.app.databinding.ActivityLoginBinding
 import com.koms.app.ui.student.StudentDashboardActivity
-import com.koms.app.ui.webview.WebViewActivity
 import com.koms.app.utils.SessionManager
 
 class LoginActivity : AppCompatActivity() {
@@ -42,13 +41,8 @@ class LoginActivity : AppCompatActivity() {
         setupCinematicStoryboardAnimations()
         setupObservers()
 
-        // Top-right corner toggle to Web Portal login
-        binding.btnToggleWebPortal.setOnClickListener {
-            val intent = Intent(this, WebViewActivity::class.java).apply {
-                putExtra("target_url", "https://koms-backend.onrender.com/login.php")
-            }
-            startActivity(intent)
-        }
+        // Pure native mode: hide web portal toggle
+        binding.btnToggleWebPortal.visibility = android.view.View.GONE
 
         // Password visibility toggle
         var isPasswordVisible = false

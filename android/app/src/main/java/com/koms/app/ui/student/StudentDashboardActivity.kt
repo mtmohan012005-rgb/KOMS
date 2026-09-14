@@ -8,8 +8,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import com.koms.app.databinding.ActivityStudentDashboardBinding
 import com.koms.app.ui.auth.LoginActivity
-import com.koms.app.ui.webview.WebViewActivity
-import com.koms.app.utils.Constants
 import com.koms.app.utils.SessionManager
 
 class StudentDashboardActivity : AppCompatActivity() {
@@ -82,21 +80,11 @@ class StudentDashboardActivity : AppCompatActivity() {
         }
 
         binding.btnHeroProfile.setOnClickListener {
-            val profileUrl = "${Constants.BASE_URL.replace("/api/", "")}/student_profile.php"
-            val intent = Intent(this, WebViewActivity::class.java).apply {
-                putExtra(WebViewActivity.EXTRA_URL, profileUrl)
-                putExtra(WebViewActivity.EXTRA_TITLE, "Student Profile")
-            }
-            startActivity(intent)
+            startActivity(Intent(this, StudentProfileActivity::class.java))
         }
 
         binding.btnTopProfile.setOnClickListener {
-            val profileUrl = "${Constants.BASE_URL.replace("/api/", "")}/student_profile.php"
-            val intent = Intent(this, WebViewActivity::class.java).apply {
-                putExtra(WebViewActivity.EXTRA_URL, profileUrl)
-                putExtra(WebViewActivity.EXTRA_TITLE, "Student Profile")
-            }
-            startActivity(intent)
+            startActivity(Intent(this, StudentProfileActivity::class.java))
         }
 
         // 4 Stat Cards
@@ -158,12 +146,7 @@ class StudentDashboardActivity : AppCompatActivity() {
 
         binding.navProfile.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
-            val profileUrl = "${Constants.BASE_URL.replace("/api/", "")}/student_profile.php"
-            val intent = Intent(this, WebViewActivity::class.java).apply {
-                putExtra(WebViewActivity.EXTRA_URL, profileUrl)
-                putExtra(WebViewActivity.EXTRA_TITLE, "Student Profile")
-            }
-            startActivity(intent)
+            startActivity(Intent(this, StudentProfileActivity::class.java))
         }
 
         binding.navAttendance.setOnClickListener {

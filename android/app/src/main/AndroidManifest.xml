@@ -51,6 +51,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".ui.student.StudentProfileActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ui.student.DojosActivity"
             android:exported="false" />
 

@@ -13,7 +13,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.koms.app.R
 import com.koms.app.databinding.ActivityPublicHomeBinding
 import com.koms.app.ui.student.DojosActivity
-import com.koms.app.ui.webview.WebViewActivity
 
 class PublicHomeActivity : AppCompatActivity() {
 
@@ -54,11 +53,7 @@ class PublicHomeActivity : AppCompatActivity() {
 
         binding.drawerItemWebPortal.setOnClickListener {
             binding.publicDrawerLayout.closeDrawer(GravityCompat.END)
-            val intent = Intent(this, WebViewActivity::class.java).apply {
-                putExtra(WebViewActivity.EXTRA_URL, "https://koms-backend.onrender.com/login.php")
-                putExtra(WebViewActivity.EXTRA_TITLE, "KOMS Web Portal")
-            }
-            startActivity(intent)
+            startActivity(Intent(this, LoginActivity::class.java))
         }
 
         binding.drawerItemAbout.setOnClickListener {
@@ -238,30 +233,17 @@ class PublicHomeActivity : AppCompatActivity() {
     private fun showGalleryDialog() {
         MaterialAlertDialogBuilder(this)
             .setTitle("🥋 KOMS Dojo Gallery")
-            .setMessage("Browse high-resolution training highlights, tournament victories, weapon demonstrations, and black belt graduation ceremonies across our 5 Chennai dojos.\n\nFull photo archives are also available on the KOMS Web Portal.")
-            .setPositiveButton("Open Web Portal") { _, _ ->
-                val intent = Intent(this, WebViewActivity::class.java).apply {
-                    putExtra(WebViewActivity.EXTRA_URL, "https://koms-backend.onrender.com/index.html")
-                    putExtra(WebViewActivity.EXTRA_TITLE, "KOMS Gallery")
-                }
-                startActivity(intent)
-            }
-            .setNegativeButton("Close", null)
+            .setMessage("Browse training highlights, tournament victories, weapon demonstrations, and black belt graduation ceremonies across our 5 Chennai dojos.\n\nDiscipline • Strength • Internal Peace")
+            .setPositiveButton("OK", null)
             .show()
     }
 
     private fun showRegistrationDialog() {
-        val dialogView = LayoutInflater.from(this).inflate(android.R.layout.simple_list_item_2, null)
-        
-        val builder = MaterialAlertDialogBuilder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle("🥋 New Student Registration")
-            .setMessage("Submit your application to join MASS DRAGON DOJO.\n\nDojo: Ranga Nagar Dojo, Chennai\nSchedule: Saturday & Sunday (6:30 PM - 8:30 PM)\nEntry Fee: ₹500 | Monthly Fee: ₹200\n\nStatus will be submitted as 'Pending Master Approval'.")
-            .setPositiveButton("Apply via Online Form") { _, _ ->
-                val intent = Intent(this, WebViewActivity::class.java).apply {
-                    putExtra(WebViewActivity.EXTRA_URL, "https://koms-backend.onrender.com/index.html#register")
-                    putExtra(WebViewActivity.EXTRA_TITLE, "Student Registration")
-                }
-                startActivity(intent)
+            .setMessage("Join MASS DRAGON DOJO.\n\nDojo: Ranga Nagar Dojo, Chennai\nSchedule: Saturday & Sunday (6:30 PM - 8:30 PM)\nEntry Fee: ₹500 | Monthly Fee: ₹200\n\nPlease visit the dojo or login with your student credentials provided by Head Sensei.")
+            .setPositiveButton("Go to Login") { _, _ ->
+                startActivity(Intent(this, LoginActivity::class.java))
             }
             .setNegativeButton("Cancel", null)
             .show()
