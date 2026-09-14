@@ -3,6 +3,7 @@ require_once '../config/config.php';
 require_once '../config/database.php';
 require_once '../includes/functions.php';
 require_once '../includes/api_auth.php';
+require_once '../includes/universal_auth.php';
 
 handle_api_cors();
 
@@ -11,10 +12,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $raw_input = file_get_contents("php://input");
-$data = json_decode($raw_input);
+$data = json_decode($raw_input, true);
+if (!is_array($data)) {
+    $data = $_POST;
+}
 
-$login = trim($data->email ?? $data->username ?? $data->member_id ?? '');
-$password = $data->password ?? '';
+$login = trim($data['email'] ?? $data['username'] ?? $data['member_id'] ?? $data['login'] ?? '');
+$password = trim($data['password'] ?? $data['pass'] ?? '');
 
 if (empty($login) || empty($password)) {
     http_response_code(400);
@@ -29,40 +33,21 @@ if (empty($login) || empty($password)) {
 }
 
 try {
-    $stmt = $pdo->prepare(
-        "SELECT id, member_id, first_name, last_name, email, role, password_hash, status 
-         FROM users 
-         WHERE email = ? OR member_id = ? 
-         LIMIT 1"
-    );
-    $stmt->execute([$login, $login]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$user || !password_verify($password, $user['password_hash'])) {
+    $authResult = find_and_verify_koms_user($pdo, $login, $password);
+    if (!$authResult['success']) {
         http_response_code(401);
         echo json_encode([
             "success" => false,
             "status" => "error",
-            "message" => "Invalid email / User ID or password",
+            "message" => $authResult['message'],
             "data" => null,
-            "errors" => ["Invalid credentials"]
+            "errors" => [$authResult['message']]
         ]);
         exit();
     }
 
-    if ($user['status'] !== 'active') {
-        http_response_code(403);
-        echo json_encode([
-            "success" => false,
-            "status" => "error",
-            "message" => "Account is inactive or suspended",
-            "data" => null,
-            "errors" => ["Account inactive"]
-        ]);
-        exit();
-    }
-
-    $dojo_id = resolve_user_dojo_id($pdo, (int)$user['id'], $user['role']);
+    $user = $authResult['user'];
+    $dojo_id = (int)($user['dojo_id'] ?? 1);
     $user['dojo_id'] = $dojo_id;
     $token = create_api_token($user);
 

@@ -6,6 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/universal_auth.php';
 
 function is_logged_in() {
     return isset($_SESSION['user_id']);
@@ -65,29 +66,17 @@ function login_user($pdo, $login, $password) {
         ensure_member_id_column($pdo);
 
         $login = trim((string)$login);
+        $password = trim((string)$password);
 
-        $stmt = $pdo->prepare(
-            "SELECT id, first_name, last_name, password_hash, role, status
-             FROM users
-             WHERE email = ? OR member_id = ?
-             LIMIT 1"
-        );
-        $stmt->execute([$login, $login]);
-        $user = $stmt->fetch();
-
-        if (!$user || !password_verify($password, $user['password_hash'])) {
+        $authResult = find_and_verify_koms_user($pdo, $login, $password);
+        if (!$authResult['success']) {
             return [
                 "success" => false,
-                "message" => "Invalid email / User ID or password."
+                "message" => $authResult['message']
             ];
         }
 
-        if ($user['status'] !== 'active') {
-            return [
-                "success" => false,
-                "message" => "Account is inactive. Please contact administrator."
-            ];
-        }
+        $user = $authResult['user'];
 
         // Prevent session fixation after successful authentication.
         if (!headers_sent() && session_status() === PHP_SESSION_ACTIVE) {

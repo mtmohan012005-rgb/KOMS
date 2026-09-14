@@ -22,7 +22,15 @@ class LoginViewModel : ViewModel() {
         _isLoading.value = true
         viewModelScope.launch {
             try {
-                var request = mapOf("email" to email, "password" to pass)
+                val cleanLogin = email.trim()
+                val cleanPass = pass.trim()
+                var request = mutableMapOf(
+                    "email" to cleanLogin,
+                    "username" to cleanLogin,
+                    "member_id" to cleanLogin,
+                    "password" to cleanPass
+                )
+
                 var response = try {
                     val cloudResp = ApiClient.apiService.login(request)
                     if (cloudResp.isSuccessful && cloudResp.body()?.data != null) {
@@ -30,7 +38,7 @@ class LoginViewModel : ViewModel() {
                     } else {
                         try {
                             val localResp = ApiClient.localApiService.login(request)
-                            if (localResp.isSuccessful) localResp else cloudResp
+                            if (localResp.isSuccessful && localResp.body()?.data != null) localResp else cloudResp
                         } catch (_: Exception) {
                             cloudResp
                         }
@@ -43,28 +51,45 @@ class LoginViewModel : ViewModel() {
                     }
                 }
 
-                // If credentials mismatch, try alternate password (password <-> password123)
+                // If credentials mismatch, try alternate password variations (e.g. 20/10/2012 -> 20.10.2012 or password123 <-> password)
                 if (!response.isSuccessful && response.code() == 401) {
-                    val alternatePass = if (pass == "password123") "password" else if (pass == "password") "password123" else null
-                    if (alternatePass != null) {
-                        request = mapOf("email" to email, "password" to alternatePass)
+                    val alternatePass = when {
+                        cleanPass.contains("/") -> cleanPass.replace("/", ".")
+                        cleanPass.contains("-") -> cleanPass.replace("-", ".")
+                        cleanPass == "password123" -> "password"
+                        cleanPass == "password" -> "password123"
+                        else -> null
+                    }
+                    if (alternatePass != null && alternatePass != cleanPass) {
+                        request["password"] = alternatePass
                         val retryResponse = try {
-                            ApiClient.apiService.login(request)
+                            val cr = ApiClient.apiService.login(request)
+                            if (cr.isSuccessful) cr else ApiClient.localApiService.login(request)
                         } catch (_: Exception) {
                             ApiClient.localApiService.login(request)
                         }
-                        if (retryResponse.isSuccessful && retryResponse.body() != null) {
+                        if (retryResponse.isSuccessful && retryResponse.body()?.data != null) {
                             response = retryResponse
                         }
                     }
                 }
 
-                if (response.isSuccessful && (response.body() != null)) {
+                if (response.isSuccessful && (response.body()?.data != null)) {
                     _loginResult.value = response.body()
                 } else {
+                    var errMsg = response.body()?.message
+                    if (errMsg.isNullOrBlank()) {
+                        try {
+                            val errBody = response.errorBody()?.string()
+                            if (!errBody.isNullOrBlank()) {
+                                val json = org.json.JSONObject(errBody)
+                                errMsg = json.optString("message", "Invalid credentials")
+                            }
+                        } catch (_: Exception) {}
+                    }
                     _loginResult.value = ApiResponse(
                         success = false,
-                        message = response.body()?.message ?: "Invalid credentials or server error",
+                        message = errMsg ?: "Invalid credentials or server error",
                         data = null,
                         errors = null
                     )
