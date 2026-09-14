@@ -29,17 +29,19 @@ class LoginActivity : AppCompatActivity() {
         sessionManager = SessionManager(this)
         com.koms.app.data.api.ApiClient.setTokenProvider { sessionManager.fetchAuthToken() }
 
+        setupCinematicStoryboardAnimations()
+        setupObservers()
+
         val autoUser = intent.getStringExtra("auto_user")
         val autoPass = intent.getStringExtra("auto_pass")
         if (!autoUser.isNullOrBlank() && !autoPass.isNullOrBlank()) {
+            binding.etEmail.setText(autoUser)
+            binding.etPassword.setText(autoPass)
             sessionManager.logout()
             viewModel.login(autoUser, autoPass)
         } else if (sessionManager.isLoggedIn()) {
             navigateToDashboard(sessionManager.getUserRole() ?: "")
         }
-
-        setupCinematicStoryboardAnimations()
-        setupObservers()
 
         // Pure native mode: hide web portal toggle
         binding.btnToggleWebPortal.visibility = android.view.View.GONE
