@@ -1,17 +1,23 @@
 <?php
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: GET");
-
+require_once '../../config/config.php';
 require_once '../../config/database.php';
+require_once '../../includes/api_auth.php';
 
-$stmt = $pdo->prepare("SELECT * FROM tournaments WHERE status IN ('published', 'registration_open') ORDER BY event_date ASC");
-$stmt->execute();
-$tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+handle_api_cors();
 
-echo json_encode([
-    "success" => true,
-    "message" => "Tournaments fetched",
-    "data" => $tournaments
-]);
-?>
+try {
+    $stmt = $pdo->prepare("
+        SELECT id, name, description, event_date, venue, registration_deadline, status 
+        FROM tournaments 
+        WHERE status IN ('published', 'registration_open') 
+        ORDER BY event_date ASC
+    ");
+    $stmt->execute();
+    $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    send_api_response($tournaments, "Tournaments fetched successfully");
+} catch (Throwable $e) {
+    error_log("API Tournaments List Error: " . $e->getMessage());
+    send_api_error("Unable to fetch tournaments.", [], 500);
+}
+

@@ -137,7 +137,22 @@ class WebViewActivity : AppCompatActivity() {
                     }
                 }
 
-                // Keep all web traffic inside our WebView
+                // Domain Whitelist Enforcement: Keep only trusted organization domains inside the bridge-enabled WebView
+                val uri = Uri.parse(url)
+                val host = uri.host?.lowercase() ?: ""
+                val trustedHosts = listOf("koms-backend.onrender.com", "localhost", "127.0.0.1", "10.0.2.2", "10.127.5.177")
+                val isTrusted = trustedHosts.any { host == it || host.endsWith(".$it") }
+
+                if (!isTrusted && (url.startsWith("http://") || url.startsWith("https://"))) {
+                    try {
+                        // Open external untrusted links safely in external system browser
+                        startActivity(Intent(Intent.ACTION_VIEW, uri))
+                        return true
+                    } catch (e: Exception) {
+                        return true
+                    }
+                }
+
                 return false
             }
 

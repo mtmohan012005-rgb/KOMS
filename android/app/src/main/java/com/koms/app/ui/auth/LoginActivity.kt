@@ -28,6 +28,7 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
         
         sessionManager = SessionManager(this)
+        com.koms.app.data.api.ApiClient.setTokenProvider { sessionManager.fetchAuthToken() }
 
         val autoUser = intent.getStringExtra("auto_user")
         val autoPass = intent.getStringExtra("auto_pass")
@@ -183,9 +184,17 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun navigateToDashboard(role: String) {
-        val intent = when (role) {
-            "student" -> Intent(this, StudentDashboardActivity::class.java)
-            else -> Intent(this, StudentDashboardActivity::class.java)
+        val intent = when {
+            role.equals("master", ignoreCase = true) ||
+            role.equals("grand_master", ignoreCase = true) ||
+            role.equals("super_admin", ignoreCase = true) ||
+            role.equals("admin", ignoreCase = true) ||
+            role.equals("senior", ignoreCase = true) -> {
+                Intent(this, com.koms.app.ui.master.MasterDashboardActivity::class.java)
+            }
+            else -> {
+                Intent(this, StudentDashboardActivity::class.java)
+            }
         }
         startActivity(intent)
         finish()

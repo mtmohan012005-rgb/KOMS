@@ -58,17 +58,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     // If student, insert DPDP student profile
                     if ($role === 'student') {
-                        $consent_status = $is_minor ? 'verified' : 'not_applicable';
-                        $artifact = $is_minor ? ('VPC-' . strtoupper($consent_method ?: 'AADHAAR') . '-' . bin2hex(random_bytes(6))) : null;
+                        $expected_otp = $_SESSION['expected_vpc_otp'] ?? '123456';
+                        $is_otp_valid = $is_minor && (!empty($vpc_otp) && trim($vpc_otp) === $expected_otp);
 
-                        $sp_stmt = $pdo->prepare("INSERT INTO student_profiles (user_id, is_minor, parent_name, parent_contact, parent_email, parent_consent_status, parent_consent_method, parent_consent_artifact, parent_consent_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-                        $sp_stmt->execute([$user_id, $is_minor ? 1 : 0, $parent_name, $parent_contact, $parent_email, $consent_status, $consent_method ?: null, $artifact]);
+                        $consent_status = 'not_applicable';
+                        $artifact = null;
+                        $consent_timestamp = null;
+
+                        if ($is_minor) {
+                            $consent_status = $is_otp_valid ? 'verified' : 'pending';
+                            $artifact = 'VPC-' . strtoupper($consent_method ?: 'DEMO_OTP') . '-' . bin2hex(random_bytes(6));
+                            $consent_timestamp = $is_otp_valid ? date('Y-m-d H:i:s') : null;
+                        }
+
+                        $sp_stmt = $pdo->prepare(
+                            "INSERT INTO student_profiles 
+                             (user_id, is_minor, parent_name, parent_contact, parent_email, parent_consent_status, parent_consent_method, parent_consent_artifact, parent_consent_timestamp) 
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                        );
+                        $sp_stmt->execute([
+                            $user_id, 
+                            $is_minor ? 1 : 0, 
+                            $parent_name, 
+                            $parent_contact, 
+                            $parent_email, 
+                            $consent_status, 
+                            $consent_method ?: null, 
+                            $artifact,
+                            $consent_timestamp
+                        ]);
                     }
 
                     $pdo->commit();
-                    log_audit_action($pdo, $user_id, 'CREATE', 'users', $user_id, "New user registered ($role)" . ($is_minor ? " with DPDP Verifiable Parental Consent" : ""));
+                    log_audit_action($pdo, $user_id, 'CREATE', 'users', $user_id, "New user registered ($role)" . ($is_minor ? " with DPDP Status: {$consent_status}" : ""));
 
-                    $_SESSION['success_msg'] = "Registration successful! Welcome to the Karate Organization.";
+                    $_SESSION['success_msg'] = "Registration successful! " . ($is_minor && $consent_status === 'pending' ? "Parental consent is pending verification." : "Welcome to the Karate Organization.");
                     redirect('/login.php');
                 } catch (\PDOException $e) {
                     $pdo->rollBack();

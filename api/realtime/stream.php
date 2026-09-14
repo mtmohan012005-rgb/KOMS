@@ -21,13 +21,17 @@ $session_user_role = $_SESSION['role'] ?? null;
 $session_dojo_id = $_SESSION['dojo_id'] ?? null;
 session_write_close(); // Release session file lock immediately
 
+require_once '../../config/config.php';
 require_once '../../config/database.php';
+require_once '../../includes/api_auth.php';
 require_once '../../includes/realtime.php';
 
-// Allow query parameter overrides (e.g. for native mobile clients passing tokens)
-$user_id = isset($_GET['user_id']) ? (int)$_GET['user_id'] : ($session_user_id ? (int)$session_user_id : null);
-$user_role = isset($_GET['role']) ? trim($_GET['role']) : ($session_user_role ?: null);
-$dojo_id = isset($_GET['dojo_id']) ? (int)$_GET['dojo_id'] : ($session_dojo_id ? (int)$session_dojo_id : null);
+// Authenticate caller securely via Bearer token, ?token= param, or web session
+$caller = authenticate_api_request($pdo, false);
+
+$user_id = $caller ? (int)$caller['user_id'] : null;
+$user_role = $caller ? $caller['role'] : null;
+$dojo_id = $caller ? $caller['dojo_id'] : null;
 
 // Last event ID from client header or query
 $last_event_id = 0;
