@@ -7,10 +7,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.koms.app.data.api.ApiClient
 import com.koms.app.databinding.ActivityStudentProfileBinding
 import com.koms.app.databinding.DialogEditStudentProfileBinding
 import com.koms.app.utils.SessionManager
+import kotlinx.coroutines.launch
 
 class StudentProfileActivity : AppCompatActivity() {
 
@@ -36,6 +39,7 @@ class StudentProfileActivity : AppCompatActivity() {
 
         setupStudentData()
         setupListeners()
+        fetchCloudProfile()
     }
 
     private fun setupStudentData() {
@@ -70,6 +74,52 @@ class StudentProfileActivity : AppCompatActivity() {
         binding.tvStatBloodGroup.text = bloodGroup
         binding.tvInfoBloodGroup.text = bloodGroup
         binding.tvAddress.text = address
+    }
+
+    private fun fetchCloudProfile() {
+        val studentId = sessionManager.getUserId()
+        if (studentId <= 0) return
+
+        lifecycleScope.launch {
+            try {
+                val res = ApiClient.apiService.getStudentProfile(studentId)
+                if (res.isSuccessful && res.body()?.data != null) {
+                    val p = res.body()!!.data!!
+                    val name = p.fullName ?: p.firstName ?: ""
+                    if (name.isNotBlank()) {
+                        binding.tvHeroStudentName.text = name
+                        binding.tvInfoFullName.text = name
+                    }
+                    if (!p.memberId.isNullOrBlank()) {
+                        binding.tvHeroStudentId.text = p.memberId
+                    }
+                    if (!p.fatherName.isNullOrBlank()) {
+                        binding.tvFatherName.text = p.fatherName
+                    }
+                    if (!p.motherName.isNullOrBlank()) {
+                        binding.tvMotherName.text = p.motherName
+                    }
+                    if (!p.phone.isNullOrBlank()) {
+                        binding.tvPhoneNumber.text = p.phone
+                    }
+                    if (!p.alternatePhone.isNullOrBlank()) {
+                        binding.tvAlternatePhone.text = p.alternatePhone
+                    }
+                    if (!p.bloodGroup.isNullOrBlank()) {
+                        binding.tvStatBloodGroup.text = p.bloodGroup
+                        binding.tvInfoBloodGroup.text = p.bloodGroup
+                    }
+                    if (!p.address.isNullOrBlank()) {
+                        binding.tvAddress.text = p.address
+                    }
+                    val age = p.age
+                    val dob = p.formattedDob ?: p.dob ?: ""
+                    if (dob.isNotBlank()) {
+                        binding.tvHeroAgeMeta.text = "Age: $age years | DOB: $dob"
+                    }
+                }
+            } catch (_: Exception) {}
+        }
     }
 
     private fun setupListeners() {
@@ -124,7 +174,7 @@ class StudentProfileActivity : AppCompatActivity() {
                 val newBlood = dialogBinding.etBloodGroup.text.toString().trim()
                 val newAddr = dialogBinding.etAddress.text.toString().trim()
 
-                // Save to SharedPreferences
+                // Save to SharedPreferences for instant local access
                 val prefs = getSharedPreferences(PREFS_PROFILE, Context.MODE_PRIVATE)
                 prefs.edit()
                     .putString(KEY_FATHER_NAME, newFather)
@@ -135,7 +185,7 @@ class StudentProfileActivity : AppCompatActivity() {
                     .putString(KEY_ADDRESS, newAddr)
                     .apply()
 
-                // Update UI
+                // Update UI instantly
                 binding.tvFatherName.text = newFather
                 binding.tvMotherName.text = newMother
                 binding.tvPhoneNumber.text = newPhone
@@ -143,6 +193,24 @@ class StudentProfileActivity : AppCompatActivity() {
                 binding.tvStatBloodGroup.text = newBlood
                 binding.tvInfoBloodGroup.text = newBlood
                 binding.tvAddress.text = newAddr
+
+                // Sync to Cloud Backend over Internet
+                val studentId = sessionManager.getUserId()
+                if (studentId > 0) {
+                    lifecycleScope.launch {
+                        try {
+                            val params = mapOf(
+                                "father_name" to newFather,
+                                "mother_name" to newMother,
+                                "phone" to newPhone,
+                                "alternate_phone" to newAltPhone,
+                                "blood_group" to newBlood,
+                                "address" to newAddr
+                            )
+                            ApiClient.apiService.updateStudentProfile(studentId, params)
+                        } catch (_: Exception) {}
+                    }
+                }
 
                 Toast.makeText(this, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
             }

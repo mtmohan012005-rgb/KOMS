@@ -5,6 +5,7 @@ import com.koms.app.data.model.ApiResponse
 import com.koms.app.data.model.AttendanceHistory
 import com.koms.app.data.model.Dojo
 import com.koms.app.data.model.FeeRecord
+import com.koms.app.data.model.StudentProfile
 import com.koms.app.data.model.Tournament
 import com.koms.app.data.model.User
 import retrofit2.Response
@@ -32,4 +33,11 @@ interface ApiService {
 
     @GET("announcements/list.php")
     suspend fun getAnnouncements(): Response<ApiResponse<List<Announcement>>>
+
+    @GET("students/profile.php")
+    suspend fun getStudentProfile(@Query("student_id") studentId: Int): Response<ApiResponse<StudentProfile>>
+
+    @POST("students/profile.php")
+    suspend fun updateStudentProfile(@Query("student_id") studentId: Int, @Body request: Map<String, String>): Response<ApiResponse<StudentProfile>>
 }
+

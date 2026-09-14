@@ -1,8 +1,8 @@
 package com.koms.app.utils
 
 object Constants {
-    // Point to local KOMS server via ADB reverse (127.0.0.1:8080)
-    const val BASE_URL = "http://127.0.0.1:8080/api/"
+    // Production Cloud Backend over the Internet (cellular / Wi-Fi)
+    const val BASE_URL = "https://koms-backend.onrender.com/api/"
     const val RENDER_URL = "https://koms-backend.onrender.com/api/"
     const val LOCAL_URL = "http://127.0.0.1:8080/api/"
     const val EMULATOR_URL = "http://10.0.2.2:8080/api/"
