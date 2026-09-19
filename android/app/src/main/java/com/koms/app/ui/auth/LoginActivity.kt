@@ -169,7 +169,7 @@ class LoginActivity : AppCompatActivity() {
             if (response.success && (response.data != null)) {
                 val user = response.data
                 sessionManager.saveAuthToken(user.token)
-                sessionManager.saveUserDetails(user.userId, user.name, user.email, user.role)
+                sessionManager.saveUserDetails(user.userId, user.name, user.email, user.role, user.dojoId ?: 1)
                 
                 Toast.makeText(this, "Welcome ${user.name}!", Toast.LENGTH_SHORT).show()
                 navigateToDashboard(user.role)
@@ -181,12 +181,17 @@ class LoginActivity : AppCompatActivity() {
 
     private fun navigateToDashboard(role: String) {
         val intent = when {
-            role.equals("master", ignoreCase = true) ||
             role.equals("grand_master", ignoreCase = true) ||
             role.equals("super_admin", ignoreCase = true) ||
-            role.equals("admin", ignoreCase = true) ||
-            role.equals("senior", ignoreCase = true) -> {
+            role.equals("admin", ignoreCase = true) -> {
+                Intent(this, com.koms.app.ui.admin.GrandMasterDashboardActivity::class.java)
+            }
+            role.equals("master", ignoreCase = true) -> {
                 Intent(this, com.koms.app.ui.master.MasterDashboardActivity::class.java)
+            }
+            role.equals("senior", ignoreCase = true) ||
+            role.equals("senior_student", ignoreCase = true) -> {
+                Intent(this, com.koms.app.ui.senior.SeniorDashboardActivity::class.java)
             }
             else -> {
                 Intent(this, StudentDashboardActivity::class.java)

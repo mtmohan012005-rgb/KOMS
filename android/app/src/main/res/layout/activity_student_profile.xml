@@ -413,6 +413,7 @@
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tvStatTargetBelt"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Target: Yellow Belt (8th Kyu)"
@@ -862,6 +863,7 @@
                             android:orientation="horizontal">
 
                             <TextView
+                                android:id="@+id/tvProgressAttendanceLabel"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
@@ -871,6 +873,7 @@
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/tvProgressAttendancePercent"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="75%"
@@ -880,6 +883,7 @@
                         </LinearLayout>
 
                         <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/pbProgressAttendance"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="5dp"
@@ -903,6 +907,7 @@
                             android:orientation="horizontal">
 
                             <TextView
+                                android:id="@+id/tvProgressFeesLabel"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
@@ -912,6 +917,7 @@
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/tvProgressFeesPercent"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="67%"
@@ -921,6 +927,7 @@
                         </LinearLayout>
 
                         <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/pbProgressFees"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="5dp"
@@ -944,6 +951,7 @@
                             android:orientation="horizontal">
 
                             <TextView
+                                android:id="@+id/tvProgressAchievementsLabel"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
@@ -953,6 +961,7 @@
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/tvProgressAchievementsPercent"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="100%"
@@ -962,6 +971,7 @@
                         </LinearLayout>
 
                         <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/pbProgressAchievements"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="5dp"
@@ -984,6 +994,7 @@
                             android:orientation="horizontal">
 
                             <TextView
+                                android:id="@+id/tvProgressCertificatesLabel"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
@@ -993,6 +1004,7 @@
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/tvProgressCertificatesPercent"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="50%"
@@ -1002,6 +1014,7 @@
                         </LinearLayout>
 
                         <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/pbProgressCertificates"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="5dp"

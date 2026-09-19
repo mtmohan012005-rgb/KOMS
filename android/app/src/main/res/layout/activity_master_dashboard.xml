@@ -11,19 +11,18 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/background"
+        android:background="#F8FAFC"
         android:orientation="vertical">
 
         <!-- Top Header Bar -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/surface"
+            android:layout_height="60dp"
+            android:background="#FFFFFF"
             android:elevation="2dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="12dp">
+            android:paddingHorizontal="16dp">
 
             <!-- Hamburger Button -->
             <ImageButton
@@ -34,13 +33,13 @@
                 android:contentDescription="Open Menu"
                 android:scaleType="centerInside"
                 android:src="@drawable/ic_menu_hamburger"
-                app:tint="@color/text_primary" />
+                app:tint="#0F172A" />
 
             <!-- Title & Subtitle -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="12dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -48,21 +47,53 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Master Dashboard"
-                    android:textColor="@color/text_primary"
-                    android:textSize="17sp"
+                    android:textColor="#0F172A"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tvHeaderSubtitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:text="Mass Dragon Dojo • Sensei Portal"
-                    android:textColor="@color/text_secondary"
+                    android:text="Manage your dojo, students and activities"
+                    android:textColor="#64748B"
                     android:textSize="11sp" />
             </LinearLayout>
 
-            <!-- Sensei User Badge -->
+            <!-- Notification Bell with Badge -->
+            <FrameLayout
+                android:id="@+id/btnNotifications"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_announcement"
+                    app:tint="#0F172A" />
+
+                <TextView
+                    android:id="@+id/tvTopNotificationCount"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="top|end"
+                    android:layout_marginTop="3dp"
+                    android:layout_marginEnd="3dp"
+                    android:background="@drawable/bg_stamp_red"
+                    android:gravity="center"
+                    android:text="3"
+                    android:textColor="#FFFFFF"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+
+            <!-- Master Profile Badge -->
             <LinearLayout
                 android:id="@+id/btnMasterProfile"
                 android:layout_width="wrap_content"
@@ -70,23 +101,18 @@
                 android:background="?attr/selectableItemBackground"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingStart="6dp"
-                android:paddingEnd="4dp">
+                android:paddingStart="4dp">
 
-                <!-- Avatar Circle with initials "JS" -->
                 <FrameLayout
                     android:layout_width="38dp"
                     android:layout_height="38dp"
                     android:background="@drawable/bg_avatar_circle">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:text="JS"
-                        android:textColor="#B91C1C"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_person_sensei" />
                 </FrameLayout>
 
                 <LinearLayout
@@ -101,879 +127,1377 @@
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
                         android:maxLines="1"
-                        android:text="John Sensei"
-                        android:textColor="@color/text_primary"
+                        android:text="R.N. Thirukailash"
+                        android:textColor="#0F172A"
                         android:textSize="13sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Sensei Master"
-                        android:textColor="#B91C1C"
+                        android:text="Dojo Master ▾"
+                        android:textColor="#2563EB"
                         android:textSize="11sp"
                         android:textStyle="bold" />
                 </LinearLayout>
-
             </LinearLayout>
-
         </LinearLayout>
 
-        <!-- Scrollable Body -->
-        <ScrollView
+        <!-- Pull to Refresh Layout -->
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeRefreshMaster"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:clipToPadding="false"
-            android:fillViewport="true"
-            android:paddingBottom="24dp">
+            android:layout_weight="1">
 
-            <LinearLayout
+            <ScrollView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingHorizontal="16dp"
-                android:paddingTop="14dp">
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:fillViewport="true"
+                android:paddingBottom="32dp">
 
-                <!-- HERO MARTIAL BANNER FOR MASTER -->
-                <FrameLayout
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:background="@drawable/bg_hero_martial"
-                    android:elevation="4dp"
-                    android:padding="20dp">
+                    android:orientation="vertical"
+                    android:paddingHorizontal="16dp"
+                    android:paddingTop="14dp">
 
-                    <!-- Watermark Kanji 龍 -->
+                    <!-- 1. HERO MARTIAL BANNER -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        app:cardCornerRadius="14dp"
+                        app:cardElevation="3dp"
+                        app:strokeColor="#1E293B"
+                        app:strokeWidth="1dp">
+
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <!-- Hero Background Image -->
+                            <ImageView
+                                android:layout_width="match_parent"
+                                android:layout_height="180dp"
+                                android:scaleType="centerCrop"
+                                android:src="@drawable/sunset_martial_hero" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="180dp"
+                                android:background="#CC090B10" />
+
+                            <!-- Kanji Watermark -->
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="end|center_vertical"
+                                android:layout_marginEnd="12dp"
+                                android:alpha="0.22"
+                                android:text="大日本沖縄"
+                                android:textColor="#FFFFFF"
+                                android:textSize="32sp"
+                                android:textStyle="bold" />
+
+                            <!-- Content Overlay -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:padding="16dp">
+
+                                <!-- Master Photo with Gold Ring -->
+                                <com.google.android.material.card.MaterialCardView
+                                    android:layout_width="76dp"
+                                    android:layout_height="76dp"
+                                    android:layout_gravity="center_vertical"
+                                    app:cardCornerRadius="38dp"
+                                    app:cardElevation="4dp"
+                                    app:strokeColor="#FBBF24"
+                                    app:strokeWidth="2.5dp">
+
+                                    <ImageView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:scaleType="centerCrop"
+                                        android:src="@drawable/ic_person_sensei" />
+                                </com.google.android.material.card.MaterialCardView>
+
+                                <!-- Middle Info -->
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center_vertical"
+                                    android:layout_marginStart="14dp"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Welcome back,"
+                                        android:textColor="#FBBF24"
+                                        android:textSize="13sp"
+                                        android:textStyle="bold" />
+
+                                    <LinearLayout
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="center_vertical"
+                                        android:orientation="horizontal">
+
+                                        <TextView
+                                            android:id="@+id/tvHeroMasterName"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="R.N. Thirukailash"
+                                            android:textColor="#FFFFFF"
+                                            android:textSize="19sp"
+                                            android:textStyle="bold" />
+
+                                        <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginStart="8dp"
+                                            android:background="@drawable/bg_badge_blue"
+                                            android:paddingHorizontal="7dp"
+                                            android:paddingVertical="2dp"
+                                            android:text="Dojo Master"
+                                            android:textColor="#FFFFFF"
+                                            android:textSize="10sp"
+                                            android:textStyle="bold" />
+                                    </LinearLayout>
+
+                                    <TextView
+                                        android:id="@+id/tvHeroDojoLocation"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:text="📍 Main Dojo | Chennai"
+                                        android:textColor="#CBD5E1"
+                                        android:textSize="12sp" />
+                                </LinearLayout>
+
+                                <!-- Right Side Dojo Card -->
+                                <LinearLayout
+                                    android:id="@+id/btnViewDojoProfile"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center_vertical"
+                                    android:background="@drawable/bg_dark_card_gold_border"
+                                    android:clickable="true"
+                                    android:focusable="true"
+                                    android:orientation="vertical"
+                                    android:padding="10dp">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Your Dojo"
+                                        android:textColor="#94A3B8"
+                                        android:textSize="10sp" />
+
+                                    <TextView
+                                        android:id="@+id/tvCardDojoName"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Main Dojo"
+                                        android:textColor="#FFFFFF"
+                                        android:textSize="13sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/tvCardDojoCity"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Chennai"
+                                        android:textColor="#CBD5E1"
+                                        android:textSize="11sp" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:text="View Dojo Profile →"
+                                        android:textColor="#FBBF24"
+                                        android:textSize="10sp"
+                                        android:textStyle="bold" />
+                                </LinearLayout>
+                            </LinearLayout>
+                        </FrameLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- 2. MASTER DASHBOARD SUMMARY: 7 DYNAMIC SUMMARY CARDS -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="end|center_vertical"
-                        android:layout_marginEnd="-6dp"
-                        android:alpha="0.16"
-                        android:text="龍"
-                        android:textColor="#FFFFFF"
-                        android:textSize="105sp"
+                        android:layout_marginBottom="8dp"
+                        android:text="Dojo Performance Summary"
+                        android:textColor="#0F172A"
+                        android:textSize="14sp"
                         android:textStyle="bold" />
 
+                    <!-- Horizontal Scroll for 7 Summary Cards matching Image 2 -->
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:clipToPadding="false"
+                        android:scrollbars="none">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <!-- 1. TOTAL STUDENTS -->
+                            <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/cardTotalStudents"
+                                android:layout_width="145dp"
+                                android:layout_height="120dp"
+                                android:layout_marginEnd="10dp"
+                                app:cardCornerRadius="12dp"
+                                app:cardElevation="1dp"
+                                app:strokeColor="#E2E8F0"
+                                app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:background="#FFFFFF"
+                                    android:orientation="vertical"
+                                    android:padding="12dp">
+
+                                    <ImageView
+                                        android:layout_width="28dp"
+                                        android:layout_height="28dp"
+                                        android:background="@drawable/bg_stat_icon_purple"
+                                        android:padding="5dp"
+                                        android:src="@drawable/ic_person_sensei"
+                                        app:tint="#8B5CF6" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="6dp"
+                                        android:text="TOTAL STUDENTS"
+                                        android:textColor="#64748B"
+                                        android:textSize="9sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/tvTotalStudentsCount"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="16"
+                                        android:textColor="#0F172A"
+                                        android:textSize="18sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Registered in dojo"
+                                        android:textColor="#94A3B8"
+                                        android:textSize="10sp" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <!-- 2. ACTIVE STUDENTS -->
+                            <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/cardActiveStudents"
+                                android:layout_width="145dp"
+                                android:layout_height="120dp"
+                                android:layout_marginEnd="10dp"
+                                app:cardCornerRadius="12dp"
+                                app:cardElevation="1dp"
+                                app:strokeColor="#E2E8F0"
+                                app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:background="#FFFFFF"
+                                    android:orientation="vertical"
+                                    android:padding="12dp">
+
+                                    <ImageView
+                                        android:layout_width="28dp"
+                                        android:layout_height="28dp"
+                                        android:background="@drawable/bg_stat_icon_green"
+                                        android:padding="5dp"
+                                        android:src="@drawable/ic_check_mark"
+                                        app:tint="#10B981" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="6dp"
+                                        android:text="ACTIVE STUDENTS"
+                                        android:textColor="#64748B"
+                                        android:textSize="9sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/tvActiveStudentsCount"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="14"
+                                        android:textColor="#0F172A"
+                                        android:textSize="18sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/tvActiveStudentsPct"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="87% of total"
+                                        android:textColor="#10B981"
+                                        android:textSize="10sp" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <!-- 3. PENDING REQUESTS -->
+                            <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/cardPendingRequests"
+                                android:layout_width="145dp"
+                                android:layout_height="120dp"
+                                android:layout_marginEnd="10dp"
+                                app:cardCornerRadius="12dp"
+                                app:cardElevation="1dp"
+                                app:strokeColor="#E2E8F0"
+                                app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:background="#FFFFFF"
+                                    android:orientation="vertical"
+                                    android:padding="12dp">
+
+                                    <ImageView
+                                        android:layout_width="28dp"
+                                        android:layout_height="28dp"
+                                        android:background="@drawable/bg_stat_icon_pink"
+                                        android:padding="5dp"
+                                        android:src="@drawable/ic_star_gold"
+                                        app:tint="#F43F5E" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="6dp"
+                                        android:text="PENDING REQUESTS"
+                                        android:textColor="#64748B"
+                                        android:textSize="9sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/tvPendingRequestsCount"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="2"
+                                        android:textColor="#F43F5E"
+                                        android:textSize="18sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Awaiting approval"
+                                        android:textColor="#94A3B8"
+                                        android:textSize="10sp" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <!-- 4. TODAY'S ATTENDANCE -->
+                            <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/cardTodayAttendance"
+                                android:layout_width="145dp"
+                                android:layout_height="120dp"
+                                android:layout_marginEnd="10dp"
+                                app:cardCornerRadius="12dp"
+                                app:cardElevation="1dp"
+                                app:strokeColor="#E2E8F0"
+                                app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:background="#FFFFFF"
+                                    android:orientation="vertical"
+                                    android:padding="12dp">
+
+                                    <ImageView
+                                        android:layout_width="28dp"
+                                        android:layout_height="28dp"
+                                        android:background="@drawable/bg_circle_attendance"
+                                        android:padding="5dp"
+                                        android:src="@drawable/ic_attendance"
+                                        app:tint="#2563EB" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="6dp"
+                                        android:text="TODAY'S ATTENDANCE"
+                                        android:textColor="#64748B"
+                                        android:textSize="9sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/tvTodayAttendanceFraction"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="12 / 16"
+                                        android:textColor="#0F172A"
+                                        android:textSize="18sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/tvTodayAttendancePct"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="75% present"
+                                        android:textColor="#2563EB"
+                                        android:textSize="10sp" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <!-- 5. MONTHLY ATTENDANCE -->
+                            <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/cardMonthlyAttendance"
+                                android:layout_width="145dp"
+                                android:layout_height="120dp"
+                                android:layout_marginEnd="10dp"
+                                app:cardCornerRadius="12dp"
+                                app:cardElevation="1dp"
+                                app:strokeColor="#E2E8F0"
+                                app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:background="#FFFFFF"
+                                    android:orientation="vertical"
+                                    android:padding="12dp">
+
+                                    <ImageView
+                                        android:layout_width="28dp"
+                                        android:layout_height="28dp"
+                                        android:background="@drawable/bg_stat_icon_gold"
+                                        android:padding="5dp"
+                                        android:src="@drawable/ic_calendar"
+                                        app:tint="#D97706" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="6dp"
+                                        android:text="MONTHLY ATTENDANCE"
+                                        android:textColor="#64748B"
+                                        android:textSize="9sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/tvMonthlyAttendancePct"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="68%"
+                                        android:textColor="#0F172A"
+                                        android:textSize="18sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="↑ +12% this month"
+                                        android:textColor="#10B981"
+                                        android:textSize="10sp" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <!-- 6. PENDING FEES -->
+                            <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/cardPendingFees"
+                                android:layout_width="145dp"
+                                android:layout_height="120dp"
+                                android:layout_marginEnd="10dp"
+                                app:cardCornerRadius="12dp"
+                                app:cardElevation="1dp"
+                                app:strokeColor="#E2E8F0"
+                                app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:background="#FFFFFF"
+                                    android:orientation="vertical"
+                                    android:padding="12dp">
+
+                                    <ImageView
+                                        android:layout_width="28dp"
+                                        android:layout_height="28dp"
+                                        android:background="@drawable/bg_stat_icon_pink"
+                                        android:padding="5dp"
+                                        android:src="@drawable/ic_currency"
+                                        app:tint="#DC2626" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="6dp"
+                                        android:text="PENDING FEES"
+                                        android:textColor="#64748B"
+                                        android:textSize="9sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/tvPendingFeesAmount"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="₹ 4,000"
+                                        android:textColor="#DC2626"
+                                        android:textSize="18sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/tvPendingFeesStudents"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="2 students"
+                                        android:textColor="#94A3B8"
+                                        android:textSize="10sp" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <!-- 7. UPCOMING CLASSES -->
+                            <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/cardUpcomingClasses"
+                                android:layout_width="145dp"
+                                android:layout_height="120dp"
+                                app:cardCornerRadius="12dp"
+                                app:cardElevation="1dp"
+                                app:strokeColor="#E2E8F0"
+                                app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:background="#FFFFFF"
+                                    android:orientation="vertical"
+                                    android:padding="12dp">
+
+                                    <ImageView
+                                        android:layout_width="28dp"
+                                        android:layout_height="28dp"
+                                        android:background="@drawable/bg_stat_icon_gold"
+                                        android:padding="5dp"
+                                        android:src="@drawable/ic_clock"
+                                        app:tint="#F59E0B" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="6dp"
+                                        android:text="UPCOMING CLASSES"
+                                        android:textColor="#64748B"
+                                        android:textSize="9sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/tvUpcomingClassesCount"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="2"
+                                        android:textColor="#0F172A"
+                                        android:textSize="18sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="This week"
+                                        android:textColor="#94A3B8"
+                                        android:textSize="10sp" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
+                    <!-- 3. MASTER QUICK MANAGEMENT ACTION BUTTONS (6 buttons) -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="Quick Actions"
+                        android:textColor="#0F172A"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:scrollbars="none">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <!-- 1. Mark Attendance -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnQuickAttendance"
+                                style="@style/Widget.Material3.Button.TonalButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="44dp"
+                                android:layout_marginEnd="8dp"
+                                android:text="Mark Attendance"
+                                android:textColor="#2563EB"
+                                android:textSize="12sp"
+                                app:backgroundTint="#EFF6FF"
+                                app:cornerRadius="22dp"
+                                app:icon="@drawable/ic_attendance"
+                                app:iconSize="16dp"
+                                app:iconTint="#2563EB"
+                                app:strokeColor="#BFDBFE"
+                                app:strokeWidth="1dp" />
+
+                            <!-- 2. View Student Requests -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnQuickRequests"
+                                style="@style/Widget.Material3.Button.TonalButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="44dp"
+                                android:layout_marginEnd="8dp"
+                                android:text="View Requests (3)"
+                                android:textColor="#8B5CF6"
+                                android:textSize="12sp"
+                                app:backgroundTint="#F5F3FF"
+                                app:cornerRadius="22dp"
+                                app:icon="@drawable/ic_person_sensei"
+                                app:iconSize="16dp"
+                                app:iconTint="#8B5CF6"
+                                app:strokeColor="#DDD6FE"
+                                app:strokeWidth="1dp" />
+
+                            <!-- 3. Manage Fees -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnQuickFees"
+                                style="@style/Widget.Material3.Button.TonalButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="44dp"
+                                android:layout_marginEnd="8dp"
+                                android:text="Manage Fees"
+                                android:textColor="#10B981"
+                                android:textSize="12sp"
+                                app:backgroundTint="#ECFDF5"
+                                app:cornerRadius="22dp"
+                                app:icon="@drawable/ic_currency"
+                                app:iconSize="16dp"
+                                app:iconTint="#10B981"
+                                app:strokeColor="#A7F3D0"
+                                app:strokeWidth="1dp" />
+
+                            <!-- 4. Add Achievement -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnQuickAchievement"
+                                style="@style/Widget.Material3.Button.TonalButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="44dp"
+                                android:layout_marginEnd="8dp"
+                                android:text="Add Achievement"
+                                android:textColor="#D97706"
+                                android:textSize="12sp"
+                                app:backgroundTint="#FFFBEB"
+                                app:cornerRadius="22dp"
+                                app:icon="@drawable/ic_trophy"
+                                app:iconSize="16dp"
+                                app:iconTint="#D97706"
+                                app:strokeColor="#FDE68A"
+                                app:strokeWidth="1dp" />
+
+                            <!-- 5. Add Certificate -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnQuickCertificate"
+                                style="@style/Widget.Material3.Button.TonalButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="44dp"
+                                android:layout_marginEnd="8dp"
+                                android:text="Add Certificate"
+                                android:textColor="#9333EA"
+                                android:textSize="12sp"
+                                app:backgroundTint="#FAF5FF"
+                                app:cornerRadius="22dp"
+                                app:icon="@drawable/ic_star_gold"
+                                app:iconSize="16dp"
+                                app:iconTint="#9333EA"
+                                app:strokeColor="#E9D5FF"
+                                app:strokeWidth="1dp" />
+
+                            <!-- 6. View Reports -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnQuickReports"
+                                style="@style/Widget.Material3.Button.TonalButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="44dp"
+                                android:text="View Reports"
+                                android:textColor="#0284C7"
+                                android:textSize="12sp"
+                                app:backgroundTint="#F0F9FF"
+                                app:cornerRadius="22dp"
+                                app:icon="@drawable/ic_dashboard_home"
+                                app:iconSize="16dp"
+                                app:iconTint="#0284C7"
+                                app:strokeColor="#BAE6FD"
+                                app:strokeWidth="1dp" />
+
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
+                    <!-- 4. RECENT STUDENT REQUESTS SECTION -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="1dp"
+                        app:strokeColor="#E2E8F0"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="#FFFFFF"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="Recent Student Requests"
+                                    android:textColor="#0F172A"
+                                    android:textSize="15sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/btnViewAllRequests"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:clickable="true"
+                                    android:focusable="true"
+                                    android:text="View All →"
+                                    android:textColor="#2563EB"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <!-- Dynamic Student Requests Container -->
+                            <LinearLayout
+                                android:id="@+id/containerStudentRequests"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:orientation="vertical" />
+
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- 5. ATTENDANCE & FEE OVERVIEWS ROW -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
                         android:orientation="vertical">
 
-                        <!-- Kicker & Status -->
-                        <LinearLayout
+                        <!-- Attendance Overview Card -->
+                        <com.google.android.material.card.MaterialCardView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
+                            android:layout_marginBottom="12dp"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="1dp"
+                            app:strokeColor="#E2E8F0"
+                            app:strokeWidth="1dp">
 
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:letterSpacing="0.08"
-                                android:text="MASS DRAGON DOJO • MASTER PORTAL"
-                                android:textColor="@color/gold_kicker"
-                                android:textSize="10sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:background="@drawable/bg_sidebar_active_pill"
-                                android:paddingHorizontal="8dp"
-                                android:paddingVertical="3dp"
-                                android:text="● ACTIVE DOJO"
-                                android:textColor="#6EE7B7"
-                                android:textSize="9sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-
-                        <!-- Dojo Name -->
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Mass Dragon Dojo"
-                            android:textColor="#FFFFFF"
-                            android:textSize="22sp"
-                            android:textStyle="bold" />
-
-                        <!-- Subtitle -->
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:lineHeight="17sp"
-                            android:text="Manage your dojo, students, attendance tracking, fee receipts and belt evaluations in one unified portal."
-                            android:textColor="#CBD5E1"
-                            android:textSize="12sp" />
-
-                        <!-- Hero Action Buttons -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="16dp"
-                            android:orientation="horizontal">
-
-                            <!-- Manage Students -->
                             <LinearLayout
-                                android:id="@+id/btnHeroManageStudents"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:background="@drawable/bg_hero_btn_white"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:gravity="center_vertical"
-                                android:orientation="horizontal"
-                                android:paddingHorizontal="14dp"
-                                android:paddingVertical="9dp">
+                                android:background="#FFFFFF"
+                                android:orientation="vertical"
+                                android:padding="16dp">
 
-                                <ImageView
-                                    android:layout_width="16dp"
-                                    android:layout_height="16dp"
-                                    android:src="@drawable/ic_profile_pen"
-                                    app:tint="#0F172A" />
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:text="Attendance Overview"
+                                        android:textColor="#0F172A"
+                                        android:textSize="15sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/btnViewAllAttendance"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:text="View All →"
+                                        android:textColor="#2563EB"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+                                </LinearLayout>
+
+                                <!-- Circular Donut Representation -->
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="12dp"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <!-- Donut Badge -->
+                                    <FrameLayout
+                                        android:layout_width="80dp"
+                                        android:layout_height="80dp">
+
+                                        <ProgressBar
+                                            android:id="@+id/pbAttendanceDonut"
+                                            style="?android:attr/progressBarStyleHorizontal"
+                                            android:layout_width="80dp"
+                                            android:layout_height="80dp"
+                                            android:indeterminate="false"
+                                            android:max="100"
+                                            android:progress="75"
+                                            android:progressDrawable="@drawable/bg_circle_attendance" />
+
+                                        <LinearLayout
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_gravity="center"
+                                            android:gravity="center"
+                                            android:orientation="vertical">
+
+                                            <TextView
+                                                android:id="@+id/tvAttendanceDonutPct"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="75%"
+                                                android:textColor="#0F172A"
+                                                android:textSize="16sp"
+                                                android:textStyle="bold" />
+
+                                            <TextView
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="Present"
+                                                android:textColor="#10B981"
+                                                android:textSize="9sp" />
+                                        </LinearLayout>
+                                    </FrameLayout>
+
+                                    <!-- Legend Counts -->
+                                    <LinearLayout
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="20dp"
+                                        android:layout_weight="1"
+                                        android:orientation="vertical">
+
+                                        <LinearLayout
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:orientation="horizontal">
+
+                                            <TextView
+                                                android:id="@+id/tvLegendPresent"
+                                                android:layout_width="0dp"
+                                                android:layout_height="wrap_content"
+                                                android:layout_weight="1"
+                                                android:text="● Present: 12"
+                                                android:textColor="#10B981"
+                                                android:textSize="12sp" />
+
+                                            <TextView
+                                                android:id="@+id/tvLegendLate"
+                                                android:layout_width="0dp"
+                                                android:layout_height="wrap_content"
+                                                android:layout_weight="1"
+                                                android:text="● Late: 1"
+                                                android:textColor="#F59E0B"
+                                                android:textSize="12sp" />
+                                        </LinearLayout>
+
+                                        <LinearLayout
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="8dp"
+                                            android:orientation="horizontal">
+
+                                            <TextView
+                                                android:id="@+id/tvLegendAbsent"
+                                                android:layout_width="0dp"
+                                                android:layout_height="wrap_content"
+                                                android:layout_weight="1"
+                                                android:text="● Absent: 2"
+                                                android:textColor="#EF4444"
+                                                android:textSize="12sp" />
+
+                                            <TextView
+                                                android:id="@+id/tvLegendExcused"
+                                                android:layout_width="0dp"
+                                                android:layout_height="wrap_content"
+                                                android:layout_weight="1"
+                                                android:text="● Excused: 1"
+                                                android:textColor="#64748B"
+                                                android:textSize="12sp" />
+                                        </LinearLayout>
+                                    </LinearLayout>
+                                </LinearLayout>
+
+                                <!-- Today's Scheduled Class Strip -->
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="14dp"
+                                    android:background="#F1F5F9"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal"
+                                    android:padding="10dp">
+
+                                    <ImageView
+                                        android:layout_width="20dp"
+                                        android:layout_height="20dp"
+                                        android:src="@drawable/ic_calendar"
+                                        app:tint="#2563EB" />
+
+                                    <LinearLayout
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="8dp"
+                                        android:layout_weight="1"
+                                        android:orientation="vertical">
+
+                                        <TextView
+                                            android:id="@+id/tvTodayClassTitle"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="Today's Class: Karate Training"
+                                            android:textColor="#0F172A"
+                                            android:textSize="12sp"
+                                            android:textStyle="bold" />
+
+                                        <TextView
+                                            android:id="@+id/tvTodayClassTiming"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="06:00 PM – 07:30 PM"
+                                            android:textColor="#64748B"
+                                            android:textSize="11sp" />
+                                    </LinearLayout>
+                                </LinearLayout>
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <!-- Fee Collection Card -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="1dp"
+                            app:strokeColor="#E2E8F0"
+                            app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:background="#FFFFFF"
+                                android:orientation="vertical"
+                                android:padding="16dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:text="Fee Collection"
+                                        android:textColor="#0F172A"
+                                        android:textSize="15sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/btnViewAllFees"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:text="View All →"
+                                        android:textColor="#2563EB"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+                                </LinearLayout>
+
+                                <!-- Donut Representation -->
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="12dp"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <FrameLayout
+                                        android:layout_width="80dp"
+                                        android:layout_height="80dp">
+
+                                        <ProgressBar
+                                            android:id="@+id/pbFeesDonut"
+                                            style="?android:attr/progressBarStyleHorizontal"
+                                            android:layout_width="80dp"
+                                            android:layout_height="80dp"
+                                            android:indeterminate="false"
+                                            android:max="100"
+                                            android:progress="75"
+                                            android:progressDrawable="@drawable/bg_circle_fees" />
+
+                                        <LinearLayout
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_gravity="center"
+                                            android:gravity="center"
+                                            android:orientation="vertical">
+
+                                            <TextView
+                                                android:id="@+id/tvFeesDonutPct"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="75%"
+                                                android:textColor="#0F172A"
+                                                android:textSize="16sp"
+                                                android:textStyle="bold" />
+
+                                            <TextView
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="Collected"
+                                                android:textColor="#10B981"
+                                                android:textSize="9sp" />
+                                        </LinearLayout>
+                                    </FrameLayout>
+
+                                    <LinearLayout
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="20dp"
+                                        android:layout_weight="1"
+                                        android:orientation="vertical">
+
+                                        <TextView
+                                            android:id="@+id/tvFeeCollectedLegend"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="● Collected: ₹ 36,000"
+                                            android:textColor="#10B981"
+                                            android:textSize="12sp"
+                                            android:textStyle="bold" />
+
+                                        <TextView
+                                            android:id="@+id/tvFeePendingLegend"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="8dp"
+                                            android:text="● Pending: ₹ 12,000"
+                                            android:textColor="#DC2626"
+                                            android:textSize="12sp"
+                                            android:textStyle="bold" />
+
+                                        <TextView
+                                            android:id="@+id/tvFeeTotalMonthly"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="6dp"
+                                            android:text="Total Fees: ₹ 48,000"
+                                            android:textColor="#64748B"
+                                            android:textSize="11sp" />
+                                    </LinearLayout>
+                                </LinearLayout>
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnRecordPaymentAction"
+                                    style="@style/Widget.Material3.Button.TonalButton"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="40dp"
+                                    android:layout_marginTop="14dp"
+                                    android:text="Record Payment"
+                                    android:textColor="#2563EB"
+                                    android:textSize="12sp"
+                                    app:backgroundTint="#EFF6FF"
+                                    app:cornerRadius="20dp"
+                                    app:icon="@drawable/ic_currency"
+                                    app:iconSize="16dp"
+                                    app:iconTint="#2563EB" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+                    </LinearLayout>
+
+                    <!-- 6. REGISTERED STUDENTS SECTION -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="1dp"
+                        app:strokeColor="#E2E8F0"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="#FFFFFF"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
 
                                 <TextView
-                                    android:layout_width="wrap_content"
+                                    android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="7dp"
-                                    android:text="Students Roster"
+                                    android:layout_weight="1"
+                                    android:text="Registered Students"
                                     android:textColor="#0F172A"
-                                    android:textSize="12sp"
+                                    android:textSize="15sp"
                                     android:textStyle="bold" />
-                            </LinearLayout>
-
-                            <!-- Join Requests -->
-                            <LinearLayout
-                                android:id="@+id/btnHeroJoinRequests"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="10dp"
-                                android:background="@drawable/bg_hero_btn_translucent"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:gravity="center_vertical"
-                                android:orientation="horizontal"
-                                android:paddingHorizontal="14dp"
-                                android:paddingVertical="9dp">
-
-                                <ImageView
-                                    android:layout_width="16dp"
-                                    android:layout_height="16dp"
-                                    android:src="@drawable/ic_star_gold"
-                                    app:tint="#FFFFFF" />
 
                                 <TextView
+                                    android:id="@+id/btnViewAllStudents"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="7dp"
-                                    android:text="Join Requests"
-                                    android:textColor="#FFFFFF"
+                                    android:clickable="true"
+                                    android:focusable="true"
+                                    android:text="View All →"
+                                    android:textColor="#2563EB"
                                     android:textSize="12sp"
                                     android:textStyle="bold" />
                             </LinearLayout>
 
+                            <!-- Dynamic Students Table Container -->
+                            <LinearLayout
+                                android:id="@+id/containerRegisteredStudents"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:orientation="vertical" />
                         </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
 
-                    </LinearLayout>
-
-                </FrameLayout>
-
-                <!-- 4 MASTER STAT CARDS -->
-                <!-- Row 1: Active Students & Join Requests -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:orientation="horizontal">
-
-                    <!-- Stat 1: Active Students -->
-                    <LinearLayout
-                        android:id="@+id/cardMasterStudents"
-                        android:layout_width="0dp"
+                    <!-- 7. CLASS SCHEDULE & RECENT ACTIVITIES -->
+                    <!-- Class Schedule -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="6dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_card_white"
-                        android:clickable="true"
-                        android:elevation="1dp"
-                        android:focusable="true"
-                        android:orientation="vertical"
+                        android:layout_marginBottom="16dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="1dp"
+                        app:strokeColor="#E2E8F0"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="#FFFFFF"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="Class Schedule"
+                                    android:textColor="#0F172A"
+                                    android:textSize="15sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/btnViewAllSchedule"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:clickable="true"
+                                    android:focusable="true"
+                                    android:text="View All →"
+                                    android:textColor="#2563EB"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/containerClassSchedule"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:orientation="vertical" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Recent Activities -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="20dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="1dp"
+                        app:strokeColor="#E2E8F0"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="#FFFFFF"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="Recent Activities"
+                                    android:textColor="#0F172A"
+                                    android:textSize="15sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/btnViewAllActivities"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:clickable="true"
+                                    android:focusable="true"
+                                    android:text="View All →"
+                                    android:textColor="#2563EB"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/containerRecentActivities"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:orientation="vertical" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- 8. BOTTOM MARTIAL QUOTE -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="12dp"
+                        android:background="#EFF6FF"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
                         android:padding="14dp">
-
-                        <FrameLayout
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:background="@drawable/bg_stat_icon_gold">
-
-                            <ImageView
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_attendance"
-                                app:tint="@color/stat_gold_fg" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:letterSpacing="0.05"
-                            android:text="ACTIVE STUDENTS"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="9sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="3"
-                            android:textColor="@color/text_primary"
-                            android:textSize="22sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Approved dojo members"
-                            android:textColor="@color/text_hint"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-
-                    <!-- Stat 2: Join Requests -->
-                    <LinearLayout
-                        android:id="@+id/cardMasterRequests"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_card_white"
-                        android:clickable="true"
-                        android:elevation="1dp"
-                        android:focusable="true"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-
-                        <FrameLayout
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:background="@drawable/bg_stat_icon_pink">
-
-                            <ImageView
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_star_gold"
-                                app:tint="@color/stat_pink_fg" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:letterSpacing="0.05"
-                            android:text="JOIN REQUESTS"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="9sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="0"
-                            android:textColor="@color/text_primary"
-                            android:textSize="22sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Waiting for review"
-                            android:textColor="@color/text_hint"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <!-- Row 2: Present Today & Today's Payments -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="18dp"
-                    android:orientation="horizontal">
-
-                    <!-- Stat 3: Present Today -->
-                    <LinearLayout
-                        android:id="@+id/cardMasterAttendance"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="6dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_card_white"
-                        android:clickable="true"
-                        android:elevation="1dp"
-                        android:focusable="true"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-
-                        <FrameLayout
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:background="@drawable/bg_stat_icon_green">
-
-                            <ImageView
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_check_mark"
-                                app:tint="@color/stat_green_fg" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:letterSpacing="0.05"
-                            android:text="PRESENT TODAY"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="9sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="0"
-                            android:textColor="@color/text_primary"
-                            android:textSize="22sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Attendance recorded today"
-                            android:textColor="@color/text_hint"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-
-                    <!-- Stat 4: Today's Payments -->
-                    <LinearLayout
-                        android:id="@+id/cardMasterFees"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_card_white"
-                        android:clickable="true"
-                        android:elevation="1dp"
-                        android:focusable="true"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-
-                        <FrameLayout
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:background="@drawable/bg_stat_icon_purple">
-
-                            <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_currency"
-                                app:tint="@color/stat_purple_fg" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:letterSpacing="0.05"
-                            android:text="TODAY'S PAYMENTS"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="9sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="₹0"
-                            android:textColor="@color/text_primary"
-                            android:textSize="22sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Payments received today"
-                            android:textColor="@color/text_hint"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <!-- DOJO OPERATIONS GRID (6 actions) -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:text="Dojo Operations"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <!-- Action Row 1 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
-                    android:orientation="horizontal">
-
-                    <!-- 1: Manage Students -->
-                    <LinearLayout
-                        android:id="@+id/actionMasterStudents"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="5dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_card_white"
-                        android:clickable="true"
-                        android:elevation="1dp"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:paddingVertical="16dp">
 
                         <ImageView
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:src="@drawable/ic_profile_pen"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_karate_kick"
                             app:tint="#2563EB" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Students"
-                            android:textColor="@color/text_primary"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <!-- 2: Join Requests -->
-                    <LinearLayout
-                        android:id="@+id/actionMasterRequests"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="3dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_card_white"
-                        android:clickable="true"
-                        android:elevation="1dp"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:paddingVertical="16dp">
-
-                        <ImageView
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:src="@drawable/ic_star_gold"
-                            app:tint="#D97706" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Join Requests"
-                            android:textColor="@color/text_primary"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <!-- 3: Attendance -->
-                    <LinearLayout
-                        android:id="@+id/actionMasterAttendance"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_card_white"
-                        android:clickable="true"
-                        android:elevation="1dp"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:paddingVertical="16dp">
-
-                        <ImageView
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:src="@drawable/ic_attendance"
-                            app:tint="#16A34A" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Attendance"
-                            android:textColor="@color/text_primary"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <!-- Action Row 2 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="18dp"
-                    android:orientation="horizontal">
-
-                    <!-- 4: Fees -->
-                    <LinearLayout
-                        android:id="@+id/actionMasterFees"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="5dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_card_white"
-                        android:clickable="true"
-                        android:elevation="1dp"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:paddingVertical="16dp">
-
-                        <ImageView
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:src="@drawable/ic_currency"
-                            app:tint="#DC2626" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Fee Records"
-                            android:textColor="@color/text_primary"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <!-- 5: Grading -->
-                    <LinearLayout
-                        android:id="@+id/actionMasterGrading"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="3dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_card_white"
-                        android:clickable="true"
-                        android:elevation="1dp"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:paddingVertical="16dp">
-
-                        <ImageView
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:src="@drawable/ic_belt"
-                            app:tint="#9333EA" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Grading"
-                            android:textColor="@color/text_primary"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <!-- 6: Dojo Profile -->
-                    <LinearLayout
-                        android:id="@+id/actionMasterDojoProfile"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_card_white"
-                        android:clickable="true"
-                        android:elevation="1dp"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:paddingVertical="16dp">
-
-                        <ImageView
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:src="@drawable/ic_dojo"
-                            app:tint="#0284C7" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Dojo Profile"
-                            android:textColor="@color/text_primary"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <!-- SECTION: RECENT STUDENTS (FROM DATABASE) -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:text="Recent Students in Dojo"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_card_white"
-                    android:elevation="1dp"
-                    android:orientation="vertical"
-                    android:padding="12dp">
-
-                    <!-- Student 1: Kenji Sato -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingVertical="8dp">
-
-                        <FrameLayout
-                            android:layout_width="34dp"
-                            android:layout_height="34dp"
-                            android:background="@drawable/bg_avatar_circle">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
-                                android:text="KS"
-                                android:textColor="#1F2937"
-                                android:textSize="11sp"
-                                android:textStyle="bold" />
-                        </FrameLayout>
-
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="10dp"
+                            android:layout_marginStart="12dp"
                             android:layout_weight="1"
                             android:orientation="vertical">
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Kenji Sato"
-                                android:textColor="@color/text_primary"
-                                android:textSize="13sp"
-                                android:textStyle="bold" />
+                                android:text="“The true purpose of Karate is not to win, but to build a better self.”"
+                                android:textColor="#1E3A8A"
+                                android:textSize="12sp"
+                                android:textStyle="italic" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="minor@gmail.com • Brown Belt"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="11sp" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/bg_stat_icon_green"
-                            android:paddingHorizontal="8dp"
-                            android:paddingVertical="3dp"
-                            android:text="Active"
-                            android:textColor="@color/stat_green_fg"
-                            android:textSize="10sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="#E2E8F0" />
-
-                    <!-- Student 2: Ryu Hoshi -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingVertical="8dp">
-
-                        <FrameLayout
-                            android:layout_width="34dp"
-                            android:layout_height="34dp"
-                            android:background="@drawable/bg_avatar_circle">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
-                                android:text="RH"
-                                android:textColor="#1F2937"
+                                android:layout_gravity="end"
+                                android:text="— Gichin Funakoshi"
+                                android:textColor="#64748B"
                                 android:textSize="11sp"
                                 android:textStyle="bold" />
-                        </FrameLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="10dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Ryu Hoshi"
-                                android:textColor="@color/text_primary"
-                                android:textSize="13sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="ryu@gmail.com • Black Belt (1st Dan)"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="11sp" />
                         </LinearLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/bg_stat_icon_green"
-                            android:paddingHorizontal="8dp"
-                            android:paddingVertical="3dp"
-                            android:text="Active"
-                            android:textColor="@color/stat_green_fg"
-                            android:textSize="10sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="#E2E8F0" />
-
-                    <!-- Student 3: Jane Doe -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingVertical="8dp">
-
-                        <FrameLayout
-                            android:layout_width="34dp"
-                            android:layout_height="34dp"
-                            android:background="@drawable/bg_avatar_circle">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
-                                android:text="JD"
-                                android:textColor="#1F2937"
-                                android:textSize="11sp"
-                                android:textStyle="bold" />
-                        </FrameLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="10dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Jane Doe"
-                                android:textColor="@color/text_primary"
-                                android:textSize="13sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="student@gmail.com • Purple Belt"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="11sp" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/bg_stat_icon_green"
-                            android:paddingHorizontal="8dp"
-                            android:paddingVertical="3dp"
-                            android:text="Active"
-                            android:textColor="@color/stat_green_fg"
-                            android:textSize="10sp"
-                            android:textStyle="bold" />
                     </LinearLayout>
 
                 </LinearLayout>
-
-            </LinearLayout>
-
-        </ScrollView>
-
+            </ScrollView>
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
     </LinearLayout>
 
-    <!-- CRIMSON SLIDING NAVIGATION DRAWER (FOR MASTER) -->
-    <LinearLayout
-        android:id="@+id/navigationDrawerMaster"
-        android:layout_width="280dp"
+    <!-- NAVIGATION DRAWER SIDEBAR (DARK NAVY THEME) -->
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/navViewMaster"
+        android:layout_width="290dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="#990B0B"
-        android:fitsSystemWindows="true"
-        android:orientation="vertical">
+        android:background="#0A1128"
+        android:fitsSystemWindows="true">
 
-        <!-- Top Header -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="20dp"
-            android:paddingTop="36dp"
-            android:paddingBottom="16dp">
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
+            <!-- Sidebar Header with KOMS Dragon Crest -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="28dp"
+                android:paddingBottom="20dp">
 
                 <ImageView
                     android:layout_width="44dp"
                     android:layout_height="44dp"
-                    android:src="@drawable/ic_dojo_logo" />
+                    android:src="@drawable/ic_shorin_ryu_logo" />
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -984,292 +1508,359 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="MASS DRAGON"
+                        android:letterSpacing="0.08"
+                        android:text="KOMS"
                         android:textColor="#FFFFFF"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="DOJO"
-                        android:textColor="#FFFFFF"
-                        android:textSize="14sp"
+                        android:textSize="20sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:letterSpacing="0.04"
-                        android:text="KOMS MASTER PORTAL"
-                        android:textColor="@color/gold_accent"
-                        android:textSize="9sp"
-                        android:textStyle="bold" />
+                        android:text="KARATE ORGANIZATION\nMANAGEMENT SYSTEM"
+                        android:textColor="#94A3B8"
+                        android:textSize="9sp" />
                 </LinearLayout>
-
             </LinearLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="Sensei Portal"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#1E293B" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="Dojo Management &amp; Training Ops"
-                android:textColor="#E0E7FF"
-                android:textSize="12sp" />
+            <!-- Scrollable Navigation Items -->
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:paddingVertical="12dp">
 
-        </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="12dp">
 
-        <!-- Menu items -->
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:paddingHorizontal="14dp">
+                    <!-- Dashboard (Active) -->
+                    <LinearLayout
+                        android:id="@+id/navMasterDashboard"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginBottom="4dp"
+                        android:background="@drawable/bg_badge_red"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp">
 
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_dashboard_home"
+                            app:tint="#FFFFFF" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:text="Dashboard"
+                            android:textColor="#FFFFFF"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Registered Students -->
+                    <LinearLayout
+                        android:id="@+id/navMasterStudents"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginBottom="4dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_person_sensei"
+                            app:tint="#94A3B8" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:text="Registered Students"
+                            android:textColor="#CBD5E1"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Student Requests -->
+                    <LinearLayout
+                        android:id="@+id/navMasterRequests"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginBottom="4dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_star_gold"
+                            app:tint="#94A3B8" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:layout_weight="1"
+                            android:text="Student Requests"
+                            android:textColor="#CBD5E1"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvNavRequestsBadge"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:background="@drawable/bg_stamp_red"
+                            android:gravity="center"
+                            android:text="3"
+                            android:textColor="#FFFFFF"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Attendance -->
+                    <LinearLayout
+                        android:id="@+id/navMasterAttendance"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginBottom="4dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_attendance"
+                            app:tint="#94A3B8" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:text="Attendance"
+                            android:textColor="#CBD5E1"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Schedule -->
+                    <LinearLayout
+                        android:id="@+id/navMasterSchedule"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginBottom="4dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_clock"
+                            app:tint="#94A3B8" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:text="Schedule"
+                            android:textColor="#CBD5E1"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Fees -->
+                    <LinearLayout
+                        android:id="@+id/navMasterFees"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginBottom="4dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_currency"
+                            app:tint="#94A3B8" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:text="Fees"
+                            android:textColor="#CBD5E1"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Achievements -->
+                    <LinearLayout
+                        android:id="@+id/navMasterAchievements"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginBottom="4dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_trophy"
+                            app:tint="#94A3B8" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:text="Achievements"
+                            android:textColor="#CBD5E1"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Certificates -->
+                    <LinearLayout
+                        android:id="@+id/navMasterCertificates"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginBottom="4dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_contact_card"
+                            app:tint="#94A3B8" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:text="Certificates"
+                            android:textColor="#CBD5E1"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Reports -->
+                    <LinearLayout
+                        android:id="@+id/navMasterReports"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginBottom="4dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_dashboard_home"
+                            app:tint="#94A3B8" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:text="Reports"
+                            android:textColor="#CBD5E1"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Dojo Profile -->
+                    <LinearLayout
+                        android:id="@+id/navMasterDojo"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginBottom="4dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_dojo"
+                            app:tint="#94A3B8" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:text="Dojo Profile"
+                            android:textColor="#CBD5E1"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Logout -->
+                    <LinearLayout
+                        android:id="@+id/navMasterLogout"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_logout"
+                            app:tint="#EF4444" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:text="Logout"
+                            android:textColor="#EF4444"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                </LinearLayout>
+            </ScrollView>
+
+            <!-- Bottom Dragon Art & Motto -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingBottom="20dp">
+                android:padding="20dp">
 
-                <!-- 1. Master Dashboard (Active) -->
-                <LinearLayout
-                    android:id="@+id/navMasterDashboard"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginBottom="4dp"
-                    android:background="@drawable/bg_sidebar_active_pill"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="14dp">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:src="@drawable/ic_dashboard_home"
-                        app:tint="#FFFFFF" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp"
-                        android:text="Master Dashboard"
-                        android:textColor="#FFFFFF"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <!-- 2. Students -->
-                <LinearLayout
-                    android:id="@+id/navMasterStudents"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginBottom="4dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="14dp">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:src="@drawable/ic_profile_pen"
-                        app:tint="#E2E8F0" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp"
-                        android:text="Manage Students"
-                        android:textColor="#E2E8F0"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
-                <!-- 3. Join Requests -->
-                <LinearLayout
-                    android:id="@+id/navMasterRequests"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginBottom="4dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="14dp">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:src="@drawable/ic_star_gold"
-                        app:tint="#E2E8F0" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp"
-                        android:text="Join Requests"
-                        android:textColor="#E2E8F0"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
-                <!-- 4. Attendance -->
-                <LinearLayout
-                    android:id="@+id/navMasterAttendance"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginBottom="4dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="14dp">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:src="@drawable/ic_check_mark"
-                        app:tint="#E2E8F0" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp"
-                        android:text="Record Attendance"
-                        android:textColor="#E2E8F0"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
-                <!-- 5. Fees -->
-                <LinearLayout
-                    android:id="@+id/navMasterFees"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginBottom="4dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="14dp">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:src="@drawable/ic_currency"
-                        app:tint="#E2E8F0" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp"
-                        android:text="Fees &amp; Payments"
-                        android:textColor="#E2E8F0"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
-                <!-- 6. Grading -->
-                <LinearLayout
-                    android:id="@+id/navMasterGrading"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginBottom="4dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="14dp">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:src="@drawable/ic_belt"
-                        app:tint="#E2E8F0" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp"
-                        android:text="Grading &amp; Belts"
-                        android:textColor="#E2E8F0"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
-                <!-- 7. Dojo Profile -->
-                <LinearLayout
-                    android:id="@+id/navMasterDojo"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginBottom="12dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="14dp">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:src="@drawable/ic_sidebar_dojo"
-                        app:tint="#E2E8F0" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp"
-                        android:text="Dojo Settings"
-                        android:textColor="#E2E8F0"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
-                <!-- Separator -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginVertical="8dp"
-                    android:background="#44FFFFFF" />
-
-                <!-- 8. Logout -->
-                <LinearLayout
-                    android:id="@+id/navMasterLogout"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="14dp">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:src="@drawable/ic_logout"
-                        app:tint="#FF8080" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp"
-                        android:text="Sign Out"
-                        android:textColor="#FF8080"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:lineHeight="18sp"
+                    android:text="Discipline.\nFocus.\nStronger Future."
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="italic|bold" />
             </LinearLayout>
 
-        </ScrollView>
-
-    </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.navigation.NavigationView>
 
 </androidx.drawerlayout.widget.DrawerLayout>

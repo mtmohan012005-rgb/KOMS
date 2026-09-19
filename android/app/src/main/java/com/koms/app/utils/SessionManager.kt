@@ -13,11 +13,12 @@ class SessionManager(context: Context) {
         editor.apply()
     }
 
-    fun saveUserDetails(userId: Int, name: String, email: String, role: String) {
+    fun saveUserDetails(userId: Int, name: String, email: String, role: String, dojoId: Int = 0) {
         editor.putInt(Constants.KEY_USER_ID, userId)
         editor.putString(Constants.KEY_USER_NAME, name)
         editor.putString(Constants.KEY_USER_EMAIL, email)
         editor.putString(Constants.KEY_USER_ROLE, role)
+        editor.putInt(Constants.KEY_DOJO_ID, dojoId)
         editor.apply()
     }
 
@@ -25,8 +26,16 @@ class SessionManager(context: Context) {
         return prefs.getString(Constants.KEY_AUTH_TOKEN, null)
     }
 
+    fun getAuthToken(): String? {
+        return fetchAuthToken()
+    }
+
     fun getUserId(): Int {
         return prefs.getInt(Constants.KEY_USER_ID, 0)
+    }
+
+    fun getDojoId(): Int {
+        return prefs.getInt(Constants.KEY_DOJO_ID, 1)
     }
 
     fun getUserRole(): String? {

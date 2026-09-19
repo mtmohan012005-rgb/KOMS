@@ -19,6 +19,8 @@ class StudentProfileActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityStudentProfileBinding
     private lateinit var sessionManager: SessionManager
+    private var isReadOnly: Boolean = false
+    private var targetStudentId: Int = -1
 
     companion object {
         private const val PREFS_PROFILE = "KomsStudentProfilePrefs"
@@ -37,6 +39,16 @@ class StudentProfileActivity : AppCompatActivity() {
 
         sessionManager = SessionManager(this)
 
+        val role = sessionManager.getUserRole() ?: "student"
+        val loggedInUserId = sessionManager.getUserId()
+        targetStudentId = intent.getIntExtra("student_id", -1)
+        if (targetStudentId <= 0) {
+            targetStudentId = loggedInUserId
+        }
+
+        val isMasterOrAdmin = role.equals("master", ignoreCase = true) || role.equals("super_admin", ignoreCase = true) || role.equals("grand_master", ignoreCase = true)
+        isReadOnly = isMasterOrAdmin || (targetStudentId > 0 && targetStudentId != loggedInUserId)
+
         setupStudentData()
         setupListeners()
         fetchStudentProfile()
@@ -44,7 +56,7 @@ class StudentProfileActivity : AppCompatActivity() {
 
     private fun setupStudentData() {
         val rawName = sessionManager.getUserName()
-        val studentName = if (!rawName.isNullOrBlank() && !rawName.equals("Student Demo", ignoreCase = true)) {
+        val studentName = if (!rawName.isNullOrBlank() && !rawName.equals("Student Demo", ignoreCase = true) && !isReadOnly) {
             rawName
         } else {
             "L. Sai Rohan"
@@ -53,8 +65,7 @@ class StudentProfileActivity : AppCompatActivity() {
         binding.tvHeroStudentName.text = studentName
         binding.tvInfoFullName.text = studentName
 
-        val studentId = sessionManager.getUserId()
-        val code = if (studentId > 0) "MD-%05d".format(studentId) else "MD-00010"
+        val code = if (targetStudentId > 0) "MD-%05d".format(targetStudentId) else "MD-00010"
         binding.tvHeroStudentId.text = code
 
         // Load persisted editable fields or fall back to authentic defaults
@@ -82,12 +93,26 @@ class StudentProfileActivity : AppCompatActivity() {
             finish()
         }
 
-        // Edit Dialog Triggers
-        val openEdit = { showEditProfileDialog() }
-        binding.btnTopEdit.setOnClickListener { openEdit() }
-        binding.btnEditPersonal.setOnClickListener { openEdit() }
-        binding.btnEditParent.setOnClickListener { openEdit() }
-        binding.btnEditContact.setOnClickListener { openEdit() }
+        if (isReadOnly) {
+            // Master or non-owner cannot edit student-controlled personal details
+            binding.btnTopEdit.visibility = android.view.View.GONE
+            binding.btnEditPersonal.visibility = android.view.View.GONE
+            binding.btnEditParent.visibility = android.view.View.GONE
+            binding.btnEditContact.visibility = android.view.View.GONE
+            binding.tvTopSubtitle.text = "Student Records (Read-Only • Master View)"
+        } else {
+            // Student owns and controls their personal profile and contact details
+            binding.btnTopEdit.visibility = android.view.View.VISIBLE
+            binding.btnEditPersonal.visibility = android.view.View.VISIBLE
+            binding.btnEditParent.visibility = android.view.View.VISIBLE
+            binding.btnEditContact.visibility = android.view.View.VISIBLE
+
+            val openEdit = { showEditProfileDialog() }
+            binding.btnTopEdit.setOnClickListener { openEdit() }
+            binding.btnEditPersonal.setOnClickListener { openEdit() }
+            binding.btnEditParent.setOnClickListener { openEdit() }
+            binding.btnEditContact.setOnClickListener { openEdit() }
+        }
 
         // Click to Dial Phone Numbers
         binding.tvPhoneNumber.setOnClickListener {
@@ -108,6 +133,10 @@ class StudentProfileActivity : AppCompatActivity() {
     }
 
     private fun showEditProfileDialog() {
+        if (isReadOnly) {
+            Toast.makeText(this, "Access Denied: Masters cannot modify student personal details.", Toast.LENGTH_LONG).show()
+            return
+        }
         val dialogBinding = DialogEditStudentProfileBinding.inflate(LayoutInflater.from(this))
 
         dialogBinding.etFatherName.setText(binding.tvFatherName.text.toString())
@@ -172,13 +201,14 @@ class StudentProfileActivity : AppCompatActivity() {
     }
 
     private fun fetchStudentProfile() {
-        val studentId = sessionManager.getUserId()
+        val queryStudentId = if (targetStudentId > 0) targetStudentId else sessionManager.getUserId()
         lifecycleScope.launch {
             try {
-                val response = ApiClient.apiService.getStudentProfile(if (studentId > 0) studentId else null)
+                val response = ApiClient.apiService.getStudentProfile(if (queryStudentId > 0) queryStudentId else null)
                 if (response.isSuccessful && response.body()?.data != null) {
                     val profile = response.body()!!.data!!
 
+                    // 1. Hero Student Name & IDs
                     if (!profile.name.isNullOrBlank()) {
                         binding.tvHeroStudentName.text = profile.name
                         binding.tvInfoFullName.text = profile.name
@@ -186,6 +216,48 @@ class StudentProfileActivity : AppCompatActivity() {
                     if (!profile.memberId.isNullOrBlank()) {
                         binding.tvHeroStudentId.text = profile.memberId
                     }
+                    if (!profile.role.isNullOrBlank()) {
+                        binding.tvHeroRoleBadge.text = profile.role.replaceFirstChar { it.uppercase() }
+                    }
+
+                    // 2. Dates & Age
+                    val dobText = profile.dob ?: "2012-10-20"
+                    val ageVal = if (profile.age > 0) profile.age else 13
+                    binding.tvHeroAgeMeta.text = "Age: $ageVal years | DOB: $dobText"
+                    binding.tvInfoDob.text = "$dobText ($ageVal years)"
+
+                    if (!profile.dateOfJoining.isNullOrBlank()) {
+                        binding.tvHeroJoinedMeta.text = "Joined On: ${profile.dateOfJoining}"
+                        binding.tvInfoJoined.text = profile.dateOfJoining
+                    }
+
+                    // 3. Gender & Blood Group
+                    if (!profile.gender.isNullOrBlank()) {
+                        binding.tvStatGender.text = profile.gender
+                        binding.tvInfoGender.text = profile.gender
+                    }
+                    if (!profile.bloodGroup.isNullOrBlank()) {
+                        binding.tvStatBloodGroup.text = profile.bloodGroup
+                        binding.tvInfoBloodGroup.text = profile.bloodGroup
+                    }
+
+                    // 4. Dojo & Master
+                    if (!profile.dojoName.isNullOrBlank()) {
+                        binding.tvStatDojoName.text = profile.dojoName
+                        val loc = profile.dojoLocation ?: "Dojo Center"
+                        val master = profile.masterName ?: "Dojo Master"
+                        binding.tvStatDojoSub.text = "$loc • $master"
+                    }
+
+                    // 5. Belts & Rank
+                    if (!profile.currentBelt.isNullOrBlank()) {
+                        binding.tvStatBelt.text = profile.currentBelt
+                    }
+                    val target = profile.targetBelt ?: "Next Belt"
+                    val level = profile.trainingLevel ?: "Training"
+                    binding.tvStatTargetBelt.text = "Target: $target ($level)"
+
+                    // 6. Parent & Contact Details
                     if (!profile.fatherName.isNullOrBlank()) {
                         binding.tvFatherName.text = profile.fatherName
                     }
@@ -198,13 +270,30 @@ class StudentProfileActivity : AppCompatActivity() {
                     if (!profile.alternatePhone.isNullOrBlank()) {
                         binding.tvAlternatePhone.text = profile.alternatePhone
                     }
-                    if (!profile.bloodGroup.isNullOrBlank()) {
-                        binding.tvStatBloodGroup.text = profile.bloodGroup
-                        binding.tvInfoBloodGroup.text = profile.bloodGroup
-                    }
                     if (!profile.address.isNullOrBlank()) {
                         binding.tvAddress.text = profile.address
                     }
+
+                    // 7. Monthly Dojo Progress Bars & Stats (Dynamic from DB)
+                    binding.tvProgressAttendanceLabel.text = "Classes Attended (${profile.classesAttended} / ${profile.totalClasses})"
+                    binding.tvProgressAttendancePercent.text = "${profile.attendancePercentage}%"
+                    binding.pbProgressAttendance.progress = profile.attendancePercentage.coerceIn(0, 100)
+
+                    val paidAmt = profile.feesPaid.toInt()
+                    val totalAmt = profile.feesTotal.toInt()
+                    binding.tvProgressFeesLabel.text = "Fees Paid (₹ $paidAmt / ₹ $totalAmt)"
+                    binding.tvProgressFeesPercent.text = "${profile.feesPercentage}%"
+                    binding.pbProgressFees.progress = profile.feesPercentage.coerceIn(0, 100)
+
+                    binding.tvProgressAchievementsLabel.text = "Achievements (${profile.achievementsCount} Active)"
+                    val achPercent = if (profile.achievementsCount > 0) 100 else 0
+                    binding.tvProgressAchievementsPercent.text = "$achPercent%"
+                    binding.pbProgressAchievements.progress = achPercent
+
+                    binding.tvProgressCertificatesLabel.text = "Certificates Issued (${profile.certificatesCount})"
+                    val certPercent = if (profile.certificatesCount > 0) 100 else 0
+                    binding.tvProgressCertificatesPercent.text = "$certPercent%"
+                    binding.pbProgressCertificates.progress = certPercent
 
                     // Save back to SharedPreferences for offline caching
                     val prefs = getSharedPreferences(PREFS_PROFILE, Context.MODE_PRIVATE)

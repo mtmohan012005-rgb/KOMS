@@ -231,6 +231,7 @@ class StudentDashboardActivity : AppCompatActivity() {
 
                     // Stat 2: Fees
                     binding.tvStatFees.text = "₹${data.pendingFees.toInt()}"
+                    binding.tvStatFeesSub.text = if (data.pendingFees > 0) "Payment required" else "All fees cleared"
 
                     // Stat 3: Tournaments
                     binding.tvStatTournaments.text = "${data.tournamentEntries}"
@@ -238,6 +239,9 @@ class StudentDashboardActivity : AppCompatActivity() {
                     // Stat 4: Belt
                     if (!data.currentBelt.isNullOrBlank()) {
                         binding.tvStatBelt.text = data.currentBelt
+                    }
+                    if (!data.targetBelt.isNullOrBlank()) {
+                        binding.tvStatBeltSub.text = "Target: ${data.targetBelt}"
                     }
 
                     // Training Base

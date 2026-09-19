@@ -1,0 +1,26 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Top curved roof beam (Kasagi) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M1,5.5c4,-1.5 18,-1.5 22,0v1.8c-4,-1.2 -18,-1.2 -22,0z" />
+    <!-- Secondary straight beam (Shimaki) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M3,7.5h18v1.6H3z" />
+    <!-- Lower cross beam (Nuki) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M1.5,10.5h21v1.6h-21z" />
+    <!-- Left Pillar (Hashira) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M5.5,7.5h2.5v13.5h-2.5z" />
+    <!-- Right Pillar (Hashira) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M16,7.5h2.5v13.5h-2.5z" />
+</vector>

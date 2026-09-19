@@ -1,7 +1,9 @@
 package com.koms.app.data.api
 
+import android.content.Context
 import com.koms.app.BuildConfig
 import com.koms.app.utils.Constants
+import com.koms.app.utils.SessionManager
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -13,13 +15,20 @@ object ApiClient {
     @Volatile
     private var tokenProvider: (() -> String?)? = null
 
+    @Volatile
+    private var appContext: Context? = null
+
+    fun init(context: Context) {
+        appContext = context.applicationContext
+    }
+
     fun setTokenProvider(provider: () -> String?) {
         tokenProvider = provider
     }
 
     private val authInterceptor = Interceptor { chain ->
         val original = chain.request()
-        val token = tokenProvider?.invoke()
+        val token = tokenProvider?.invoke() ?: appContext?.let { SessionManager(it).getAuthToken() }
         val requestBuilder = original.newBuilder()
         if (!token.isNullOrBlank()) {
             requestBuilder.header("Authorization", "Bearer $token")
@@ -39,36 +48,44 @@ object ApiClient {
 
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
-            .connectTimeout(35, TimeUnit.SECONDS)
-            .readTimeout(35, TimeUnit.SECONDS)
-            .writeTimeout(35, TimeUnit.SECONDS)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
             .addInterceptor(authInterceptor)
             .addInterceptor(loggingInterceptor)
             .retryOnConnectionFailure(true)
             .build()
     }
 
-    val client: Retrofit by lazy {
-        Retrofit.Builder()
-            .baseUrl(Constants.BASE_URL)
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-    }
+    @Volatile
+    private var retrofitInstance: Retrofit? = null
 
-    val apiService: ApiService by lazy {
-        client.create(ApiService::class.java)
-    }
+    @Volatile
+    var currentBaseUrl: String = Constants.LOCAL_URL
 
-    val localClient: Retrofit by lazy {
-        Retrofit.Builder()
-            .baseUrl(Constants.LOCAL_URL)
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-    }
+    val client: Retrofit
+        get() {
+            return retrofitInstance ?: synchronized(this) {
+                retrofitInstance ?: Retrofit.Builder()
+                    .baseUrl(currentBaseUrl)
+                    .client(okHttpClient)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build().also { retrofitInstance = it }
+            }
+        }
 
-    val localApiService: ApiService by lazy {
-        localClient.create(ApiService::class.java)
+    val apiService: ApiService
+        get() = client.create(ApiService::class.java)
+
+    val localApiService: ApiService
+        get() = apiService
+
+    fun updateBaseUrl(newUrl: String) {
+        synchronized(this) {
+            if (currentBaseUrl != newUrl) {
+                currentBaseUrl = newUrl
+                retrofitInstance = null
+            }
+        }
     }
 }

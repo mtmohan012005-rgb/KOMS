@@ -6,7 +6,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.koms.app.data.model.Dojo
 import com.koms.app.databinding.ItemDojoBinding
 
-class DojoAdapter(private var dojos: List<Dojo>) : RecyclerView.Adapter<DojoAdapter.DojoViewHolder>() {
+class DojoAdapter(
+    private var dojos: List<Dojo>,
+    private val onJoinClick: ((Dojo) -> Unit)? = null
+) : RecyclerView.Adapter<DojoAdapter.DojoViewHolder>() {
 
     class DojoViewHolder(val binding: ItemDojoBinding) : RecyclerView.ViewHolder(binding.root)
 
@@ -19,8 +22,15 @@ class DojoAdapter(private var dojos: List<Dojo>) : RecyclerView.Adapter<DojoAdap
         val dojo = dojos[position]
         holder.binding.tvDojoName.text = dojo.name
         holder.binding.tvLocation.text = dojo.location
-        holder.binding.tvMasterName.text = "Sensei: ${dojo.masterName}"
+        holder.binding.tvMasterName.text = "Sensei: ${dojo.masterName ?: "Sensei Master"}"
         holder.binding.tvTimings.text = "${dojo.trainingDays ?: "Mon-Sat"} | ${dojo.trainingTimings ?: "6:00 PM - 8:00 PM"}"
+        
+        holder.binding.btnJoinDojo.setOnClickListener {
+            onJoinClick?.invoke(dojo)
+        }
+        holder.binding.root.setOnClickListener {
+            onJoinClick?.invoke(dojo)
+        }
     }
 
     override fun getItemCount() = dojos.size

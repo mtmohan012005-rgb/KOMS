@@ -24,6 +24,7 @@ class SplashActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         sessionManager = SessionManager(this)
+        com.koms.app.data.api.ApiClient.init(this)
 
         startLogoEntranceAnimation()
     }
@@ -100,12 +101,25 @@ class SplashActivity : AppCompatActivity() {
         // Step 5: Transition to Public Home or Role Dashboard after intro animation (2.8s)
         binding.root.postDelayed({
             if (sessionManager.isLoggedIn()) {
-                val role = sessionManager.getUserRole()
-                if (role.equals("master", ignoreCase = true) || role.equals("grand_master", ignoreCase = true) || role.equals("admin", ignoreCase = true) || role.equals("senior", ignoreCase = true)) {
-                    startActivity(Intent(this, com.koms.app.ui.master.MasterDashboardActivity::class.java))
-                } else {
-                    startActivity(Intent(this, StudentDashboardActivity::class.java))
+                val role = sessionManager.getUserRole() ?: ""
+                val intent = when {
+                    role.equals("grand_master", ignoreCase = true) ||
+                    role.equals("super_admin", ignoreCase = true) ||
+                    role.equals("admin", ignoreCase = true) -> {
+                        Intent(this, com.koms.app.ui.admin.GrandMasterDashboardActivity::class.java)
+                    }
+                    role.equals("master", ignoreCase = true) -> {
+                        Intent(this, com.koms.app.ui.master.MasterDashboardActivity::class.java)
+                    }
+                    role.equals("senior", ignoreCase = true) ||
+                    role.equals("senior_student", ignoreCase = true) -> {
+                        Intent(this, com.koms.app.ui.senior.SeniorDashboardActivity::class.java)
+                    }
+                    else -> {
+                        Intent(this, StudentDashboardActivity::class.java)
+                    }
                 }
+                startActivity(intent)
             } else {
                 startActivity(Intent(this, PublicHomeActivity::class.java))
             }

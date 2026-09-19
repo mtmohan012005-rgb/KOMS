@@ -37,8 +37,16 @@
             android:exported="true" />
 
         <activity
+            android:name=".ui.admin.GrandMasterDashboardActivity"
+            android:exported="true" />
+
+        <activity
             android:name=".ui.master.MasterDashboardActivity"
-            android:exported="false" />
+            android:exported="true" />
+
+        <activity
+            android:name=".ui.senior.SeniorDashboardActivity"
+            android:exported="true" />
 
         <activity
             android:name=".ui.webview.WebViewActivity"
@@ -48,27 +56,27 @@
 
         <activity
             android:name=".ui.student.StudentDashboardActivity"
-            android:exported="false" />
+            android:exported="true" />
 
         <activity
             android:name=".ui.student.StudentProfileActivity"
-            android:exported="false" />
+            android:exported="true" />
 
         <activity
             android:name=".ui.student.DojosActivity"
-            android:exported="false" />
+            android:exported="true" />
 
         <activity
             android:name=".ui.student.AttendanceActivity"
-            android:exported="false" />
+            android:exported="true" />
 
         <activity
             android:name=".ui.student.FeesActivity"
-            android:exported="false" />
+            android:exported="true" />
 
         <activity
             android:name=".ui.student.GradingActivity"
-            android:exported="false" />
+            android:exported="true" />
 
     </application>
 

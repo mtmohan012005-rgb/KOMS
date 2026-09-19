@@ -264,8 +264,8 @@ function require_api_role(array $caller, array $allowed_roles): void {
  * Verify dojo isolation: ensures a student or master cannot access a different dojo's resources
  */
 function assert_dojo_access(PDO $pdo, array $caller, int $target_student_id): void {
-    // Super admin can access globally
-    if ($caller['role'] === 'super_admin') {
+    // Super admin, grand master, and admin can access globally
+    if (in_array($caller['role'], ['super_admin', 'grand_master', 'admin'], true)) {
         return;
     }
 

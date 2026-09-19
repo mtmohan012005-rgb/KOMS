@@ -31,7 +31,8 @@ try {
     }
 
     $user = $authResult['user'];
-    $dojo_id = (int)($user['dojo_id'] ?? 1);
+    $dojo_id = resolve_user_dojo_id($pdo, (int)$user['id'], $user['role']);
+    $user['dojo_id'] = $dojo_id;
 
     // Generate cryptographic token
     $token = create_api_token($user);

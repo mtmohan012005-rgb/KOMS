@@ -1,5 +1,5 @@
 <?php
-// api/students/update_profile.php - Live Student Profile Update API
+// api/students/update_profile.php - Live Student Profile Update API with field-level permissions
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/api_auth.php';
@@ -11,20 +11,22 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 try {
-    $authUser = null;
-    try {
-        $authUser = authenticate_api_request();
-    } catch (Throwable $e) {}
+    $authUser = authenticate_api_request($pdo, true);
+    
+    // Strict field-level permission: Masters cannot edit student personal details
+    if ($authUser['role'] === 'master') {
+        send_api_error("Access denied: Masters cannot modify student personal information.", [], 403);
+    }
 
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true) ?: $_POST;
 
-    $studentId = $authUser ? (int)$authUser['user_id'] : (int)($data['student_id'] ?? 0);
-    if ($studentId <= 0) {
-        $studentId = (int)$pdo->query("SELECT id FROM users WHERE role = 'student' AND (email LIKE '%sairohan%' OR member_id LIKE '%sairohan%') LIMIT 1")->fetchColumn();
-    }
-    if ($studentId <= 0) {
-        $studentId = (int)$pdo->query("SELECT id FROM users WHERE role = 'student' ORDER BY id ASC LIMIT 1")->fetchColumn();
+    // Students can only update their own profile unless super_admin
+    $studentId = (int)$authUser['user_id'];
+    if ($authUser['role'] === 'super_admin' || $authUser['role'] === 'grand_master') {
+        if (!empty($data['student_id'])) {
+            $studentId = (int)$data['student_id'];
+        }
     }
 
     $father = trim($data['father_name'] ?? '');
@@ -41,10 +43,15 @@ try {
             phone = COALESCE(NULLIF(?, ''), phone),
             alternate_phone = COALESCE(NULLIF(?, ''), alternate_phone),
             blood_group = COALESCE(NULLIF(?, ''), blood_group),
-            address = COALESCE(NULLIF(?, ''), address)
+            address = COALESCE(NULLIF(?, ''), address),
+            updated_at = NOW()
         WHERE id = ?
     ");
     $stmt->execute([$father, $mother, $phone, $altPhone, $bloodGroup, $address, $studentId]);
+
+    // Audit log
+    $pdo->prepare("INSERT INTO audit_logs (user_id, action, module, record_id, description) VALUES (?, 'STUDENT_PROFILE_UPDATED', 'users', ?, ?)")
+        ->execute([$studentId, $studentId, "Student updated own personal profile information"]);
 
     send_api_response([
         'student_id' => $studentId,
